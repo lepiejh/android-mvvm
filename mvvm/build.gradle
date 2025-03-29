@@ -37,11 +37,11 @@ android {
 }
 
 dependencies {
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    compileOnly fileTree(include: ['*.jar'], dir: 'libs')
     //support
-    implementation rootProject.ext.support["support-v4"]
-    implementation rootProject.ext.support["appcompat-v7"]
-    implementation rootProject.ext.support["recyclerview-v7"]
+    compileOnly rootProject.ext.support["support-v4"]
+    compileOnly rootProject.ext.support["appcompat-v7"]
+    compileOnly rootProject.ext.support["recyclerview-v7"]
     //rxjava
     api rootProject.ext.dependencies.rxjava
     api rootProject.ext.dependencies.rxandroid
@@ -78,7 +78,7 @@ dependencies {
     api (rootProject.ext.dependencies.glide){
         exclude group: 'com.android.support'
     }
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    compileOnly 'androidx.constraintlayout:constraintlayout:2.1.4'
     annotationProcessor rootProject.ext.dependencies["glide-compiler"]
     //recyclerview的databinding套装
     api(rootProject.ext.dependencies.bindingcollectionadapter) {
@@ -110,7 +110,7 @@ dependencies {
     implementation 'com.github.getActivity:Toaster:12.3'
     implementation 'org.apache.commons:commons-lang3:3.6'
     api 'com.github.lepiejh:android-dialog:v1.1.9'
-    api 'com.github.lepiejh:android-tcp:v1.0.7'
+    api 'com.github.lepiejh:android-tcp:v1.0.8'
     api 'com.github.lepiejh:android-tablayout:v1.3.7'
     implementation 'com.github.lepiejh:android-play:v1.0.8'
     implementation 'com.github.lepiejh:android-update:v1.0.1'
