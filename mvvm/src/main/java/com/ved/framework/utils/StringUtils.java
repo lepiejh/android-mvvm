@@ -413,6 +413,9 @@ public final class StringUtils {
     }
 
     public static String trim(String s){
+        if (isSpace(s)){
+            return "";
+        }
         try {
             s = s.trim();
         } catch (Exception e) {
