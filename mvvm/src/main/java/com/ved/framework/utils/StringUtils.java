@@ -424,12 +424,7 @@ public final class StringUtils {
         if (isSpace(s)){
             return "";
         }
-        try {
-            s = s.trim();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return s;
+        return s.trim();
     }
 
     public static String subPhone(String phone){
