@@ -7,7 +7,6 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.ved.framework.mode.EntityResponse;
-import com.ved.framework.mode.Result;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
@@ -113,14 +112,6 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                     }
                 } catch (IllegalAccessException | InvocationTargetException e) {
                     KLog.e(e.getMessage());
-                }
-
-                EntityResponse er = JsonPraise.jsonToObj(response,EntityResponse.class);
-                if (er != null){
-                    Result r = JsonPraise.jsonToObj(er.getMsg(), Result.class);
-                    if (r != null) {
-                        code = r.getResult();
-                    }
                 }
                 if (code == Configure.getCode()) {
                     return gson.fromJson(response, type);
