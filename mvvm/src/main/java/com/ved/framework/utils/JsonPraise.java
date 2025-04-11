@@ -111,6 +111,15 @@ public class JsonPraise {
         return code;
     }
 
+    public static boolean hasKey(String jsonStr, String key){
+        try {
+            JSONObject jsonObject = new JSONObject(jsonStr);
+            return jsonObject.has(key);
+        } catch (JSONException e) {
+            return false;
+        }
+    }
+
     /**
      * 将001的data对象转换为Map<String,Object>
      *
