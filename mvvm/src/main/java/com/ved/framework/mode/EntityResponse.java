@@ -1,24 +1,24 @@
 package com.ved.framework.mode;
 
 public class EntityResponse<T> {
-    private int resultCode;
-    private String resultMsg;
+    private int code;
+    private String msg;
     private T data;
 
     public int getCode() {
-        return resultCode;
+        return code;
     }
 
     public void setCode(int code) {
-        this.resultCode = code;
+        this.code = code;
     }
 
     public String getMsg() {
-        return resultMsg;
+        return msg;
     }
 
     public void setMsg(String msg) {
-        this.resultMsg = msg;
+        this.msg = msg;
     }
 
     public T getData() {
