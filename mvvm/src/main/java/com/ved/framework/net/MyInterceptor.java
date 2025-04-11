@@ -37,7 +37,7 @@ class MyInterceptor implements Interceptor {
         }
         String token = SPUtils.getInstance().getString("token");
         if (StringUtils.isNotEmpty(token)){
-            builder.addHeader("authorization", "Bearer "+token);
+            builder.addHeader("token", token);
         }
 
         List<String> headerValues = request.headers("url_name");
