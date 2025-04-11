@@ -7,6 +7,7 @@ import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.MyGson;
+import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.Utils;
 
 import org.json.JSONObject;
@@ -70,14 +71,16 @@ class RetrofitClient {
                             KLog.e("Interceptor", "请求地址：| " + request);
                             KLog.e("Interceptor", "请求体返回：| Response:" + content);
                             KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
-                            try {
-                                JSONObject jsonObject = new JSONObject(content);
-                                int code = jsonObject.optInt("code");
-                                String message = jsonObject.optString("msg");
-                                iResult.onInfoResult(message,code);
-                            }catch (Exception e)
-                            {
-                                e.printStackTrace();
+                            if (StringUtils.isNotEmpty(content)) {
+                                try {
+                                    JSONObject jsonObject = new JSONObject(content);
+                                    int code = jsonObject.optInt("code");
+                                    String message = jsonObject.optString("msg");
+                                    iResult.onInfoResult(message,code);
+                                }catch (Exception e)
+                                {
+                                    e.printStackTrace();
+                                }
                             }
                             return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
                         }).addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))

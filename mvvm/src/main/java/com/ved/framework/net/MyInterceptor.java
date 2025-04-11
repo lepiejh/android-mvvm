@@ -1,5 +1,6 @@
 package com.ved.framework.net;
 
+import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.bland.code.DeviceUtils;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ class MyInterceptor implements Interceptor {
                 builder.addHeader(headerKey, Objects.requireNonNull(headers.get(headerKey))).build();
             }
         }
-        builder.addHeader("device_id", DeviceUtils.getUniqueDeviceId());
+        builder.addHeader("authorization", SPUtils.getInstance().getString("token"));
 
         List<String> headerValues = request.headers("url_name");
         if (headerValues.size() > 0) {
