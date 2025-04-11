@@ -62,6 +62,8 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                         if (urlCodeObject != null){
                             Configure.setUrl("", (int) urlCodeObject, (String) urlObject);
                         }
+                    }else {
+                        Configure.setUrl("", 0, (String) urlObject);
                     }
                 }
             }
