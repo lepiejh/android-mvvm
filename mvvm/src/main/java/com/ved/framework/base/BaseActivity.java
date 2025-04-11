@@ -18,6 +18,7 @@ import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.DpiUtils;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
@@ -118,6 +119,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     protected void onDestroy() {
+        KLog.i(this.getLocalClassName()+" : onDestroy()");
         super.onDestroy();
         try {
             //解除Messenger注册
@@ -441,5 +443,23 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         if (event != null) {
             viewModel.receiveStickyEvent(event);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        KLog.i(this.getLocalClassName()+" : onResume()");
+    }
+
+    @Override
+    protected void onPause() {
+        KLog.i(this.getLocalClassName()+" : onPause()");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        KLog.i(this.getLocalClassName()+" : onStop()");
+        super.onStop();
     }
 }

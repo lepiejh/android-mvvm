@@ -20,6 +20,7 @@ import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -130,6 +131,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
 
     @Override
     protected void onDestroy() {
+        KLog.i(this.getLocalClassName()+" : onDestroy()");
         super.onDestroy();
         //解除Messenger注册
         Messenger.getDefault().unregister(viewModel);
@@ -461,5 +463,23 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         if (event != null) {
             viewModel.receiveStickyEvent(event);
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        KLog.i(this.getLocalClassName()+" : onResume()");
+    }
+
+    @Override
+    protected void onPause() {
+        KLog.i(this.getLocalClassName()+" : onPause()");
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        KLog.i(this.getLocalClassName()+" : onStop()");
+        super.onStop();
     }
 }
