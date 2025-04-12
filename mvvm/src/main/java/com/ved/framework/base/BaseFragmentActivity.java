@@ -42,6 +42,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     protected VM viewModel;
     private int viewModelId;
     private MMLoading mmLoading;
+    private ImmersionBar mImmersionBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -69,12 +70,28 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     }
 
     /**
+     * 设置状态栏背景颜色
+     */
+    public void setStatusBarColor(int color){
+        if (statusBarColorDef()) {
+            mImmersionBar.statusBarColor(statusBarColor());
+        }
+    }
+
+    /**
+     * 设置状态栏字体的颜色
+     */
+    public void setStatusBarDarkFont(boolean blackFont){
+        mImmersionBar.statusBarDarkFont(blackFont);
+    }
+
+    /**
      * 初始化沉浸式状态栏
      */
     private ImmersionBar statusBarConfig() {
         //    private MaterialDialog dialog;
         //状态栏沉浸
-        ImmersionBar mImmersionBar = ImmersionBar.with(this);
+        mImmersionBar = ImmersionBar.with(this);
         mImmersionBar.statusBarDarkFont(statusBarDarkFont());   //默认状态栏字体颜色为黑色
         if (statusBarColorDef()) {
             mImmersionBar.statusBarColor(statusBarColor());

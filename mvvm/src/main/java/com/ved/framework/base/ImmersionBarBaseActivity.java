@@ -11,6 +11,7 @@ import com.gyf.immersionbar.ImmersionBar;
 import com.ved.framework.R;
 
 public class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeObserver.OnGlobalLayoutListener{
+    private ImmersionBar mImmersionBar;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -49,11 +50,27 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
     }
 
     /**
+     * 设置状态栏背景颜色
+     */
+    public void setStatusBarColor(int color){
+        if (statusBarColorDef()) {
+            mImmersionBar.statusBarColor(statusBarColor());
+        }
+    }
+
+    /**
+     * 设置状态栏字体的颜色
+     */
+    public void setStatusBarDarkFont(boolean blackFont){
+        mImmersionBar.statusBarDarkFont(blackFont);
+    }
+
+    /**
      * 初始化沉浸式状态栏
      */
     private ImmersionBar statusBarConfig() {
         //状态栏沉浸
-        ImmersionBar mImmersionBar = ImmersionBar.with(this);
+        mImmersionBar = ImmersionBar.with(this);
         mImmersionBar.statusBarDarkFont(statusBarDarkFont());   //默认状态栏字体颜色为黑色
         if (statusBarColorDef()) {
             mImmersionBar.statusBarColor(statusBarColor());
