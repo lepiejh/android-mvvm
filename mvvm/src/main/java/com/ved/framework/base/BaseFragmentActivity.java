@@ -74,7 +74,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
      */
     public void setStatusBarColor(int color){
         if (statusBarColorDef()) {
-            mImmersionBar.statusBarColor(color);
+            mImmersionBar.statusBarColor(color).init();
         }
     }
 
@@ -82,7 +82,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
      * 设置状态栏字体的颜色
      */
     public void setStatusBarDarkFont(boolean blackFont){
-        mImmersionBar.statusBarDarkFont(blackFont);
+        mImmersionBar.statusBarDarkFont(blackFont).init();
     }
 
     /**
