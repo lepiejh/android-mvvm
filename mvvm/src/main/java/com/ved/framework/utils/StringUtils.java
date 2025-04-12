@@ -76,7 +76,7 @@ public final class StringUtils {
         }
     }
 
-    public static double parseFloat(String s){
+    public static float parseFloat(String s){
         if (isSpace(s)){
             return 0.0f;
         }else {
