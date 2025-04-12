@@ -74,7 +74,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
      */
     public void setStatusBarColor(int color){
         if (statusBarColorDef()) {
-            mImmersionBar.statusBarColor(statusBarColor());
+            mImmersionBar.statusBarColor(color);
         }
     }
 

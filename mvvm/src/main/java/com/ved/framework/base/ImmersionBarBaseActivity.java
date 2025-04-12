@@ -54,7 +54,7 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
      */
     public void setStatusBarColor(int color){
         if (statusBarColorDef()) {
-            mImmersionBar.statusBarColor(statusBarColor());
+            mImmersionBar.statusBarColor(color);
         }
     }
 
