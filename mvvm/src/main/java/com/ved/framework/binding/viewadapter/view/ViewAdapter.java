@@ -12,7 +12,6 @@ import android.widget.TextView;
 
 import com.jakewharton.rxbinding4.view.RxView;
 import com.ved.framework.binding.command.BindingCommand;
-import com.ved.framework.entity.TouchCallBack;
 import com.ved.framework.listener.OnViewGlobalLayoutListener;
 import com.ved.framework.utils.CalendarUtil;
 import com.ved.framework.utils.CorpseUtils;
@@ -128,9 +127,9 @@ public class ViewAdapter {
     }
 
     @BindingAdapter({"onTouchCommand"})
-    public static void onTouchCommand(View view, final BindingCommand<TouchCallBack> onTouchCommand) {
+    public static void onTouchCommand(View view, final BindingCommand<MotionEvent> onTouchCommand) {
         RxView.touches(view).subscribe(motionEvent -> {
-            if (onTouchCommand != null) onTouchCommand.execute(new TouchCallBack(motionEvent,view));
+            if (onTouchCommand != null) onTouchCommand.execute(motionEvent);
         });
     }
 
