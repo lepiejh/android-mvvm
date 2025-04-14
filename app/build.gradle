@@ -1,7 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'maven-publish'
 
 android {
     compileSdkVersion 33
@@ -56,23 +55,4 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 //    implementation 'cn.carbs.android:ExpandableTextView:1.0.3'
-}
-
-// 配置发布信息
-publishing {
-    publications {
-        maven(MavenPublication) {
-            groupId = 'com.lad.plum'       // 自定义 groupId
-            artifactId = 'android-mvvm'    // 自定义 artifactId
-            version = '0.0.20'               // 版本号
-
-            // 如果是 Java/Kotlin 库
-//            from components.java
-
-            // 如果是 Android 库，需额外配置
-//             afterEvaluate {
-//                 from components.release
-//             }
-        }
-    }
 }
