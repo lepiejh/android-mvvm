@@ -88,7 +88,7 @@ class RetrofitClient {
                         .readTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                         .writeTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                         .connectionPool(new ConnectionPool(8, 15, TimeUnit.SECONDS))
-//                        .proxy(Proxy.NO_PROXY)
+                        .proxy(Proxy.NO_PROXY)
                         .build())
                 .addConverterFactory(GsonDConverterFactory.create(MyGson.getInstance().getGson()))
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
