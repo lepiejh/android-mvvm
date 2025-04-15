@@ -6,10 +6,12 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Request
+import org.json.JSONObject
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
 import java.util.*
@@ -179,6 +181,15 @@ object CorpseUtils {
                     KLog.i("Interceptor","Body (${contentType}): ${contentBytes.take(100)}... [truncated]")
                 }
             }
+        }
+    }
+
+    fun isStandardJson(jsonString: String): Boolean {
+        return try {
+            val json = JSONObject(jsonString)
+            json.length() == 3 && json.has("code") && json.has("msg") && json.has("data")
+        } catch (e: Exception) {
+            false
         }
     }
 }

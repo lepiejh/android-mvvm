@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.ved.framework.mode.EntityResponse;
 import com.ved.framework.utils.Configure;
+import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SPUtils;
@@ -44,13 +45,9 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
         } catch (ClassNotFoundException e) {
             KLog.e(e.getMessage());
         }
-        boolean hasCode = JsonPraise.hasKey(response,"code");
-        if (hasCode) {
-            String code = JsonPraise.optCode(response, "code");
-            hasCode = RegexUtils.isNumeric(code);
-        }
+        boolean isStandardJson = CorpseUtils.INSTANCE.isStandardJson(response);
         if (entityResponse == null) {
-            if (hasCode){
+            if (isStandardJson){
                 int code = StringUtils.parseInt(JsonPraise.optCode(response, "code"));
                 if (code == Configure.getCode()) {
                     JsonReader jsonReader = gson.newJsonReader(value.charStream());
@@ -69,7 +66,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                 return gson.fromJson(response, type);
             }
         } else {
-            if (hasCode){
+            if (isStandardJson){
                 Object result;
                 try {
                     result = gson.fromJson(response, entityResponse);
