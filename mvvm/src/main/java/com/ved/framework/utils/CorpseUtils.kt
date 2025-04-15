@@ -6,7 +6,6 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.google.gson.JsonSyntaxException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -152,7 +151,6 @@ object CorpseUtils {
     }
 
     fun inspectRequestBody(request: Request) {
-        KLog.i("Interceptor", "请求地址：| ${request.url}")
         val body = request.body ?: return
         // 复制一份 Buffer 以便多次读取
         val buffer = okio.Buffer()
