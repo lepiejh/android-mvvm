@@ -11,6 +11,10 @@ public final class RegexConstants {
      */
     public static final String REGEX_MOBILE_SIMPLE = "^[1][3-9]\\d{9}$";
     /**
+     * 正则：数字
+     */
+    public static final String REGEX_NUMBER = "-?\\d+(\\.\\d+)?";
+    /**
      * 正则：手机号（精确）
      * <p>移动：134(0-8)、135、136、137、138、139、147、150、151、152、157、158、159、178、182、183、184、187、188</p>
      * <p>联通：130、131、132、145、155、156、175、176、185、186</p>

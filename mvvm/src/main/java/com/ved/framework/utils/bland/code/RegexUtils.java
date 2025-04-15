@@ -32,6 +32,10 @@ public final class RegexUtils {
         return isMatch(RegexConstants.REGEX_MOBILE_SIMPLE, input);
     }
 
+    public static boolean isNumeric(final CharSequence input){
+        return isMatch(RegexConstants.REGEX_NUMBER, input);
+    }
+
     
     /**
      * Returns the domain part of a given Email address

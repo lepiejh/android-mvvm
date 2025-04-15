@@ -12,6 +12,7 @@ import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.StringUtils;
+import com.ved.framework.utils.bland.code.RegexUtils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -43,9 +44,13 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
         } catch (ClassNotFoundException e) {
             KLog.e(e.getMessage());
         }
-
+        boolean hasCode = JsonPraise.hasKey(response,"code");
+        if (hasCode) {
+            String code = JsonPraise.optCode(response, "code");
+            hasCode = RegexUtils.isNumeric(code);
+        }
         if (entityResponse == null) {
-            if (JsonPraise.hasKey(response,"code")){
+            if (hasCode){
                 int code = StringUtils.parseInt(JsonPraise.optCode(response, "code"));
                 if (code == Configure.getCode()) {
                     JsonReader jsonReader = gson.newJsonReader(value.charStream());
@@ -64,7 +69,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                 return gson.fromJson(response, type);
             }
         } else {
-            if (JsonPraise.hasKey(response,"code")){
+            if (hasCode){
                 Object result;
                 try {
                     result = gson.fromJson(response, entityResponse);
