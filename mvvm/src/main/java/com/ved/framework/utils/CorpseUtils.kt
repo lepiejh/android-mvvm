@@ -158,11 +158,9 @@ object CorpseUtils {
             KLog.e("Interceptor","Request has no body")
             return
         }
-
         try {
             val contentType = body.contentType()
             val contentString = body.toString()
-
             when {
                 // 如果是 JSON 类型
                 contentType?.subtype?.equals("json", ignoreCase = true) == true -> {
@@ -173,17 +171,14 @@ object CorpseUtils {
                         KLog.e("Interceptor","Could not parse as JSON: ${e.message}")
                     }
                 }
-
                 // 如果是表单数据
                 contentType?.subtype?.equals("x-www-form-urlencoded", ignoreCase = true) == true -> {
                     KLog.e("Interceptor","Form Data Request Body: $contentString")
                 }
-
                 // 如果是 multipart 数据
                 contentType?.subtype?.equals("multipart", ignoreCase = true) == true -> {
                     KLog.e("Interceptor","Multipart Request Body (not showing content)")
                 }
-
                 // 其他类型
                 else -> {
                     KLog.e("Interceptor","Other Request Body (${contentType}): $contentString")
