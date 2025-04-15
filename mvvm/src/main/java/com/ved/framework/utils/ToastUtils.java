@@ -349,10 +349,16 @@ public final class ToastUtils {
      * @param args   参数
      */
     public static void showLong(String format, Object... args) {
-        try {
-            show(format, Toast.LENGTH_LONG, args);
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (args.length == 0){
+            if (StringUtils.isNotEmpty(format)){
+                showLong(format);
+            }
+        }else {
+            try {
+                show(format, Toast.LENGTH_LONG, args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
