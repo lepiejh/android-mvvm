@@ -161,6 +161,7 @@ object CorpseUtils {
         try {
             val contentType = body.contentType()
             val contentString = body.toString()
+            KLog.e("Interceptor","contentString: $contentString")
             when {
                 // 如果是 JSON 类型
                 contentType?.subtype?.equals("json", ignoreCase = true) == true -> {
