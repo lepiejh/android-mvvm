@@ -5,6 +5,7 @@ import com.ved.framework.http.cookie.store.PersistentCookieStore;
 import com.ved.framework.http.interceptor.CacheInterceptor;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.Constant;
+import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.MyGson;
 import com.ved.framework.utils.StringUtils;
@@ -69,6 +70,7 @@ class RetrofitClient {
                             MediaType mediaType = response.body().contentType();
                             String content = response.body().string();
                             KLog.e("Interceptor", "请求地址：| " + request);
+                            CorpseUtils.INSTANCE.processRequestBody(request);
                             KLog.e("Interceptor", "请求体返回：| Response:" + content);
                             KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
                             if (StringUtils.isNotEmpty(content)) {
