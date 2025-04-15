@@ -150,7 +150,7 @@ object CorpseUtils {
     }
 
     fun inspectRequestBody(request: Request) {
-        KLog.e("Interceptor", "请求地址：| ${request.url}")
+        KLog.i("Interceptor", "请求地址：| ${request.url}")
         val body = request.body ?: return
         // 复制一份 Buffer 以便多次读取
         val buffer = okio.Buffer()
@@ -167,16 +167,16 @@ object CorpseUtils {
                     KLog.e("Interceptor","JSON Body: $jsonString")
                     try {
                         val jsonObject = JsonPraise.jsonToObj(jsonString, Any::class.java)
-                        KLog.e("Interceptor","Parsed JSON: $jsonObject")
+                        KLog.i("Interceptor","Parsed JSON: $jsonObject")
                     } catch (e: Exception) {
                         KLog.e("Interceptor","Failed to parse JSON: ${e.message}")
                     }
                 }
                 "x-www-form-urlencoded" -> {
-                    KLog.e("Interceptor","Form Data: ${contentBytes.decodeToString()}")
+                    KLog.i("Interceptor","Form Data: ${contentBytes.decodeToString()}")
                 }
                 else -> {
-                    KLog.e("Interceptor","Body (${contentType}): ${contentBytes.take(100)}... [truncated]")
+                    KLog.i("Interceptor","Body (${contentType}): ${contentBytes.take(100)}... [truncated]")
                 }
             }
         }
