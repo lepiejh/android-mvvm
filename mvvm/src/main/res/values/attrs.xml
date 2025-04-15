@@ -17,6 +17,7 @@
     <attr format="reference" name="onStartTrackingTouch"/>
     <attr format="reference" name="onStopTrackingTouch"/>
     <attr format="integer" name="inputType"/>
+    <attr format="string" name="digits"/>
     <attr format="integer" name="countThrottle"/>
     <attr format="boolean" name="isExpand"/>
     <attr format="float" name="expandSize"/>

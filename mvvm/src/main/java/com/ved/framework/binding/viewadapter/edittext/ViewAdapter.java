@@ -4,6 +4,7 @@ import android.content.Context;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
+import android.text.method.DigitsKeyListener;
 import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -11,6 +12,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.utils.StringUtils;
 
 import androidx.databinding.BindingAdapter;
 
@@ -81,6 +83,13 @@ public class ViewAdapter {
             }
             return false;
         });
+    }
+
+    @BindingAdapter(value = {"digits"}, requireAll = false)
+    public static void digitsCommand(EditText editView, final String digit){
+        if (StringUtils.isNotEmpty(digit)) {
+            editView.setKeyListener(DigitsKeyListener.getInstance(digit));
+        }
     }
 
     @BindingAdapter(value = {"inputType"}, requireAll = false)
