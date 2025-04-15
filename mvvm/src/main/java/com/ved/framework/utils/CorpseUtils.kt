@@ -3,20 +3,16 @@ package com.ved.framework.utils
 import android.graphics.Rect
 import android.location.Geocoder
 import android.os.Looper
-import android.text.SpannableStringBuilder
 import android.view.TouchDelegate
 import android.view.View
-import androidx.annotation.ColorInt
 import androidx.lifecycle.LifecycleCoroutineScope
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.IOException
+import okhttp3.Request
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
 import java.util.*
-import okhttp3.Request
 
 object CorpseUtils {
     fun remove(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
@@ -153,40 +149,36 @@ object CorpseUtils {
         // no op
     }
 
-    fun processRequestBody(request: Request) {
-        val body = request.body ?: run {
-            KLog.e("Interceptor","Request has no body")
-            return
-        }
-        try {
-            val contentType = body.contentType()
-            val contentString = body.toString()
-            KLog.e("Interceptor","contentString: $contentString")
-            when {
-                // 如果是 JSON 类型
-                contentType?.subtype?.equals("json", ignoreCase = true) == true -> {
+    fun inspectRequestBody(request: Request) {
+        KLog.e("Interceptor", "请求地址：| ${request.url}")
+        val body = request.body ?: return
+        // 复制一份 Buffer 以便多次读取
+        val buffer = okio.Buffer()
+        body.writeTo(buffer)
+        val contentBytes = buffer.readByteArray()
+        // 根据 Content-Type 处理
+        when (val contentType = body.contentType()) {
+            null -> {
+                KLog.e("Interceptor","Raw body (no content type): ${contentBytes.decodeToString()}")
+            }
+            else -> when (contentType.subtype.lowercase()) {
+                "json" -> {
+                    val jsonString = contentBytes.decodeToString()
+                    KLog.e("Interceptor","JSON Body: $jsonString")
                     try {
-                        val map = JsonPraise.jsonToObj(contentString, Map::class.java)
-                        KLog.e("Interceptor","Parsed JSON: $map")
+                        val jsonObject = JsonPraise.jsonToObj(jsonString, Any::class.java)
+                        KLog.e("Interceptor","Parsed JSON: $jsonObject")
                     } catch (e: Exception) {
-                        KLog.e("Interceptor","Could not parse as JSON: ${e.message}")
+                        KLog.e("Interceptor","Failed to parse JSON: ${e.message}")
                     }
                 }
-                // 如果是表单数据
-                contentType?.subtype?.equals("x-www-form-urlencoded", ignoreCase = true) == true -> {
-                    KLog.e("Interceptor","Form Data Request Body: $contentString")
+                "x-www-form-urlencoded" -> {
+                    KLog.e("Interceptor","Form Data: ${contentBytes.decodeToString()}")
                 }
-                // 如果是 multipart 数据
-                contentType?.subtype?.equals("multipart", ignoreCase = true) == true -> {
-                    KLog.e("Interceptor","Multipart Request Body (not showing content)")
-                }
-                // 其他类型
                 else -> {
-                    KLog.e("Interceptor","Other Request Body (${contentType}): $contentString")
+                    KLog.e("Interceptor","Body (${contentType}): ${contentBytes.take(100)}... [truncated]")
                 }
             }
-        } catch (e: IOException) {
-            KLog.e("Interceptor","Error reading request body: ${e.message}")
         }
     }
 }

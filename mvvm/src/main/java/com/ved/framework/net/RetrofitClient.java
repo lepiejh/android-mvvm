@@ -69,8 +69,7 @@ class RetrofitClient {
                             long duration = endTime - startTime;
                             MediaType mediaType = response.body().contentType();
                             String content = response.body().string();
-                            KLog.e("Interceptor", "请求地址：| " + request);
-                            CorpseUtils.INSTANCE.processRequestBody(request);
+                            CorpseUtils.INSTANCE.inspectRequestBody(request);
                             KLog.e("Interceptor", "请求体返回：| Response:" + content);
                             KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
                             if (StringUtils.isNotEmpty(content)) {
