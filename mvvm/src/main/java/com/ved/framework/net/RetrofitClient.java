@@ -1,14 +1,11 @@
 package com.ved.framework.net;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
 import com.ved.framework.http.cookie.CookieJarImpl;
 import com.ved.framework.http.cookie.store.PersistentCookieStore;
 import com.ved.framework.http.interceptor.CacheInterceptor;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.CorpseUtils;
-import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.MyGson;
 import com.ved.framework.utils.StringUtils;
