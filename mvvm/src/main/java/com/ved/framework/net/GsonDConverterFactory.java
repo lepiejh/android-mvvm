@@ -14,6 +14,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
@@ -44,8 +45,15 @@ final class GsonDConverterFactory extends Converter.Factory {
     }
 
     @Override public Converter < ?, RequestBody> requestBodyConverter(@NonNull Type type, @NonNull Annotation[] parameterAnnotations, @NonNull Annotation[] methodAnnotations, @NonNull Retrofit retrofit) {
-        TypeAdapter< ?> adapter = gson.getAdapter(TypeToken.get(type));
-        return new GsonRequestBodyConverter< >(gson, adapter);
+        if (type instanceof Class<?> && Map.class.isAssignableFrom((Class<?>) type)) {
+            return (Converter<Map<String, Object>, RequestBody>) value -> {
+                String json = gson.toJson(value);
+                return RequestBody.create(MediaType.parse("application/json"), json);
+            };
+        }else {
+            TypeAdapter< ?> adapter = gson.getAdapter(TypeToken.get(type));
+            return new GsonRequestBodyConverter< >(gson, adapter);
+        }
     }
 }
 
