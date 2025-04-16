@@ -1,12 +1,9 @@
 package com.ved.framework.net;
 
-import androidx.annotation.NonNull;
-
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
-import com.ved.framework.utils.KLog;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -15,8 +12,8 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 
+import androidx.annotation.NonNull;
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
@@ -46,17 +43,8 @@ final class GsonDConverterFactory extends Converter.Factory {
     }
 
     @Override public Converter < ?, RequestBody> requestBodyConverter(@NonNull Type type, @NonNull Annotation[] parameterAnnotations, @NonNull Annotation[] methodAnnotations, @NonNull Retrofit retrofit) {
-        boolean isMap = type instanceof Class<?> && Map.class.isAssignableFrom((Class<?>) type);
-        KLog.e("isMap : "+isMap);
-        if (isMap) {
-            return (Converter<Map<String, Object>, RequestBody>) value -> {
-                String json = gson.toJson(value);
-                return RequestBody.create(MediaType.parse("application/json"), json);
-            };
-        }else {
-            TypeAdapter< ?> adapter = gson.getAdapter(TypeToken.get(type));
-            return new GsonRequestBodyConverter< >(gson, adapter);
-        }
+        TypeAdapter< ?> adapter = gson.getAdapter(TypeToken.get(type));
+        return new GsonRequestBodyConverter< >(gson, adapter);
     }
 }
 
