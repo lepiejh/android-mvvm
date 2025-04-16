@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
+import com.ved.framework.utils.KLog;
 
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -45,7 +46,9 @@ final class GsonDConverterFactory extends Converter.Factory {
     }
 
     @Override public Converter < ?, RequestBody> requestBodyConverter(@NonNull Type type, @NonNull Annotation[] parameterAnnotations, @NonNull Annotation[] methodAnnotations, @NonNull Retrofit retrofit) {
-        if (type instanceof Class<?> && Map.class.isAssignableFrom((Class<?>) type)) {
+        boolean isMap = type instanceof Class<?> && Map.class.isAssignableFrom((Class<?>) type);
+        KLog.e("isMap : "+isMap);
+        if (isMap) {
             return (Converter<Map<String, Object>, RequestBody>) value -> {
                 String json = gson.toJson(value);
                 return RequestBody.create(MediaType.parse("application/json"), json);
