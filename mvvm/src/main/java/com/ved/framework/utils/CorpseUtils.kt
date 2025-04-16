@@ -165,12 +165,6 @@ object CorpseUtils {
                 "json" -> {
                     val jsonString = contentBytes.decodeToString()
                     KLog.e("Interceptor","JSON Body: $jsonString")
-                    try {
-                        val jsonObject = JsonPraise.jsonToObj(jsonString, Any::class.java)
-                        KLog.i("Interceptor","Parsed JSON: $jsonObject")
-                    } catch (e: Exception) {
-                        KLog.e("Interceptor","Failed to parse JSON: ${e.message}")
-                    }
                 }
                 "x-www-form-urlencoded" -> {
                     KLog.i("Interceptor","Form Data: ${contentBytes.decodeToString()}")
@@ -182,12 +176,10 @@ object CorpseUtils {
         }
     }
 
-    fun isStandardJson(jsonString: String): Boolean {
-        return try {
-            val json = JSONObject(jsonString)
-            json.length() == 3 && json.has("code") && json.has("msg") && json.has("data")
-        } catch (e: Exception) {
-            false
-        }
+    fun isStandardJson(jsonString: String) = try {
+        val json = JSONObject(jsonString)
+        json.length() == 3 && json.has("code") && json.has("msg") && json.has("data")
+    } catch (e: Exception) {
+        false
     }
 }
