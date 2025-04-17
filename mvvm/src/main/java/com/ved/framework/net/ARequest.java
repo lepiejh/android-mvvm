@@ -8,6 +8,7 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
 import com.ved.framework.utils.Utils;
@@ -100,7 +101,10 @@ public abstract class ARequest<T, K> {
                             .subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
+                if (view!= null && seatError != null) {
+                    seatError.onErrorView();
+                }
             }
         }
         return lifecycleDisposable;
@@ -208,7 +212,11 @@ public abstract class ARequest<T, K> {
                             .subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
+                if (iResponse != null) {
+                    iResponse.onError("连接服务器失败或其他异常");
+                }
+                exceptionHandling(activity, "连接服务器失败或其他异常", -2);
             }
         }
         return lifecycleDisposable;
