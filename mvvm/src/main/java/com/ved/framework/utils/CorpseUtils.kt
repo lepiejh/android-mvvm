@@ -37,10 +37,13 @@ object CorpseUtils {
         scope.cancel()
     }
 
-    fun delayedAction(viewModel: BaseViewModel<*>?,delayMillis: Long) {
-        viewModel?.mCoroutineScope?.launch {
+    /**
+     * 延时执行某个动作
+     */
+    fun BaseViewModel<*>.delayedAction(delayMillis: Long,action: () -> Unit) {
+        mCoroutineScope.launch {
             delay(delayMillis) // 协程的delay函数
-            viewModel.dismissDialog()
+            action.invoke()
         }
     }
 

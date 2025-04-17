@@ -8,7 +8,6 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
-import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
 import com.ved.framework.utils.Utils;
@@ -63,27 +62,22 @@ public abstract class ARequest<T, K> {
     @SuppressLint("CheckResult")
     public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel,@Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,View view,ISeatSuccess seatSuccess,ISeatError seatError,@Nullable IResponse<K> iResponse) {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
-        if (view!= null) {
-            seatSuccess.onStateView();
-        }
-        if (isLoading&&viewModel!=null)
-        {
-            viewModel.showDialog();
-        }
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
-            CorpseUtils.INSTANCE.delayedAction(viewModel,1000);
             if (iResponse != null) {
                 iResponse.onError("网络异常");
-                if (view != null) {
-                    //手机无网络
-                    seatSuccess.onNoNetworkView();
-                }
-                if (viewModel!=null)
-                {
-                    viewModel.dismissDialog();
-                }
+            }
+            if (view != null) {
+                //手机无网络
+                seatSuccess.onNoNetworkView();
             }
         } else {
+            if (view!= null) {
+                seatSuccess.onStateView();
+            }
+            if (isLoading&&viewModel!=null)
+            {
+                viewModel.showDialog();
+            }
             try {
                 final String[] msg = new String[1];
                 if (method != null) {
@@ -183,16 +177,15 @@ public abstract class ARequest<T, K> {
     @SuppressLint("CheckResult")
     public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
-        if (isLoading && viewModel != null) {
-            viewModel.showDialog();
-        }
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
-            CorpseUtils.INSTANCE.delayedAction(viewModel,1000);
             if (iResponse != null) {
                 iResponse.onError("网络异常");
             }
             exceptionHandling(activity, "网络异常", -1);
         } else {
+            if (isLoading && viewModel != null) {
+                viewModel.showDialog();
+            }
             try {
                 final String[] msg = new String[1];
                 if (method != null) {
