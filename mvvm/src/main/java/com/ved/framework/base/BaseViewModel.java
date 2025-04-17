@@ -12,6 +12,7 @@ import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
+import com.ved.framework.utils.CorpseUtils;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -25,6 +26,11 @@ import androidx.lifecycle.Observer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
+import kotlinx.coroutines.CoroutineScope;
+import kotlinx.coroutines.Dispatchers;
+
+import static kotlinx.coroutines.CoroutineScopeKt.CoroutineScope;
+import static kotlinx.coroutines.SupervisorKt.SupervisorJob;
 
 /**
  * Created by ved on 2017/6/15.
@@ -37,6 +43,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
     private Disposable mEventSubscription;
+    public CoroutineScope mCoroutineScope;
 
     public BaseViewModel(@NonNull Application application) {
         this(application, null);
@@ -46,6 +53,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         super(application);
         this.model = model;
         mCompositeDisposable = new CompositeDisposable();
+        mCoroutineScope = CorpseUtils.INSTANCE.getCoroutineScope();
     }
 
     protected void addSubscribe(Disposable disposable) {
@@ -284,6 +292,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     protected void onCleared() {
         super.onCleared();
         try {
+            CorpseUtils.INSTANCE.cancelCoroutineScope(mCoroutineScope);
             if (model != null) {
                 model.onCleared();
             }

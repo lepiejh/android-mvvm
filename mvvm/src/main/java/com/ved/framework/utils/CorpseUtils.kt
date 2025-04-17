@@ -6,9 +6,8 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import com.ved.framework.base.BaseViewModel
+import kotlinx.coroutines.*
 import okhttp3.Request
 import org.json.JSONObject
 import java.lang.reflect.InvocationHandler
@@ -29,6 +28,19 @@ object CorpseUtils {
             }
         } ?: kotlin.run {
             return ""
+        }
+    }
+
+    fun getCoroutineScope() = CoroutineScope(SupervisorJob() + Dispatchers.Main)
+
+    fun cancelCoroutineScope(scope: CoroutineScope){
+        scope.cancel()
+    }
+
+    fun delayedAction(viewModel: BaseViewModel<*>?,delayMillis: Long) {
+        viewModel?.mCoroutineScope?.launch {
+            delay(delayMillis) // 协程的delay函数
+            viewModel.dismissDialog()
         }
     }
 

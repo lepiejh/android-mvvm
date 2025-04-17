@@ -8,6 +8,7 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
+import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
 import com.ved.framework.utils.Utils;
@@ -59,7 +60,6 @@ public abstract class ARequest<T, K> {
         return request(isLoading,viewModel, method, service,view,seatSuccess,seatError,iResponse);
     }
 
-
     @SuppressLint("CheckResult")
     public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel,@Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,View view,ISeatSuccess seatSuccess,ISeatError seatError,@Nullable IResponse<K> iResponse) {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
@@ -70,14 +70,8 @@ public abstract class ARequest<T, K> {
         {
             viewModel.showDialog();
         }
-
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
-
-            if (viewModel!=null)
-            {
-                viewModel.dismissDialog();
-            }
-
+            CorpseUtils.INSTANCE.delayedAction(viewModel,1000);
             if (iResponse != null) {
                 iResponse.onError("网络异常");
                 if (view != null) {
@@ -193,9 +187,7 @@ public abstract class ARequest<T, K> {
             viewModel.showDialog();
         }
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
-            if (viewModel != null) {
-                viewModel.dismissDialog();
-            }
+            CorpseUtils.INSTANCE.delayedAction(viewModel,1000);
             if (iResponse != null) {
                 iResponse.onError("网络异常");
             }
