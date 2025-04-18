@@ -73,7 +73,6 @@ class RetrofitClient {
                             try {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
-                                KLog.e(e.getMessage());
                                 if (viewModel != null){
                                     viewModel.dismissDialog();
                                 }
