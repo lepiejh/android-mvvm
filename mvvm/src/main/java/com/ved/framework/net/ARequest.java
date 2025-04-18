@@ -92,20 +92,17 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    o.compose(RxUtils.schedulersTransformer());
-                    o.compose(observable -> observable
+                    o.compose(RxUtils.schedulersTransformer())
+                    .compose(observable -> observable
                             .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                 CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                                     parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
                                     return null;
                                 });
                                 return Observable.error(throwable);
-                            }));
-                    CorpseUtils.INSTANCE.retryWhen(o);
-                    o.takeUntil(lifecycleDisposable);
-                    o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
-                    o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
-                    o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                            }))
+                    .takeUntil(lifecycleDisposable)
+                    .subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                         parseSuccess(isLoading,viewModel,view, iResponse, response);
                         return null;
                     }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
@@ -215,20 +212,17 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    o.compose(RxUtils.schedulersTransformer());
-                    o.compose(observable -> observable
+                    o.compose(RxUtils.schedulersTransformer())
+                    .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                                             parseError(viewModel, isLoading,msg[0], iResponse);
                                             return null;
                                         });
                                         return Observable.error(throwable);
-                                    }));
-                    CorpseUtils.INSTANCE.retryWhen(o);
-                    o.takeUntil(lifecycleDisposable);
-                    o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
-                    o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
-                    o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                                    }))
+                    .takeUntil(lifecycleDisposable)
+                    .subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                         parseSuccess(viewModel, isLoading, iResponse, response);
                         return null;
                     }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
