@@ -193,7 +193,7 @@
  -keepclassmembers class com.ved.framework.** {
      public <methods>;
      protected <methods>;
-     <init>();
+     <init>(...);
  }
  # 只混淆private方法
  -keepclassmembers,allowshrinking,allowoptimization class com.ved.framework.** {
