@@ -1,5 +1,6 @@
 package com.ved.framework.net;
 
+import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.cookie.CookieJarImpl;
 import com.ved.framework.http.cookie.store.PersistentCookieStore;
 import com.ved.framework.http.interceptor.CacheInterceptor;
@@ -14,11 +15,14 @@ import com.ved.framework.utils.Utils;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.net.Proxy;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
@@ -26,6 +30,7 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.retrofiturlmanager.RetrofitUrlManager;
 import okhttp3.Cache;
 import okhttp3.ConnectionPool;
+import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -49,7 +54,7 @@ class RetrofitClient {
         return RetrofitClient.getInstance();
     }
 
-    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult) {
+    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult,@Nullable BaseViewModel viewModel,@Nullable IResponse<?> iResponse) {
         if (service == null) {
             throw new RuntimeException("Api service is null!");
         }
@@ -64,28 +69,43 @@ class RetrofitClient {
                         .addInterceptor(chain -> {
                             Request request = chain.request();
                             long startTime = System.currentTimeMillis();
-                            Response response = chain.proceed(chain.request());
-                            long endTime = System.currentTimeMillis();
-                            long duration = endTime - startTime;
-                            MediaType mediaType = response.body().contentType();
-                            String content = response.body().string();
-                            CorpseUtils.INSTANCE.inspectRequestBody(request);
-                            KLog.e("Interceptor", "请求体返回：| Response:" + content);
-                            KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
-                            if (StringUtils.isNotEmpty(content)) {
-                                try {
-                                    if (CorpseUtils.INSTANCE.isStandardJson(content)) {
-                                        JSONObject jsonObject = new JSONObject(content);
-                                        int code = jsonObject.optInt("code");
-                                        String message = jsonObject.optString("msg");
-                                        iResult.onInfoResult(message,code);
-                                    }
-                                }catch (Exception e)
-                                {
-                                    e.printStackTrace();
+                            Response response = null;
+                            try {
+                                response = chain.proceed(chain.request());
+                            } catch (IOException e) {
+                                KLog.e(e.getMessage());
+                                if (viewModel != null){
+                                    viewModel.dismissDialog();
+                                }
+                                if (iResponse != null){
+                                    iResponse.onError(e.getMessage());
                                 }
                             }
-                            return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
+                            if (response != null) {
+                                long endTime = System.currentTimeMillis();
+                                long duration = endTime - startTime;
+                                MediaType mediaType = response.body().contentType();
+                                String content = response.body().string();
+                                CorpseUtils.INSTANCE.inspectRequestBody(request);
+                                KLog.e("Interceptor", "请求体返回：| Response:" + content);
+                                KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
+                                if (StringUtils.isNotEmpty(content)) {
+                                    try {
+                                        if (CorpseUtils.INSTANCE.isStandardJson(content)) {
+                                            JSONObject jsonObject = new JSONObject(content);
+                                            int code = jsonObject.optInt("code");
+                                            String message = jsonObject.optString("msg");
+                                            iResult.onInfoResult(message,code);
+                                        }
+                                    }catch (Exception e)
+                                    {
+                                        e.printStackTrace();
+                                    }
+                                }
+                                return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
+                            }else {
+                                return null;
+                            }
                         }).addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
                         .connectTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                         .readTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
