@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.net.Proxy;
+import java.net.SocketException;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
@@ -76,7 +77,7 @@ class RetrofitClient {
                                         viewModel.dismissDialog();
                                     }
                                     if (iResponse != null){
-                                        iResponse.onError(e.getMessage());
+                                        iResponse.onError(e.getMessage(),e instanceof SocketException);
                                     }
                                     return null;
                                 });

@@ -5,5 +5,5 @@ import androidx.annotation.Nullable;
 public interface IResponse<T> {
     void onSuccess(@Nullable T t);
 
-    void onError(@Nullable String msg);
+    void onError(@Nullable String msg, boolean socketClosed);
 }

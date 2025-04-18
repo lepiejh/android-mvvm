@@ -64,7 +64,7 @@ public abstract class ARequest<T, K> {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
             if (iResponse != null) {
-                iResponse.onError("网络异常");
+                iResponse.onError("网络异常",false);
             }
             if (view != null) {
                 //手机无网络
@@ -139,7 +139,7 @@ public abstract class ARequest<T, K> {
             if (viewState!= null) {
                 seatError.onErrorView();
             }
-            iResponse.onError(msg);
+            iResponse.onError(msg,false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -162,14 +162,14 @@ public abstract class ARequest<T, K> {
                     seatError.onErrorHandler(resultException.getErrCode());
 
                     if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                        iResponse.onError(throwable.message);
+                        iResponse.onError(throwable.message,false);
                         seatError.onEmptyView();
                     } else {
-                        iResponse.onError(resultException.getErrMsg());
+                        iResponse.onError(resultException.getErrMsg(),false);
                         seatError.onEmptyView();
                     }
                 } else {
-                    iResponse.onError(throwable.message);
+                    iResponse.onError(throwable.message,false);
                     seatError.onEmptyView(throwable.message);
                 }
 
@@ -185,7 +185,7 @@ public abstract class ARequest<T, K> {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
             if (iResponse != null) {
-                iResponse.onError("网络异常");
+                iResponse.onError("网络异常",false);
             }
             exceptionHandling(activity, "网络异常", -1);
         } else {
@@ -219,7 +219,7 @@ public abstract class ARequest<T, K> {
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 if (iResponse != null) {
-                    iResponse.onError("连接服务器失败或其他异常");
+                    iResponse.onError("连接服务器失败或其他异常",false);
                 }
                 exceptionHandling(activity, "连接服务器失败或其他异常", -2);
             }
@@ -232,7 +232,7 @@ public abstract class ARequest<T, K> {
             if (viewModel != null) {
                 viewModel.dismissDialog();
             }
-            iResponse.onError(msg);
+            iResponse.onError(msg,false);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -258,12 +258,12 @@ public abstract class ARequest<T, K> {
                 ResultException resultException = (ResultException) throwable.getCause();
                 exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
                 if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                    iResponse.onError(throwable.message);
+                    iResponse.onError(throwable.message,false);
                 } else {
-                    iResponse.onError(resultException.getErrMsg());
+                    iResponse.onError(resultException.getErrMsg(),false);
                 }
             } else {
-                iResponse.onError(throwable.message);
+                iResponse.onError(throwable.message,false);
             }
         } catch (Exception e) {
             e.printStackTrace();
