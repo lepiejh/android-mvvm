@@ -6,9 +6,13 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
+import androidx.lifecycle.viewModelScope
 import com.ved.framework.base.BaseViewModel
 import io.reactivex.rxjava3.core.Observable
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Request
 import org.json.JSONObject
 import java.lang.reflect.InvocationHandler
@@ -34,17 +38,11 @@ object CorpseUtils {
         }
     }
 
-    fun getCoroutineScope() = CoroutineScope(SupervisorJob() + Dispatchers.Main)
-
-    fun cancelCoroutineScope(scope: CoroutineScope){
-        scope.cancel()
-    }
-
     /**
      * 延时执行某个动作
      */
     fun BaseViewModel<*>.delayedAction(delayMillis: Long,action: () -> Unit) {
-        mCoroutineScope.launch {
+        viewModelScope.launch {
             delay(delayMillis) // 协程的delay函数
             action.invoke()
         }
