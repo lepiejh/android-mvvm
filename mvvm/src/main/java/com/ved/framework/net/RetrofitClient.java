@@ -71,7 +71,15 @@ class RetrofitClient {
                             try {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
-                                CorpseUtils.INSTANCE.fetch(viewModel,iResponse,e.getMessage());
+                                CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                                    if (viewModel != null) {
+                                        viewModel.dismissDialog();
+                                    }
+                                    if (iResponse != null){
+                                        iResponse.onError(e.getMessage());
+                                    }
+                                    return null;
+                                });
                                 throw e; // 继续抛出，让 RxJava 的 onError 处理
                             }
                             long endTime = System.currentTimeMillis();

@@ -8,7 +8,6 @@ import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.viewModelScope
 import com.ved.framework.base.BaseViewModel
-import com.ved.framework.net.IResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,15 +43,6 @@ object CorpseUtils {
             ioAction?.invoke()
             withContext(Dispatchers.Main){
                 mainAction?.invoke()
-            }
-        }
-    }
-
-    fun fetch(viewModel: BaseViewModel<*>?, iResponse: IResponse<*>?, error:String?){
-        viewModel?.viewModelScope?.launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main){
-                viewModel.dismissDialog()
-                iResponse?.onError(error)
             }
         }
     }
