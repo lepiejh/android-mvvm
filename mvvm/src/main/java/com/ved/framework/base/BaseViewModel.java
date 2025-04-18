@@ -36,6 +36,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     private WeakReference<LifecycleProvider> lifecycle;
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
+    private CompositeDisposable mNetCompositeDisposable;
     private Disposable mEventSubscription;
 
     public BaseViewModel(@NonNull Application application) {
@@ -46,6 +47,14 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         super(application);
         this.model = model;
         mCompositeDisposable = new CompositeDisposable();
+        mNetCompositeDisposable = new CompositeDisposable();
+    }
+
+    public void addNetSubscribe(Disposable disposable) {
+        if (mNetCompositeDisposable == null) {
+            mNetCompositeDisposable = new CompositeDisposable();
+        }
+        mNetCompositeDisposable.add(disposable);
     }
 
     protected void addSubscribe(Disposable disposable) {
@@ -53,6 +62,13 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
             mCompositeDisposable = new CompositeDisposable();
         }
         mCompositeDisposable.add(disposable);
+    }
+
+    /**
+     * 判断请求是否已停止
+     */
+    public boolean isRequestStopped(){
+        return mNetCompositeDisposable.size() == 0;
     }
 
     @Override
@@ -289,6 +305,9 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
             }
             if (mCompositeDisposable != null) {
                 mCompositeDisposable.clear();
+            }
+            if (mNetCompositeDisposable != null) {
+                mNetCompositeDisposable.clear();
             }
         } catch (Exception e) {
             e.printStackTrace();
