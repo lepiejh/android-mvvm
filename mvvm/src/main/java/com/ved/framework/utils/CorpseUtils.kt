@@ -8,7 +8,6 @@ import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.viewModelScope
 import com.ved.framework.base.BaseViewModel
-import io.reactivex.rxjava3.core.Observable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -17,9 +16,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
-import java.net.SocketException
 import java.util.*
-import java.util.concurrent.TimeUnit
 
 object CorpseUtils {
     fun remove(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
@@ -135,21 +132,6 @@ object CorpseUtils {
      */
     fun isMainThread(): Boolean {
         return Looper.getMainLooper().thread == Thread.currentThread()
-    }
-
-    /**
-     * 失败后自动延迟重试
-     */
-    fun retryWhen(o : Observable<Any>?){
-        o?.retryWhen { errors ->
-            errors.flatMap { error ->
-                if (error is SocketException) {
-                    Observable.timer(1, TimeUnit.SECONDS) // 延迟 1 秒后重试
-                } else {
-                    Observable.error(error) // 其他错误直接抛出
-                }
-            }
-        }
     }
 
     /**

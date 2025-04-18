@@ -22,8 +22,6 @@ import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.PublishSubject;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 
 /**
  * 网络请求
@@ -104,7 +102,6 @@ public abstract class ARequest<T, K> {
                                 return Observable.error(throwable);
                             }));
                     o.takeUntil(lifecycleDisposable);
-                    CorpseUtils.INSTANCE.retryWhen(o);
                     o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
                     o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
                     o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
@@ -227,7 +224,6 @@ public abstract class ARequest<T, K> {
                                         return Observable.error(throwable);
                                     }));
                     o.takeUntil(lifecycleDisposable);
-                    CorpseUtils.INSTANCE.retryWhen(o);
                     o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
                     o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
                     o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
