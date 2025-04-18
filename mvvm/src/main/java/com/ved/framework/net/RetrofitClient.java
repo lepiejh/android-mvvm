@@ -14,6 +14,7 @@ import com.ved.framework.utils.Utils;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.net.Proxy;
 import java.util.Map;
@@ -65,7 +66,11 @@ class RetrofitClient {
                             Request request = chain.request();
                             long startTime = System.currentTimeMillis();
                             Response response;
-                            response = chain.proceed(chain.request());
+                            try {
+                                response = chain.proceed(chain.request());
+                            } catch (IOException e) {
+                                throw e; // 继续抛出，让 RxJava 的 onError 处理
+                            }
                             long endTime = System.currentTimeMillis();
                             long duration = endTime - startTime;
                             MediaType mediaType = response.body().contentType();
