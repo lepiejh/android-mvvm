@@ -16,7 +16,6 @@ import com.ved.framework.utils.Utils;
 import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
-import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
@@ -90,7 +89,7 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    Disposable disposable = o.compose(RxUtils.schedulersTransformer())
+                    o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                             .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                 parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
@@ -98,9 +97,6 @@ public abstract class ARequest<T, K> {
                             }))
                     .takeUntil(lifecycleDisposable)
                     .subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
-                    if (viewModel != null){
-                        viewModel.addNetSubscribe(disposable);
-                    }
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
@@ -204,7 +200,7 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    Disposable disposable = o.compose(RxUtils.schedulersTransformer())
+                    o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         parseError(viewModel, isLoading,msg[0], iResponse);
@@ -212,9 +208,6 @@ public abstract class ARequest<T, K> {
                                     }))
                     .takeUntil(lifecycleDisposable)
                     .subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
-                    if (viewModel != null){
-                        viewModel.addNetSubscribe(disposable);
-                    }
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
