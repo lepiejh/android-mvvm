@@ -19,6 +19,7 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
+import io.reactivex.rxjava3.subjects.Subject;
 
 /**
  * 网络请求
@@ -40,29 +41,29 @@ public abstract class ARequest<T, K> {
     /**
      * 可自定义code 封装处理    继承 ApiDisposableObserver
      */
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, @Nullable IResponse<K> iResponse) {
+    public Subject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, @Nullable IResponse<K> iResponse) {
         return request(activity, viewModel, service, method, 0, iResponse);
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, boolean isLoading, @Nullable IResponse<K> iResponse) {
+    public Subject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, boolean isLoading, @Nullable IResponse<K> iResponse) {
         return request(activity, viewModel, service, method, 0, isLoading, iResponse);
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, @Nullable IResponse<K> iResponse) {
+    public Subject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, @Nullable IResponse<K> iResponse) {
         return request(activity, viewModel, method, service,index,false,iResponse);
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, boolean isLoading, @Nullable IResponse<K> iResponse) {
+    public Subject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, boolean isLoading, @Nullable IResponse<K> iResponse) {
         return request(activity, viewModel, method, service,index,isLoading,iResponse);
     }
 
-    public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method,  View view,ISeatSuccess seatSuccess,ISeatError seatError, @Nullable IResponse<K> iResponse) {
+    public Subject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method,  View view,ISeatSuccess seatSuccess,ISeatError seatError, @Nullable IResponse<K> iResponse) {
         return request(isLoading,viewModel, method, service,view,seatSuccess,seatError,iResponse);
     }
 
     @SuppressLint("CheckResult")
-    public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel,@Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,View view,ISeatSuccess seatSuccess,ISeatError seatError,@Nullable IResponse<K> iResponse) {
-        PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
+    public Subject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel,@Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,View view,ISeatSuccess seatSuccess,ISeatError seatError,@Nullable IResponse<K> iResponse) {
+        Subject<Object> lifecycleDisposable = PublishSubject.create().toSerialized();
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
             if (iResponse != null) {
                 iResponse.onError("网络异常");
@@ -179,8 +180,8 @@ public abstract class ARequest<T, K> {
     }
 
     @SuppressLint("CheckResult")
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
-        PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
+    public Subject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
+        Subject<Object> lifecycleDisposable = PublishSubject.create().toSerialized();
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
             if (iResponse != null) {
                 iResponse.onError("网络异常");
