@@ -15,10 +15,12 @@ import com.ved.framework.utils.RxUtils;
 import com.ved.framework.utils.Utils;
 
 import androidx.annotation.Nullable;
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 import kotlin.Unit;
 import kotlin.jvm.functions.Function0;
@@ -95,11 +97,16 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer());
                     o.compose(observable -> observable
                             .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
+                                CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                                    parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
+                                    return null;
+                                });
                                 return Observable.error(throwable);
                             }));
                     o.takeUntil(lifecycleDisposable);
                     CorpseUtils.INSTANCE.retryWhen(o);
+                    o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
+                    o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
                     o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                         parseSuccess(isLoading,viewModel,view, iResponse, response);
                         return null;
@@ -213,11 +220,16 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer());
                     o.compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                        parseError(viewModel, isLoading,msg[0], iResponse);
+                                        CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                                            parseError(viewModel, isLoading,msg[0], iResponse);
+                                            return null;
+                                        });
                                         return Observable.error(throwable);
                                     }));
                     o.takeUntil(lifecycleDisposable);
                     CorpseUtils.INSTANCE.retryWhen(o);
+                    o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
+                    o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
                     o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
                         parseSuccess(viewModel, isLoading, iResponse, response);
                         return null;
