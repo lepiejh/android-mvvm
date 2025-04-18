@@ -39,19 +39,10 @@ object CorpseUtils {
      * 线程切换
      */
     fun fetch(viewModel: BaseViewModel<*>?,ioAction: (() -> Unit)?,mainAction: (() -> Unit)?){
-        if (isMainThread()){
-            mainAction?.invoke()
-            if (viewModel != null && ioAction != null){
-                viewModel.viewModelScope.launch(Dispatchers.IO) {
-                    ioAction.invoke()
-                }
-            }
-        }else{
-            viewModel?.viewModelScope?.launch(Dispatchers.IO) {
-                ioAction?.invoke()
-                withContext(Dispatchers.Main){
-                    mainAction?.invoke()
-                }
+        viewModel?.viewModelScope?.launch(Dispatchers.IO) {
+            ioAction?.invoke()
+            withContext(Dispatchers.Main){
+                mainAction?.invoke()
             }
         }
     }

@@ -8,7 +8,6 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
-import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
@@ -93,20 +92,11 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                             .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                                    parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
-                                    return null;
-                                });
+                                parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
                                 return Observable.error(throwable);
                             }))
                     .takeUntil(lifecycleDisposable)
-                    .subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                        parseSuccess(isLoading,viewModel,view, iResponse, response);
-                        return null;
-                    }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                        parseError( isLoading,viewModel,view,seatError, iResponse, throwable);
-                        return null;
-                    }));
+                    .subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
@@ -213,20 +203,11 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                        CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                                            parseError(viewModel, isLoading,msg[0], iResponse);
-                                            return null;
-                                        });
+                                        parseError(viewModel, isLoading,msg[0], iResponse);
                                         return Observable.error(throwable);
                                     }))
                     .takeUntil(lifecycleDisposable)
-                    .subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                        parseSuccess(viewModel, isLoading, iResponse, response);
-                        return null;
-                    }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
-                        parseError(viewModel, isLoading, iResponse, throwable, activity);
-                        return null;
-                    }));
+                    .subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
