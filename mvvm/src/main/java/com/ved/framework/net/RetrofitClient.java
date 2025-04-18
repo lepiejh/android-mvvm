@@ -1,5 +1,6 @@
 package com.ved.framework.net;
 
+import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.cookie.CookieJarImpl;
 import com.ved.framework.http.cookie.store.PersistentCookieStore;
 import com.ved.framework.http.interceptor.CacheInterceptor;
@@ -20,6 +21,7 @@ import java.net.Proxy;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
@@ -50,7 +52,7 @@ class RetrofitClient {
         return RetrofitClient.getInstance();
     }
 
-    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult) {
+    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult, @Nullable BaseViewModel viewModel, @Nullable IResponse<?> iResponse) {
         if (service == null) {
             throw new RuntimeException("Api service is null!");
         }
@@ -69,6 +71,7 @@ class RetrofitClient {
                             try {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
+                                CorpseUtils.INSTANCE.fetch(viewModel,iResponse,e.getMessage());
                                 throw e; // 继续抛出，让 RxJava 的 onError 处理
                             }
                             long endTime = System.currentTimeMillis();

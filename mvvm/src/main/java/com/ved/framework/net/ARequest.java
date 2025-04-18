@@ -85,7 +85,7 @@ public abstract class ARequest<T, K> {
                         {
                             msg[0] =message;
                         }
-                    }));
+                    },viewModel,iResponse));
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
@@ -196,7 +196,7 @@ public abstract class ARequest<T, K> {
                         {
                             msg[0] =message;
                         }
-                    }));
+                    },viewModel,iResponse));
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
