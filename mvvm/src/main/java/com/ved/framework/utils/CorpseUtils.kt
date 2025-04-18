@@ -51,8 +51,8 @@ object CorpseUtils {
     fun fetch(viewModel: BaseViewModel<*>?, iResponse: IResponse<*>?, error:String?){
         viewModel?.viewModelScope?.launch(Dispatchers.IO) {
             withContext(Dispatchers.Main){
-                viewModel.dismissDialog()
-                iResponse?.onError(error)
+//                viewModel.dismissDialog()
+//                iResponse?.onError(error)
             }
         }
     }
