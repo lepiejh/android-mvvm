@@ -39,6 +39,18 @@ object CorpseUtils {
     }
 
     /**
+     * 线程切换
+     */
+    fun fetch(viewModel: BaseViewModel<*>?,ioAction: (() -> Unit)?,mainAction: (() -> Unit)?){
+        viewModel?.viewModelScope?.launch(Dispatchers.IO) {
+            ioAction?.invoke()
+            withContext(Dispatchers.Main){
+                mainAction?.invoke()
+            }
+        }
+    }
+
+    /**
      * 延时执行某个动作
      */
     fun BaseViewModel<*>.delayedAction(delayMillis: Long,action: () -> Unit) {

@@ -20,6 +20,8 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * 网络请求
@@ -98,7 +100,13 @@ public abstract class ARequest<T, K> {
                             }));
                     o.takeUntil(lifecycleDisposable);
                     CorpseUtils.INSTANCE.retryWhen(o);
-                    o.subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
+                    o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                        parseSuccess(isLoading,viewModel,view, iResponse, response);
+                        return null;
+                    }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                        parseError( isLoading,viewModel,view,seatError, iResponse, throwable);
+                        return null;
+                    }));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
@@ -210,7 +218,13 @@ public abstract class ARequest<T, K> {
                                     }));
                     o.takeUntil(lifecycleDisposable);
                     CorpseUtils.INSTANCE.retryWhen(o);
-                    o.subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
+                    o.subscribe((Consumer<K>) response -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                        parseSuccess(viewModel, isLoading, iResponse, response);
+                        return null;
+                    }),(Consumer<ResponseThrowable>) throwable -> CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                        parseError(viewModel, isLoading, iResponse, throwable, activity);
+                        return null;
+                    }));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
