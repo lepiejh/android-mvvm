@@ -74,12 +74,12 @@ class RetrofitClient {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
                                 KLog.e(e.getMessage());
-                                /*if (viewModel != null){
+                                if (viewModel != null){
                                     viewModel.dismissDialog();
                                 }
                                 if (iResponse != null){
                                     iResponse.onError(e.getMessage());
-                                }*/
+                                }
                                 throw e; // 继续抛出，让 RxJava 的 onError 处理
                             }
                             long endTime = System.currentTimeMillis();
