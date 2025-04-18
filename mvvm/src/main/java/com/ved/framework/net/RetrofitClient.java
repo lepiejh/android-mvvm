@@ -1,6 +1,5 @@
 package com.ved.framework.net;
 
-import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.cookie.CookieJarImpl;
 import com.ved.framework.http.cookie.store.PersistentCookieStore;
 import com.ved.framework.http.interceptor.CacheInterceptor;
@@ -15,14 +14,11 @@ import com.ved.framework.utils.Utils;
 import org.json.JSONObject;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.ObjectStreamException;
 import java.net.Proxy;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Observer;
@@ -30,7 +26,6 @@ import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.retrofiturlmanager.RetrofitUrlManager;
 import okhttp3.Cache;
 import okhttp3.ConnectionPool;
-import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -54,7 +49,7 @@ class RetrofitClient {
         return RetrofitClient.getInstance();
     }
 
-    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult,@Nullable BaseViewModel viewModel,@Nullable IResponse<?> iResponse) {
+    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult) {
         if (service == null) {
             throw new RuntimeException("Api service is null!");
         }
@@ -70,12 +65,7 @@ class RetrofitClient {
                             Request request = chain.request();
                             long startTime = System.currentTimeMillis();
                             Response response;
-                            try {
-                                response = chain.proceed(chain.request());
-                            } catch (IOException e) {
-                                CorpseUtils.INSTANCE.fetch(viewModel,iResponse,e.getMessage());
-                                throw e; // 继续抛出，让 RxJava 的 onError 处理
-                            }
+                            response = chain.proceed(chain.request());
                             long endTime = System.currentTimeMillis();
                             long duration = endTime - startTime;
                             MediaType mediaType = response.body().contentType();

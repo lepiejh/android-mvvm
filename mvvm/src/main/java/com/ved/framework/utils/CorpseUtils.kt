@@ -6,9 +6,7 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.viewModelScope
 import com.ved.framework.base.BaseViewModel
-import com.ved.framework.net.IResponse
 import kotlinx.coroutines.*
 import okhttp3.Request
 import org.json.JSONObject
@@ -115,15 +113,6 @@ object CorpseUtils {
      */
     fun isMainThread(): Boolean {
         return Looper.getMainLooper().thread == Thread.currentThread()
-    }
-
-    fun fetch(viewModel: BaseViewModel<*>?,iResponse: IResponse<*>?,error:String?){
-        viewModel?.viewModelScope?.launch(Dispatchers.IO) {
-            withContext(Dispatchers.Main){
-                viewModel.dismissDialog()
-                iResponse?.onError(error)
-            }
-        }
     }
 
     /**
