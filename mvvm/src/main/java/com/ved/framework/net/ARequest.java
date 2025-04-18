@@ -101,6 +101,7 @@ public abstract class ARequest<T, K> {
                                 });
                                 return Observable.error(throwable);
                             }));
+                    CorpseUtils.INSTANCE.retryWhen(o);
                     o.takeUntil(lifecycleDisposable);
                     o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
                     o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
@@ -223,6 +224,7 @@ public abstract class ARequest<T, K> {
                                         });
                                         return Observable.error(throwable);
                                     }));
+                    CorpseUtils.INSTANCE.retryWhen(o);
                     o.takeUntil(lifecycleDisposable);
                     o.subscribeOn(Schedulers.io());                // 在IO线程执行网络请求
                     o.observeOn(AndroidSchedulers.mainThread());  // 在主线程处理结果
