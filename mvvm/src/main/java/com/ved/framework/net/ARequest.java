@@ -8,6 +8,7 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
+import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
@@ -30,7 +31,7 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
  * val lifecycleDisposable = PublishSubject.create<Unit>()
  *
  * 当需要取消时
- * lifecycleDisposable.onNext(Unit)
+ * lifecycleDisposable.onNext(Unit) 取消网络请求后需要 延时 1 秒再重新请求 才能生效，可能是由于 请求取消后资源未完全释放 或 OkHttp 连接池未及时清理
  *
  */
 public abstract class ARequest<T, K> {
@@ -89,14 +90,15 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    o.compose(RxUtils.schedulersTransformer())
-                            .compose(observable -> observable
-                                    .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                        parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
-                                        return Observable.error(throwable);
-                                    }))
-                            .takeUntil(lifecycleDisposable)
-                            .subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
+                    o.compose(RxUtils.schedulersTransformer());
+                    o.compose(observable -> observable
+                            .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
+                                parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
+                                return Observable.error(throwable);
+                            }));
+                    o.takeUntil(lifecycleDisposable);
+                    CorpseUtils.INSTANCE.retryWhen(o);
+                    o.subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
@@ -200,14 +202,15 @@ public abstract class ARequest<T, K> {
                     if (viewModel != null) {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
-                    o.compose(RxUtils.schedulersTransformer())
-                            .compose(observable -> observable
+                    o.compose(RxUtils.schedulersTransformer());
+                    o.compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         parseError(viewModel, isLoading,msg[0], iResponse);
                                         return Observable.error(throwable);
-                                    }))
-                            .takeUntil(lifecycleDisposable)
-                            .subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
+                                    }));
+                    o.takeUntil(lifecycleDisposable);
+                    CorpseUtils.INSTANCE.retryWhen(o);
+                    o.subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
