@@ -69,43 +69,40 @@ class RetrofitClient {
                         .addInterceptor(chain -> {
                             Request request = chain.request();
                             long startTime = System.currentTimeMillis();
-                            Response response = null;
+                            Response response;
                             try {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
                                 KLog.e(e.getMessage());
-                                if (viewModel != null){
+                                /*if (viewModel != null){
                                     viewModel.dismissDialog();
                                 }
                                 if (iResponse != null){
                                     iResponse.onError(e.getMessage());
-                                }
+                                }*/
+                                throw e; // 继续抛出，让 RxJava 的 onError 处理
                             }
-                            if (response != null) {
-                                long endTime = System.currentTimeMillis();
-                                long duration = endTime - startTime;
-                                MediaType mediaType = response.body().contentType();
-                                String content = response.body().string();
-                                CorpseUtils.INSTANCE.inspectRequestBody(request);
-                                KLog.e("Interceptor", "请求体返回：| Response:" + content);
-                                KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
-                                if (StringUtils.isNotEmpty(content)) {
-                                    try {
-                                        if (CorpseUtils.INSTANCE.isStandardJson(content)) {
-                                            JSONObject jsonObject = new JSONObject(content);
-                                            int code = jsonObject.optInt("code");
-                                            String message = jsonObject.optString("msg");
-                                            iResult.onInfoResult(message,code);
-                                        }
-                                    }catch (Exception e)
-                                    {
-                                        e.printStackTrace();
+                            long endTime = System.currentTimeMillis();
+                            long duration = endTime - startTime;
+                            MediaType mediaType = response.body().contentType();
+                            String content = response.body().string();
+                            CorpseUtils.INSTANCE.inspectRequestBody(request);
+                            KLog.e("Interceptor", "请求体返回：| Response:" + content);
+                            KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
+                            if (StringUtils.isNotEmpty(content)) {
+                                try {
+                                    if (CorpseUtils.INSTANCE.isStandardJson(content)) {
+                                        JSONObject jsonObject = new JSONObject(content);
+                                        int code = jsonObject.optInt("code");
+                                        String message = jsonObject.optString("msg");
+                                        iResult.onInfoResult(message,code);
                                     }
+                                }catch (Exception e)
+                                {
+                                    e.printStackTrace();
                                 }
-                                return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
-                            }else {
-                                return null;
                             }
+                            return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
                         }).addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
                         .connectTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                         .readTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
