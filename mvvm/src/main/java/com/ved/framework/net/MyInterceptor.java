@@ -2,16 +2,11 @@ package com.ved.framework.net;
 
 import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.StringUtils;
-import com.ved.framework.utils.bland.code.DeviceUtils;
-
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-
 import androidx.annotation.NonNull;
-import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -38,27 +33,6 @@ class MyInterceptor implements Interceptor {
         String token = SPUtils.getInstance().getString("token");
         if (StringUtils.isNotEmpty(token)){
             builder.addHeader("token", token);
-        }
-
-        List<String> headerValues = request.headers("url_name");
-        if (headerValues.size() > 0) {
-            String headerValue = headerValues.get(0);
-            HttpUrl oldHttpUrl = request.url();
-            HttpUrl newBaseUrl;
-            if("weixin".equals(headerValue)) {
-                newBaseUrl = HttpUrl.parse("https://api.weixin.qq.com/sns/oauth2/");
-            }else{
-                newBaseUrl = oldHttpUrl;
-            }
-            if (newBaseUrl != null) {
-                HttpUrl newFullUrl = oldHttpUrl
-                        .newBuilder()
-                        .scheme(newBaseUrl.scheme())
-                        .host(newBaseUrl.host())
-                        .port(newBaseUrl.port())
-                        .build();
-                builder = builder.url(newFullUrl);
-            }
         }
         request = builder.build();
         Response r = chain.proceed(request);
