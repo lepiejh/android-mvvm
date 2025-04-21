@@ -164,13 +164,7 @@ object CorpseUtils {
         }
     }
 
-    inline fun <reified T : Any> noOpDelegate(): T {
-        val javaClass = T::class.java
-        return Proxy.newProxyInstance(
-            javaClass.classLoader, arrayOf(javaClass)
-        ) { _, _, _ ->
-        } as T
-    }
+    inline fun <reified T : Any> noOpDelegate(): T = T::class.java.let { Proxy.newProxyInstance(it.classLoader,arrayOf(it)){ _, _, _ -> } as T }
 
     fun inspectRequestBody(request: Request) {
         val body = request.body ?: return
