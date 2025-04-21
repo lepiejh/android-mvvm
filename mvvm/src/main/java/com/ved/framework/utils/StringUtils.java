@@ -131,7 +131,7 @@ public final class StringUtils {
         return parseDouble(parseStr(o));
     }
 
-    public static double parseFloat(Object o){
+    public static float parseFloat(Object o){
         return parseFloat(parseStr(o));
     }
 
