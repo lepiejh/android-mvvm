@@ -13,7 +13,9 @@ import android.view.animation.CycleInterpolator;
 import android.view.animation.TranslateAnimation;
 
 import com.ved.framework.R;
+import com.ved.framework.utils.DisplayUtil;
 import com.ved.framework.utils.UIUtils;
+import com.ved.framework.utils.Utils;
 
 /**
  * Created by Cheng Bao on 2015/6/17.
@@ -60,14 +62,15 @@ public class ClearEditText extends androidx.appcompat.widget.AppCompatEditText i
     public boolean onTouchEvent(MotionEvent event) {
 
         if (mClearDrawable != null && event.getAction() == MotionEvent.ACTION_UP) {
+            int padding = DisplayUtil.dip2px(Utils.getContext(),20f);
             int x = (int) event.getX();
             //判断触摸点是否在水平范围内
-            boolean isInnerWidth = (x > (getWidth() - getTotalPaddingRight())) &&
-                    (x < (getWidth() - getPaddingRight()));
+            boolean isInnerWidth = (x > (getWidth() - getTotalPaddingRight() - padding)) &&
+                    (x < (getWidth() - getPaddingRight() + padding));
             //获取删除图标的边界，返回一个Rect对象
             Rect rect = mClearDrawable.getBounds();
             //获取删除图标的高度
-            int height = rect.height();
+            int height = rect.height() + padding;
             int y = (int) event.getY();
             //计算图标底部到控件底部的距离
             int distance = (getHeight() - height) / 2;
