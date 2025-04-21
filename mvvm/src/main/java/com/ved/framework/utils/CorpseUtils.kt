@@ -151,15 +151,16 @@ object CorpseUtils {
      *
      * @param expandSize 扩大的大小，单位px
      */
-    fun View.expandTouchView(expandSize: Int = DisplayUtil.dip2px(Utils.getContext(),10f)) {
+    fun View.expandTouchView(expandSize: Float = 10f) {
         val parentView = (parent as? View)
+        val size = DisplayUtil.dip2px(Utils.getContext(),expandSize)
         parentView?.post {
             val rect = Rect()
             getHitRect(rect) //getHitRect(rect)将视图在父容器中所占据的区域存储到rect中。
-            rect.left -= expandSize
-            rect.top -= expandSize
-            rect.right += expandSize
-            rect.bottom += expandSize
+            rect.left -= size
+            rect.top -= size
+            rect.right += size
+            rect.bottom += size
             parentView.touchDelegate = TouchDelegate(rect, this)
         }
     }

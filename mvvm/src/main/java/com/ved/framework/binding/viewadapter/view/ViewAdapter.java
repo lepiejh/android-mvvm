@@ -39,9 +39,9 @@ public class ViewAdapter {
     public static void onClickCommand(View view, final BindingCommand<Void> clickCommand, final boolean isThrottleFirst,int countThrottle,boolean isExpand,float expandSize) {
         if (isExpand){
             if (StringUtils.parseFloat(expandSize) == 0f){
-                CorpseUtils.INSTANCE.expandTouchView(view, DisplayUtil.dip2px(Utils.getContext(),10f));
+                CorpseUtils.INSTANCE.expandTouchView(view,10f);
             }else {
-                CorpseUtils.INSTANCE.expandTouchView(view,DisplayUtil.dip2px(Utils.getContext(),expandSize));
+                CorpseUtils.INSTANCE.expandTouchView(view,expandSize);
             }
         }
         if (isThrottleFirst) {
