@@ -62,7 +62,7 @@ public class ClearEditText extends androidx.appcompat.widget.AppCompatEditText i
     public boolean onTouchEvent(MotionEvent event) {
 
         if (mClearDrawable != null && event.getAction() == MotionEvent.ACTION_UP) {
-            int padding = DisplayUtil.dip2px(Utils.getContext(),20f);
+            int padding = DisplayUtil.dip2px(Utils.getContext(),10f);
             int x = (int) event.getX();
             //判断触摸点是否在水平范围内
             boolean isInnerWidth = (x > (getWidth() - getTotalPaddingRight() - padding)) &&
