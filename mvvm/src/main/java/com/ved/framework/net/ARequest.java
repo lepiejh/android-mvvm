@@ -211,16 +211,16 @@ public abstract class ARequest<T, K> {
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
-                if (isLoading && viewModel != null){
-                    CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                    if (isLoading && viewModel != null){
                         viewModel.dismissDialog();
-                        return null;
-                    });
-                }
-                if (iResponse != null) {
-                    iResponse.onError("连接服务器失败或其他异常",false);
-                }
-                exceptionHandling(activity, "连接服务器失败或其他异常", -2);
+                    }
+                    if (iResponse != null) {
+                        iResponse.onError("连接服务器失败或其他异常",false);
+                    }
+                    exceptionHandling(activity, "连接服务器失败或其他异常", -2);
+                    return null;
+                });
             }
         }
         return lifecycleDisposable;
