@@ -22,18 +22,6 @@ object CorpseUtils {
 
     fun bytesToHex(s: String?): String? = StringUtils.bytesToHex(s?.toByteArray(Charsets.UTF_8))
 
-    fun first(s:String?) : String{
-        s?.let {
-            if (it.contains(".")){
-                return it.split(".")[0]
-            }else{
-                return it
-            }
-        } ?: kotlin.run {
-            return ""
-        }
-    }
-
     /**
      * 线程切换
      */
@@ -105,16 +93,6 @@ object CorpseUtils {
             }
         }
         return count
-    }
-
-    fun split(s:String) : Int{
-        val str = s.split(".")
-        val ss = str.getOrNull(1)
-        return if (ss?.isNotEmpty() == true){
-            ss.length
-        }else{
-            0
-        }
     }
 
     /**

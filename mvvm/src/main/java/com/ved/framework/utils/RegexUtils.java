@@ -199,14 +199,6 @@ public final class RegexUtils {
         return Pattern.compile(regex).matcher(input).replaceAll(replacement);
     }
 
-    public static boolean isPassword(String password){
-        return com.ved.framework.utils.RegexUtils.isMatch("^[0-9a-zA-Z_]{"+ Configure.getForm()+","+ Configure.getTo()+"}$",password);
-    }
-
-    public static boolean isAuth(String code){
-        return com.ved.framework.utils.RegexUtils.isMatch("\\d{"+ Configure.getAuthNumber()+"}$",code);
-    }
-
     /**
      * 验证Email
      *

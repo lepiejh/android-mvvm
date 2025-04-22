@@ -24,7 +24,8 @@ public final class Utils {
      *
      * @param context 上下文
      */
-    public static void init(@NonNull final Application context) {
+    public static void init(@NonNull final Application context,@NonNull final String packageName) {
+        Configure.setPackageName(packageName);
         Utils.context = context.getApplicationContext();
         com.ved.framework.utils.bland.code.Utils.init(context);
     }

@@ -52,18 +52,20 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
     void init(Application app)  {
         app.registerActivityLifecycleCallbacks(this);
         try {
-            Field urlField = ReflectUtil.getAccessibleField(app.getPackageName()+".BuildConfig","BASE_URL");
+            Field urlField = ReflectUtil.getAccessibleField(Configure.getPackageName()+".BuildConfig","BASE_URL");
             if (urlField != null){
                 Object urlObject = urlField.get(0);
                 if (urlObject != null) {
-                    Field urlCodeField = ReflectUtil.getAccessibleField(app.getPackageName()+".BuildConfig","BASE_URL_CODE");
+                    Field urlCodeField = ReflectUtil.getAccessibleField(Configure.getPackageName()+".BuildConfig","BASE_URL_CODE");
                     if (urlCodeField != null){
                         Object urlCodeObject = urlCodeField.get(0);
                         if (urlCodeObject != null){
-                            Configure.setUrl("", (int) urlCodeObject, (String) urlObject);
+                            Configure.setUrl((String) urlObject);
+                            Configure.setCode((int) urlCodeObject);
                         }
                     }else {
-                        Configure.setUrl("", 0, (String) urlObject);
+                        Configure.setUrl((String) urlObject);
+                        Configure.setCode(0);
                     }
                 }
             }
@@ -71,7 +73,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             KLog.e(e.getMessage());
         }
         try {
-            Field logField = ReflectUtil.getAccessibleField(app.getPackageName()+".BuildConfig","DEBUG");
+            Field logField = ReflectUtil.getAccessibleField(Configure.getPackageName()+".BuildConfig","DEBUG");
             if (logField != null) {
                 Object logObject = logField.get(0);
                 if (logObject != null) {

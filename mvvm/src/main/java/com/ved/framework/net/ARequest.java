@@ -8,6 +8,7 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
+import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
@@ -19,6 +20,8 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 /**
  * 网络请求
@@ -110,24 +113,22 @@ public abstract class ARequest<T, K> {
 
 
     private void parseSuccess(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState, IResponse<K> iResponse, K response) {
-        try {
-            if (viewState!= null) {
-                viewState.setVisibility(View.GONE);
-            }
-            if (viewModel!=null)
-            {
-                viewModel.dismissDialog();
-            }
+        if (viewState!= null) {
+            viewState.setVisibility(View.GONE);
+        }
+        if (isLoading && viewModel!=null)
+        {
+            viewModel.dismissDialog();
+        }
+        if (iResponse != null) {
             iResponse.onSuccess(response);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState,ISeatError seatError,String msg,IResponse<K> iResponse) {
 
         try {
-            if (viewModel!=null)
+            if (isLoading && viewModel!=null)
             {
                 viewModel.dismissDialog();
             }
@@ -142,38 +143,37 @@ public abstract class ARequest<T, K> {
     }
 
     private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState,ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable) {
-
-        try {
-            if (viewModel!=null)
-            {
-                viewModel.dismissDialog();
-            }
-
-            if (viewState!= null) {
-                seatError.onErrorView();
-                if (throwable.getCause() instanceof ResultException)
-                {
-                    ResultException resultException = (ResultException) throwable.getCause();
-                    seatError.onErrorView();
-                    seatError.onErrorHandler(resultException.getErrCode());
-
-                    if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                        iResponse.onError(throwable.message,false);
-                        seatError.onEmptyView();
-                    } else {
-                        iResponse.onError(resultException.getErrMsg(),false);
-                        seatError.onEmptyView();
-                    }
-                } else {
-                    iResponse.onError(throwable.message,false);
-                    seatError.onEmptyView(throwable.message);
-                }
-
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (isLoading && viewModel!=null)
+        {
+            viewModel.dismissDialog();
         }
+        if (viewState!= null) {
+            seatError.onErrorView();
+            if (throwable.getCause() instanceof ResultException)
+            {
+                ResultException resultException = (ResultException) throwable.getCause();
+                seatError.onErrorView();
+                seatError.onErrorHandler(resultException.getErrCode());
 
+                if (TextUtils.isEmpty(resultException.getErrMsg())) {
+                    if (iResponse != null) {
+                        iResponse.onError(throwable.message,false);
+                    }
+                    seatError.onEmptyView();
+                } else {
+                    if (iResponse != null) {
+                        iResponse.onError(resultException.getErrMsg(),false);
+                    }
+                    seatError.onEmptyView();
+                }
+            } else {
+                if (iResponse != null) {
+                    iResponse.onError(throwable.message,false);
+                }
+                seatError.onEmptyView(throwable.message);
+            }
+
+        }
     }
 
     @SuppressLint("CheckResult")
@@ -211,6 +211,12 @@ public abstract class ARequest<T, K> {
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
+                if (isLoading && viewModel != null){
+                    CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                        viewModel.dismissDialog();
+                        return null;
+                    });
+                }
                 if (iResponse != null) {
                     iResponse.onError("连接服务器失败或其他异常",false);
                 }
@@ -221,45 +227,43 @@ public abstract class ARequest<T, K> {
     }
 
     private void parseError(@Nullable BaseViewModel viewModel, boolean isLoading, String msg,IResponse<K> iResponse) {
-        try {
-            if (viewModel != null) {
-                viewModel.dismissDialog();
-            }
+        if (isLoading && viewModel != null) {
+            viewModel.dismissDialog();
+        }
+        if (iResponse != null) {
             iResponse.onError(msg,false);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     private void parseSuccess(@Nullable BaseViewModel viewModel, boolean isLoading, IResponse<K> iResponse, K response) {
-        try {
-            if (viewModel != null) {
-                viewModel.dismissDialog();
-            }
+        if (isLoading && viewModel != null) {
+            viewModel.dismissDialog();
+        }
+        if (iResponse != null) {
             iResponse.onSuccess(response);
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
     private void parseError(@Nullable BaseViewModel viewModel, boolean isLoading, IResponse<K> iResponse, ResponseThrowable throwable, Activity activity) {
-        try {
-            if (viewModel != null) {
-                viewModel.dismissDialog();
-            }
-            if (throwable.getCause() instanceof ResultException) {
-                ResultException resultException = (ResultException) throwable.getCause();
-                exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
-                if (TextUtils.isEmpty(resultException.getErrMsg())) {
+        if (isLoading && viewModel != null) {
+            viewModel.dismissDialog();
+        }
+        if (throwable.getCause() instanceof ResultException) {
+            ResultException resultException = (ResultException) throwable.getCause();
+            exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
+            if (TextUtils.isEmpty(resultException.getErrMsg())) {
+                if (iResponse != null) {
                     iResponse.onError(throwable.message,false);
-                } else {
-                    iResponse.onError(resultException.getErrMsg(),false);
                 }
             } else {
+                if (iResponse != null) {
+                    iResponse.onError(resultException.getErrMsg(),false);
+                }
+            }
+        } else {
+            if (iResponse != null) {
                 iResponse.onError(throwable.message,false);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
     }
 
