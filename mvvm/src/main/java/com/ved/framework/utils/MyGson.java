@@ -16,6 +16,6 @@ public class MyGson {
     }
 
     public Gson getGson(){
-        return new GsonBuilder().registerTypeAdapterFactory(new NullStringToEmptyAdapterFactory()).create();
+        return new GsonBuilder().registerTypeAdapterFactory(new NullStringToEmptyAdapterFactory()).registerTypeAdapterFactory(new FlexibleTypeAdapterFactory()).create();
     }
 }
