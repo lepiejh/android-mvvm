@@ -95,6 +95,7 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                             .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
+                                KLog.e(throwable.getMessage());
                                 parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
                                 return Observable.error(throwable);
                             }))
@@ -143,6 +144,7 @@ public abstract class ARequest<T, K> {
     }
 
     private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState,ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable) {
+        KLog.e(throwable.message);
         if (isLoading && viewModel!=null)
         {
             viewModel.dismissDialog();
@@ -203,6 +205,7 @@ public abstract class ARequest<T, K> {
                     o.compose(RxUtils.schedulersTransformer())
                     .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
+                                        KLog.e(throwable.getMessage());
                                         parseError(viewModel, isLoading,msg[0], iResponse);
                                         return Observable.error(throwable);
                                     }))
@@ -245,6 +248,7 @@ public abstract class ARequest<T, K> {
     }
 
     private void parseError(@Nullable BaseViewModel viewModel, boolean isLoading, IResponse<K> iResponse, ResponseThrowable throwable, Activity activity) {
+        KLog.e(throwable.message);
         if (isLoading && viewModel != null) {
             viewModel.dismissDialog();
         }
