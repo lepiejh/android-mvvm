@@ -1,6 +1,5 @@
 package com.ved.framework.utils.bland.code;
 
-import android.app.Application;
 import android.content.res.Resources;
 
 import java.util.IllegalFormatException;
@@ -33,38 +32,6 @@ public final class StringUtils {
      */
     public static boolean isTrimEmpty(final String s) {
         return (s == null || s.trim().length() == 0);
-    }
-
-    public static String getPackageName(Application app){
-        String packageName = app.getPackageName();
-        if (packageName.contains(".")) {
-            String[] splitList = packageName.split("\\.");
-            StringBuilder sb = new StringBuilder();
-            try {
-                sb.append(splitList[0]).append(".");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            try {
-                sb.append(splitList[1]).append(".");
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            String name = null;
-            try {
-                name = splitList[2];
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-            if (com.ved.framework.utils.StringUtils.isNotEmpty(name)){
-                if (!name.contains("fbjc")){
-                    name = "fbjc";
-                }
-                sb.append(name);
-            }
-            packageName = sb.toString();
-        }
-        return packageName;
     }
 
     /**

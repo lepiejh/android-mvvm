@@ -16,9 +16,6 @@ import com.ved.framework.base.AppManager;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.ReflectUtil;
-import com.ved.framework.utils.album.GlideAlbumLoader;
-import com.yanzhenjie.album.Album;
-import com.yanzhenjie.album.AlbumConfig;
 
 import java.lang.reflect.Field;
 import java.util.LinkedList;
@@ -51,14 +48,13 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
 
     void init(Application app)  {
         app.registerActivityLifecycleCallbacks(this);
-        String packageName = StringUtils.getPackageName(app);
         try {
-            setBaseurl(packageName);
+            setBaseurl(app.getPackageName());
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
         try {
-            setLog(packageName);
+            setLog(app.getPackageName());
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
