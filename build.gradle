@@ -11,7 +11,10 @@ buildscript {
         google()
         maven {
             url 'https://jitpack.io'
-            credentials { username authToken }
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USER")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
         }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
@@ -39,7 +42,10 @@ allprojects {
         google()
         maven {
             url 'https://jitpack.io'
-            credentials { username authToken }
+            credentials {
+                username = project.findProperty("gpr.user") ?: System.getenv("GITHUB_USER")
+                password = project.findProperty("gpr.key") ?: System.getenv("GITHUB_TOKEN")
+            }
         }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
