@@ -137,9 +137,9 @@ afterEvaluate {
                 from components.release
 
                 // 移除 sourcesJar（关键配置）
-                artifacts = [
+                /*artifacts = [
                         artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-                ]
+                ]*/
             }
         }
     }
