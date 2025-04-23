@@ -189,9 +189,3 @@
      void *(**On*Event);
  }
  -keep class com.ved.framework.** { *; }
- # 混淆所有实现细节（关键）
- -assumenosideeffects class ** { *; }
- # 保留内部类结构
- -keepclassmembers class * {
-     **$* *;
- }
