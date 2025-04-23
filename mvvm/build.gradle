@@ -1,7 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'maven-publish'
 
 apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.lixiong'
@@ -128,25 +127,4 @@ dependencies {
 //    api "androidx.viewpager2:viewpager2:1.0.0"
     api "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
     api 'androidx.fragment:fragment-ktx:1.4.1'
-}
-
-afterEvaluate {
-    publishing {
-        publications {
-            release(MavenPublication) {
-                from components.release
-
-                // 移除 sourcesJar（关键配置）
-                artifacts = [
-                        artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
-                ]
-            }
-        }
-    }
-}
-
-// 可选：生成空 sourcesJar（兼容某些仓库要求）
-task emptySourcesJar(type: Jar) {
-    archiveClassifier = 'sources'
-    from 'empty' // 空目录
 }
