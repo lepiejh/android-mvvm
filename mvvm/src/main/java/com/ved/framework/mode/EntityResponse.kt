@@ -1,31 +1,7 @@
-package com.ved.framework.mode;
+package com.ved.framework.mode
 
-public class EntityResponse<T> {
-    private int code;
-    private String msg;
-    private T data;
-
-    public int getCode() {
-        return code;
-    }
-
-    public void setCode(int code) {
-        this.code = code;
-    }
-
-    public String getMsg() {
-        return msg;
-    }
-
-    public void setMsg(String msg) {
-        this.msg = msg;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
+class EntityResponse<T> {
+    var code = 0
+    var msg: String? = null
+    var data: T? = null
 }
