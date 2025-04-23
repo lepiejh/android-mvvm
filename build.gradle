@@ -9,7 +9,10 @@ buildscript {
         mavenCentral()
         jcenter()
         google()
-        maven { url 'https://jitpack.io' }
+        maven {
+            url 'https://jitpack.io'
+            credentials { username authToken }
+        }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
         }
@@ -34,7 +37,10 @@ allprojects {
         mavenCentral()
         jcenter()
         google()
-        maven { url 'https://jitpack.io' }
+        maven {
+            url 'https://jitpack.io'
+            credentials { username authToken }
+        }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
         }
