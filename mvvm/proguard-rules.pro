@@ -188,16 +188,7 @@
  -keepclassmembers class * {
      void *(**On*Event);
  }
- -keep class com.ved.framework.mode.** { *; }
- # 保留所有非private方法不混淆
- -keepclassmembers class com.ved.framework.** {
-     public <methods>;
-     protected <methods>;
-     <init>(...);
- }
- # 只混淆private方法
- -keepclassmembers,allowshrinking,allowoptimization class com.ved.framework.** {
-     private <methods>;
- }
- # 保留类名不被混淆
- -keepnames class com.ved.framework.**
+ # 保留公共 API
+ -keep public class com.ved.framework.** { public *; }
+ # 混淆所有实现细节
+ -assumenosideeffects class com.ved.framework.internal.** { *; }
