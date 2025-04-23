@@ -20,13 +20,13 @@ android {
     buildTypes {
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField "String","ENCRYPT_KEY","${encrypt_key}"
         }
 
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             buildConfigField "String","ENCRYPT_KEY","${encrypt_key}"
         }
