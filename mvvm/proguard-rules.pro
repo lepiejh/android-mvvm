@@ -188,7 +188,10 @@
  -keepclassmembers class * {
      void *(**On*Event);
  }
- # 保留公共 API
- -keep public class com.ved.framework.** { public *; }
+ # 保留 public/protected 成员
+ -keepclassmembers class com.ved.framework.** {
+     public *;
+     protected *;
+ }
  # 混淆所有实现细节
  -assumenosideeffects class com.ved.framework.internal.** { *; }
