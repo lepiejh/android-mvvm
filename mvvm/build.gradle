@@ -140,11 +140,6 @@ afterEvaluate {
                 artifacts = [
                         artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
                 ]
-
-                pom {
-                    name = project.getName()
-                    description = 'mvvm description'
-                }
             }
         }
     }

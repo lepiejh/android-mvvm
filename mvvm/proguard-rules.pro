@@ -194,5 +194,5 @@
      protected *;
  }
  -keep class com.ved.framework.mode.** { *; }
- # 混淆所有实现细节
- -assumenosideeffects class com.ved.framework.internal.** { *; }
+ # 混淆所有实现细节（关键）
+ -assumenosideeffects class ** { *; }
