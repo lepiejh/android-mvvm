@@ -188,11 +188,6 @@
  -keepclassmembers class * {
      void *(**On*Event);
  }
- # 保留 public/protected 成员
- -keepclassmembers class com.ved.framework.** {
-     public *;
-     protected *;
- }
- -keep class com.ved.framework.mode.** { *; }
+ -keep class com.ved.framework.** { *; }
  # 混淆所有实现细节（关键）
  -assumenosideeffects class ** { *; }
