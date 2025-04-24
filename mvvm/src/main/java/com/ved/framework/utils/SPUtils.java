@@ -6,7 +6,6 @@ import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.Gson;
-import com.ved.framework.BuildConfig;
 import com.ved.framework.utils.bland.code.Utils;
 
 import java.lang.reflect.ParameterizedType;
