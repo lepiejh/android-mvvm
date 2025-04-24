@@ -14,6 +14,7 @@ import android.text.style.ForegroundColorSpan;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 import androidx.annotation.ColorInt;
@@ -497,6 +498,24 @@ public final class StringUtils {
                 return "00:" + second;
             }
         }
+    }
+
+    /**
+     * 二进制数组转十六进制字符串
+     *
+     * @param bytes byte array to be converted
+     * @return string containing hex values
+     */
+    public static String byteArrayToHexString(byte[] bytes) {
+        StringBuilder sb = new StringBuilder(bytes.length * 2);
+        for (byte element : bytes) {
+            int v = element & 0xff;
+            if (v < 16) {
+                sb.append('0');
+            }
+            sb.append(Integer.toHexString(v));
+        }
+        return sb.toString().toUpperCase(Locale.US);
     }
 
     public static byte[] hexStringToByteArray(String str) {
