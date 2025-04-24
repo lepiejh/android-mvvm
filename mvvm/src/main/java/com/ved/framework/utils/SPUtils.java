@@ -205,7 +205,7 @@ public final class SPUtils {
     public boolean saveEntity(@Nullable final Object obj) {
         if (null != obj) {
             final String innerKey = getKey(obj.getClass());
-            if (null != innerKey) {
+            if (StringUtils.isNotEmpty(innerKey)) {
                 String value = JsonPraise.objToJson(obj);
                 if (TextUtils.isEmpty(value)) {
                     return false;
@@ -221,7 +221,7 @@ public final class SPUtils {
             return false;
         }
         final String innerKey = getKey(clazz);
-        if (null != innerKey) {
+        if (StringUtils.isNotEmpty(innerKey)) {
             String value = JsonPraise.objToJson(datalist);
             if (TextUtils.isEmpty(value)) {
                 return false;
