@@ -7,7 +7,6 @@ group='com.github.lixiong'
 
 android {
     compileSdkVersion 30
-    def encrypt_key = "\"123456789e12345abcdefQhYJ5FHgkro\""
     defaultConfig {
         minSdkVersion 19
         targetSdkVersion 30
@@ -21,13 +20,11 @@ android {
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "String","ENCRYPT_KEY","${encrypt_key}"
         }
 
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            buildConfigField "String","ENCRYPT_KEY","${encrypt_key}"
         }
     }
     compileOptions {
