@@ -12,7 +12,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.StringUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import androidx.databinding.BindingAdapter;
 
@@ -41,7 +45,7 @@ public class ViewAdapter {
     @BindingAdapter(value = {"beforeTextChanged","textChanged","afterTextChanged"}, requireAll = false)
     public static void addTextChangedListener(EditText editText, final BindingCommand<String> beforeTextChanged,
                                               final BindingCommand<String> textChanged,
-                                              final BindingCommand<Editable> afterTextChanged) {
+                                              final BindingCommand<Map<String,Object>> afterTextChanged) {
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -60,7 +64,10 @@ public class ViewAdapter {
             @Override
             public void afterTextChanged(Editable editable) {
                 if (afterTextChanged != null){
-                    afterTextChanged.execute(editable);
+                    Map<String,Object> map = new HashMap<>();
+                    map.put(Constant.EDITABLE,editable);
+                    map.put(Constant.EDITTEXT,editText);
+                    afterTextChanged.execute(map);
                 }
             }
         });
