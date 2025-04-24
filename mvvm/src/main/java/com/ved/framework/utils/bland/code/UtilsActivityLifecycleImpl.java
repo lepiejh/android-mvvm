@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -440,7 +439,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                 }
             }
         } catch (Exception e) {
-            Log.e("UtilsActivityLifecycle", "getActivitiesByReflect: " + e.getMessage());
+            KLog.e("UtilsActivityLifecycle", "getActivitiesByReflect: " + e.getMessage());
         }
         if (topActivity != null) {
             list.addFirst(topActivity);
@@ -461,7 +460,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             sCurrentActivityThreadField.setAccessible(true);
             return sCurrentActivityThreadField.get(null);
         } catch (Exception e) {
-            Log.e("UtilsActivityLifecycle", "getActivityThreadInActivityThreadStaticField: " + e.getMessage());
+            KLog.e("UtilsActivityLifecycle", "getActivityThreadInActivityThreadStaticField: " + e.getMessage());
             return null;
         }
     }
@@ -471,7 +470,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             Class activityThreadClass = Class.forName("android.app.ActivityThread");
             return activityThreadClass.getMethod("currentActivityThread").invoke(null);
         } catch (Exception e) {
-            Log.e("UtilsActivityLifecycle", "getActivityThreadInActivityThreadStaticMethod: " + e.getMessage());
+            KLog.e("UtilsActivityLifecycle", "getActivityThreadInActivityThreadStaticMethod: " + e.getMessage());
             return null;
         }
     }
@@ -491,7 +490,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             float sDurationScale = (Float) sDurationScaleField.get(null);
             if (sDurationScale == 0f) {
                 sDurationScaleField.set(null, 1f);
-                Log.i("UtilsActivityLifecycle", "setAnimatorsEnabled: Animators are enabled now!");
+                KLog.i("UtilsActivityLifecycle", "setAnimatorsEnabled: Animators are enabled now!");
             }
         } catch (NoSuchFieldException e) {
             e.printStackTrace();

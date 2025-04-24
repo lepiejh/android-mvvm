@@ -27,7 +27,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
+
+import com.ved.framework.utils.KLog;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -87,16 +88,16 @@ public final class CustomActivityOnCrash {
     public static void install(@Nullable final Context context) {
         try {
             if (context == null) {
-                Log.e(TAG, "Install failed: context is null!");
+                KLog.e(TAG, "Install failed: context is null!");
             } else {
                 //INSTALL!
                 final Thread.UncaughtExceptionHandler oldHandler = Thread.getDefaultUncaughtExceptionHandler();
 
                 if (oldHandler != null && oldHandler.getClass().getName().startsWith(CAOC_HANDLER_PACKAGE_NAME)) {
-                    Log.e(TAG, "CustomActivityOnCrash was already installed, doing nothing!");
+                    KLog.e(TAG, "CustomActivityOnCrash was already installed, doing nothing!");
                 } else {
                     if (oldHandler != null && !oldHandler.getClass().getName().startsWith(DEFAULT_HANDLER_PACKAGE_NAME)) {
-                        Log.e(TAG, "IMPORTANT WARNING! You already have an UncaughtExceptionHandler, are you sure this is correct? If you use a custom UncaughtExceptionHandler, you must initialize it AFTER CustomActivityOnCrash! Installing anyway, but your original handler will not be called.");
+                        KLog.e(TAG, "IMPORTANT WARNING! You already have an UncaughtExceptionHandler, are you sure this is correct? If you use a custom UncaughtExceptionHandler, you must initialize it AFTER CustomActivityOnCrash! Installing anyway, but your original handler will not be called.");
                     }
 
                     application = (Application) context.getApplicationContext();
@@ -106,10 +107,10 @@ public final class CustomActivityOnCrash {
                         @Override
                         public void uncaughtException(Thread thread, final Throwable throwable) {
                             if (config.isEnabled()) {
-                                Log.e(TAG, "App has crashed, executing CustomActivityOnCrash's UncaughtExceptionHandler", throwable);
+                                KLog.e(TAG, "App has crashed, executing CustomActivityOnCrash's UncaughtExceptionHandler"+throwable);
 
                                 if (hasCrashedInTheLastSeconds(application)) {
-                                    Log.e(TAG, "App already crashed recently, not starting custom error activity because we could enter a restart loop. Are you sure that your app does not crash directly on init?", throwable);
+                                    KLog.e(TAG, "App already crashed recently, not starting custom error activity because we could enter a restart loop. Are you sure that your app does not crash directly on init?"+throwable);
                                     if (oldHandler != null) {
                                         oldHandler.uncaughtException(thread, throwable);
                                         return;
@@ -124,7 +125,7 @@ public final class CustomActivityOnCrash {
                                     }
 
                                     if (isStackTraceLikelyConflictive(throwable, errorActivityClass)) {
-                                        Log.e(TAG, "Your application class or your error activity have crashed, the custom activity will not be launched!");
+                                        KLog.e(TAG, "Your application class or your error activity have crashed, the custom activity will not be launched!");
                                         if (oldHandler != null) {
                                             oldHandler.uncaughtException(thread, throwable);
                                             return;
@@ -249,10 +250,10 @@ public final class CustomActivityOnCrash {
                     });
                 }
 
-                Log.i(TAG, "CustomActivityOnCrash has been installed.");
+                KLog.i(TAG, "CustomActivityOnCrash has been installed.");
             }
         } catch (Throwable t) {
-            Log.e(TAG, "An unknown error occurred while installing CustomActivityOnCrash, it may not have been properly initialized. Please report this as a bug if needed.", t);
+            KLog.e(TAG, "An unknown error occurred while installing CustomActivityOnCrash, it may not have been properly initialized. Please report this as a bug if needed."+t);
         }
     }
 
@@ -556,7 +557,7 @@ public final class CustomActivityOnCrash {
                 return (Class<? extends Activity>) Class.forName(resolveInfo.activityInfo.name);
             } catch (ClassNotFoundException e) {
                 //Should not happen, print it to the log!
-                Log.e(TAG, "Failed when resolving the restart activity class via intent filter, stack trace follows!", e);
+                KLog.e(TAG, "Failed when resolving the restart activity class via intent filter, stack trace follows!"+ e);
             }
         }
 
@@ -579,7 +580,7 @@ public final class CustomActivityOnCrash {
                 return (Class<? extends Activity>) Class.forName(intent.getComponent().getClassName());
             } catch (ClassNotFoundException e) {
                 //Should not happen, print it to the log!
-                Log.e(TAG, "Failed when resolving the restart activity class via getLaunchIntentForPackage, stack trace follows!", e);
+                KLog.e(TAG, "Failed when resolving the restart activity class via getLaunchIntentForPackage, stack trace follows!"+ e);
             }
         }
 
@@ -629,7 +630,7 @@ public final class CustomActivityOnCrash {
                 return (Class<? extends Activity>) Class.forName(resolveInfo.activityInfo.name);
             } catch (ClassNotFoundException e) {
                 //Should not happen, print it to the log!
-                Log.e(TAG, "Failed when resolving the error activity class via intent filter, stack trace follows!", e);
+                KLog.e(TAG, "Failed when resolving the error activity class via intent filter, stack trace follows!"+ e);
             }
         }
 
