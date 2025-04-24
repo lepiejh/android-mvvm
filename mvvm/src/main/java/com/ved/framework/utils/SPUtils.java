@@ -21,8 +21,6 @@ import androidx.annotation.Nullable;
 
 public final class SPUtils {
 
-    private final String SECRET_KEY = BuildConfig.ENCRYPT_KEY;
-
     private static final Map<String, SPUtils> sSPMap = new HashMap<>();
     private final SharedPreferences sp;
 
@@ -236,11 +234,17 @@ public final class SPUtils {
     }
 
     private String encryptDES(@Nullable String value) {
-        if (!TextUtils.isEmpty(SECRET_KEY)) {
-            try {
-                return DES.encryptDES(value, SECRET_KEY);
-            } catch (Exception e) {
-                e.printStackTrace();
+        if (TextUtils.isEmpty(value)) {
+            return "";
+        }
+        String encryptDes = DES.encrypt(value);
+        if (StringUtils.isNotEmpty(encryptDes)) {
+            return encryptDes;
+        } else {
+            String encrypt = AesEncryptUtil.encrypt(value);
+            if (StringUtils.isNotEmpty(encrypt)) {
+                return encrypt;
+            } else {
                 String base64 = null;
                 try {
                     base64 = Base64.encodeToString(value.getBytes(), Base64.DEFAULT);
@@ -250,18 +254,8 @@ public final class SPUtils {
                 }
                 return base64;
             }
-        } else {
-            String b64;
-            try {
-                b64 = Base64.encodeToString(value.getBytes(), Base64.DEFAULT);
-            } catch (Exception e) {
-                KLog.e(e.getMessage());
-                return value;
-            }
-            return b64;
         }
     }
-
 
     public <T> T getEntity(@Nullable final Class<? extends T> clazz, @Nullable final T defaultValue) {
         final String innerKey = getKey(clazz);
@@ -313,16 +307,18 @@ public final class SPUtils {
         }
     }
 
-
     private String decryptDES(@Nullable String value) {
         if (TextUtils.isEmpty(value)) {
             return null;
         }
-        if (!TextUtils.isEmpty(SECRET_KEY)) {
-            try {
-                return DES.decryptDES(value, SECRET_KEY);
-            } catch (Exception e) {
-                e.printStackTrace();
+        String decryptDES = DES.desEncrypt(value);
+        if (StringUtils.isNotEmpty(decryptDES)){
+            return decryptDES;
+        }else {
+            String desEncrypt = AesEncryptUtil.desEncrypt(value);
+            if (StringUtils.isNotEmpty(desEncrypt)){
+                return desEncrypt;
+            }else {
                 String base64 = null;
                 try {
                     base64 = new String(Base64.decode(value, Base64.DEFAULT));
@@ -332,18 +328,8 @@ public final class SPUtils {
                 }
                 return base64;
             }
-        } else {
-            String b64;
-            try {
-                b64 = new String(Base64.decode(value, Base64.DEFAULT));
-            } catch (Exception e) {
-                KLog.e(e.getMessage());
-                return value;
-            }
-            return b64;
         }
     }
-
 
     private String getKey(@Nullable final Class<?> clazz) {
         if (null != clazz) {

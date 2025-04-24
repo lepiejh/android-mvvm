@@ -7,13 +7,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * AES 加密
+ * 使用AES-128-CBC加密模式，key需要为16位,key和iv可以相同！
  */
 public class AesEncryptUtil {
-
-    //使用AES-128-CBC加密模式，key需要为16位,key和iv可以相同！
-    public static  String key = "1234567890adbcde";//长度为16个字符
-
-    public static  String iv  = "1234567890hjlkew";//长度为16个字符
     /**
      * 加密方法
      * @param data  要加密的数据
@@ -46,7 +42,7 @@ public class AesEncryptUtil {
             return android.util.Base64.encodeToString(encrypted,android.util.Base64.NO_WRAP);
 
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -73,7 +69,7 @@ public class AesEncryptUtil {
             String originalString = new String(original,"utf-8").trim();
             return originalString;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -85,7 +81,7 @@ public class AesEncryptUtil {
      * @throws Exception
      */
     public static String encrypt(String data) {
-        return encrypt(data, key, iv);
+        return encrypt(data, "1234567890adbcde", "1234567890hjlkew");
     }
 
     /**
@@ -95,7 +91,7 @@ public class AesEncryptUtil {
      * @throws Exception
      */
     public static String desEncrypt(String data) {
-        return desEncrypt(data, key, iv);
+        return desEncrypt(data, "1234567890adbcde", "1234567890hjlkew");
     }
 
 }
