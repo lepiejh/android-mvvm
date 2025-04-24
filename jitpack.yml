@@ -1,5 +1,8 @@
 jdk:
   - openjdk11
+jitpack:
+  # 跳过源码编译，直接使用预编译文件
+  skip: true
 before_install:
   - ./gradlew clean
   - ./gradlew clean assembleRelease  # 只构建 release
