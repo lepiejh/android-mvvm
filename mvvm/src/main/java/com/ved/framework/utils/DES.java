@@ -12,10 +12,7 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public class DES {
 
-    private static byte[] iv = {1, 2, 3, 4, 5, 6, 7, 8};
-
-
-    public static String encryptDES(String encryptString, String encryptKey) {
+    public static String encryptDES(String encryptString, String encryptKey, byte[] iv) {
         try {
             if (TextUtils.isEmpty(encryptString)){
                 return encryptString;
@@ -33,7 +30,7 @@ public class DES {
         }
     }
 
-    public static String decryptDES(String decryptString, String decryptKey) {
+    public static String decryptDES(String decryptString, String decryptKey, byte[] iv) {
         try {
             if (TextUtils.isEmpty(decryptString)){
                 return decryptString;
@@ -44,7 +41,7 @@ public class DES {
             SecretKeySpec key = new SecretKeySpec(decryptKey.getBytes(), "DESede");
             Cipher cipher = Cipher.getInstance("DESede/CBC/PKCS5Padding");
             cipher.init(Cipher.DECRYPT_MODE, key, zeroIv);
-            byte decryptedData[] = cipher.doFinal(byteMi);
+            byte[] decryptedData = cipher.doFinal(byteMi);
             return new String(decryptedData);
         } catch (Exception e) {
             KLog.e(e.getMessage());
@@ -59,7 +56,7 @@ public class DES {
      * @throws Exception
      */
     public static String encrypt(String data) {
-        return encryptDES(data, "123456789e12345abcdefQhYJ5FHgkro");
+        return encryptDES(data, "123456789e12345abcdefQhYJ5FHgkro", new byte[]{1, 2, 3, 4, 5, 6, 7, 8});
     }
 
     /**
@@ -69,6 +66,6 @@ public class DES {
      * @throws Exception
      */
     public static String desEncrypt(String data) {
-        return decryptDES(data, "123456789e12345abcdefQhYJ5FHgkro");
+        return decryptDES(data, "123456789e12345abcdefQhYJ5FHgkro", new byte[]{1, 2, 3, 4, 5, 6, 7, 8});
     }
 }
