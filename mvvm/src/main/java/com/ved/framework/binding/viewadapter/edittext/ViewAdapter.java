@@ -45,7 +45,7 @@ public class ViewAdapter {
     @BindingAdapter(value = {"beforeTextChanged","textChanged","afterTextChanged"}, requireAll = false)
     public static void addTextChangedListener(EditText editText, final BindingCommand<String> beforeTextChanged,
                                               final BindingCommand<String> textChanged,
-                                              final BindingCommand<Map<String,Object>> afterTextChanged) {
+                                              final BindingCommand<com.ved.framework.entity.Editable> afterTextChanged) {
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -64,10 +64,7 @@ public class ViewAdapter {
             @Override
             public void afterTextChanged(Editable editable) {
                 if (afterTextChanged != null){
-                    Map<String,Object> map = new HashMap<>();
-                    map.put(Constant.EDITABLE,editable);
-                    map.put(Constant.EDITTEXT,editText);
-                    afterTextChanged.execute(map);
+                    afterTextChanged.execute(new com.ved.framework.entity.Editable(editText,editable));
                 }
             }
         });

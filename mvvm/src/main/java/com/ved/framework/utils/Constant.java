@@ -18,6 +18,4 @@ public class Constant {
     public static final int ITEM_FOOT = 1;
     public static final int ITEM_LAYOUT = 2;
     public static final int variableId = BR.viewModel;
-    public static final String EDITABLE = "editable";
-    public static final String EDITTEXT = "editText";
 }
