@@ -54,9 +54,9 @@ dependencies {
         exclude group: 'com.android.support'
     }
     //rx权限请求
-   /* implementation(rootProject.ext.dependencies.rxpermissions) {
-        exclude group: 'com.android.support'
-    }*/
+    /* implementation(rootProject.ext.dependencies.rxpermissions) {
+         exclude group: 'com.android.support'
+     }*/
     //network
     api rootProject.ext.dependencies.okhttp
     api rootProject.ext.dependencies.retrofit
@@ -104,20 +104,20 @@ dependencies {
 //    api 'com.blankj:utilcodex:1.31.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     api 'com.tencent:mmkv-static:1.2.16'
-    api 'com.github.getActivity:Toaster:12.3'
-    api 'org.apache.commons:commons-lang3:3.6'
+    implementation 'com.github.getActivity:Toaster:12.3'
+    implementation 'org.apache.commons:commons-lang3:3.6'
     api 'com.github.lepiejh:android-dialog:v1.2.11'
 //    api 'com.github.lepiejh:android-tcp:v1.1.5'
     api 'com.github.lepiejh:android-tablayout:v1.3.7'
-    api 'com.github.lepiejh:android-play:v1.0.8'
-    api 'com.github.lepiejh:android-update:v1.0.1'
-    api 'com.github.lepiejh:html:v1.1.0'
-    api 'com.github.lepiejh:android-chat:v1.0.2'
+    implementation 'com.github.lepiejh:android-play:v1.0.8'
+    implementation 'com.github.lepiejh:android-update:v1.0.1'
+    implementation 'com.github.lepiejh:html:v1.1.0'
+    implementation 'com.github.lepiejh:android-chat:v1.0.2'
     api 'com.github.lepiejh:android-recycleview:v1.0.1'
-    api 'com.github.lepiejh:calendarview:v1.0.0'
+    implementation 'com.github.lepiejh:calendarview:v1.0.0'
 //    api 'com.amplitude:android-sdk:2.23.2'
     api 'me.jessyan:retrofit-url-manager:1.4.0'
-    api 'com.github.lepiejh:arc:v1.2.10'
+    implementation 'com.github.lepiejh:arc:v1.2.10'
     api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3"
     api "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.3"
 //    api "androidx.viewpager2:viewpager2:1.0.0"

@@ -412,7 +412,7 @@
     <attr name="progressValue" format="integer"/>
     <attr name="foodIngestion" format="string"/>
 
-   <!-- <attr name="blood_sugar_avg" format="string" />
+    <attr name="blood_sugar_avg" format="string" />
     <attr name="blood_sugar_proportion" format="string" />
     <attr name="blood_sugar_fluctuate" format="string" />
     <attr name="blood_sugar_reachts" format="string" />
@@ -448,5 +448,5 @@
     <attr name="float_to_int" format="string" />
     <attr name="format_to_string" format="string" />
     <attr name="format_key" format="integer" />
-    <attr name="format_value" format="string" />-->
+    <attr name="format_value" format="string" />
 </resources>
