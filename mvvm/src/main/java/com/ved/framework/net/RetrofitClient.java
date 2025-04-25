@@ -34,6 +34,7 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
@@ -92,18 +93,23 @@ class RetrofitClient {
                             KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
                             if (StringUtils.isNotEmpty(content)) {
                                 try {
+                                    JSONObject jsonObject = new JSONObject(content);
+                                    int code = 0;
+                                    String message = null;
                                     if (CorpseUtils.INSTANCE.isStandardJson(content)) {
-                                        JSONObject jsonObject = new JSONObject(content);
-                                        int code = jsonObject.optInt("code");
-                                        String message = jsonObject.optString("msg");
-                                        iResult.onInfoResult(message,code);
+                                        code = jsonObject.optInt("code");
+                                        message = jsonObject.optString("msg");
+                                    }else {
+                                        code = jsonObject.optInt("status");
+                                        message = jsonObject.optString("message");
                                     }
+                                    iResult.onInfoResult(message,code);
                                 }catch (Exception e)
                                 {
-                                    e.printStackTrace();
+                                    KLog.e(e.getMessage());
                                 }
                             }
-                            return response.newBuilder().body(okhttp3.ResponseBody.create(mediaType, content)).build();
+                            return response.newBuilder().body(ResponseBody.create(mediaType, content)).build();
                         }).addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
                         .connectTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
                         .readTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
