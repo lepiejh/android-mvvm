@@ -413,6 +413,7 @@
     <attr name="foodIngestion" format="string"/>
 
     <attr name="blood_sugar_avg" format="string" />
+    <attr name="blood_status" format="string" />
     <attr name="blood_sugar_proportion" format="string" />
     <attr name="blood_sugar_fluctuate" format="string" />
     <attr name="blood_sugar_reachts" format="string" />
