@@ -75,7 +75,7 @@ public abstract class ARequest<T, K> {
         return this;
     }
 
-    public ARequest<T, K> withIsLoading(boolean isLoading) {
+    public ARequest<T, K> withLoading(boolean isLoading) {
         this.isLoading = isLoading;
         return this;
     }
@@ -110,7 +110,7 @@ public abstract class ARequest<T, K> {
     }
 
     @SuppressLint("CheckResult")
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel,
+    private PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel,
                                           @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,
                                           View view,ISeatSuccess seatSuccess,ISeatError seatError,Map<String, String> headers,
                                           int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
