@@ -1482,7 +1482,7 @@ com.ved.framework.mode.EntityResponse -> com.ved.framework.mode.EntityResponse:
     13:14:void setCode(int) -> setCode
     29:30:void setData(java.lang.Object) -> setData
     21:22:void setMsg(java.lang.String) -> setMsg
-com.ved.framework.net.ARequest -> com.ved.framework.net.ARequest:
+com.ved.framework.net.ARequest2 -> com.ved.framework.net.ARequest2:
     39:39:void <init>() -> <init>
     87:91:void lambda$request$0(java.lang.String[],java.lang.String,int) -> a
     96:97:io.reactivex.rxjava3.core.ObservableSource lambda$request$2(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.ISeatError,java.lang.String[],com.ved.framework.net.IResponse,io.reactivex.rxjava3.core.Observable) -> a

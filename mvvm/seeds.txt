@@ -1509,7 +1509,7 @@ com.ved.framework.R$styleable: int SwitchButton_sb_enable_effect
 com.ved.framework.R$styleable: int KeyTimeCycle_transitionEasing
 com.ved.framework.R$attr: int layout_srlBackgroundColor
 com.ved.framework.binding.viewadapter.drawable.Drawables$Orientation: int TOP_BOTTOM
-com.ved.framework.net.ARequest: void parseSuccess(com.ved.framework.base.BaseViewModel,boolean,com.ved.framework.net.IResponse,java.lang.Object)
+com.ved.framework.net.ARequest2: void parseSuccess(com.ved.framework.base.BaseViewModel,boolean,com.ved.framework.net.IResponse,java.lang.Object)
 com.ved.framework.utils.TimeUtils: long f_str_2_long(java.lang.String)
 com.ved.framework.entity.InputType: int TYPE_NULL
 com.ved.framework.R$style: int Base_Theme_MaterialComponents_Light_Dialog_FixedSize
@@ -1985,7 +1985,7 @@ com.ved.framework.R$styleable: int ConstraintOverride_layout_constraintLeft_crea
 com.ved.framework.R$styleable: int Constraint_layout_goneMarginBaseline
 com.ved.framework.binding.viewadapter.drawable.Drawables: int dip2px(float)
 com.ved.framework.R$color: int material_on_primary_emphasis_medium
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,int,boolean,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,int,boolean,com.ved.framework.net.IResponse)
 com.ved.framework.R$drawable: int ps_orange_oval
 com.ved.framework.R$styleable: int Constraint_android_scaleX
 com.ved.framework.utils.bland.code.EncryptUtils: byte[] decryptRSA(byte[],byte[],int,java.lang.String)
@@ -2623,7 +2623,7 @@ com.ved.framework.http.cookie.store.MemoryCookieStore: java.util.HashMap memoryC
 com.ved.framework.utils.EncryptUtil: EncryptUtil()
 com.ved.framework.utils.bland.code.TimeUtils: long string2Millis(java.lang.String,java.text.DateFormat)
 com.ved.framework.R$color: int design_bottom_navigation_shadow_color
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,boolean,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,boolean,com.ved.framework.net.IResponse)
 com.ved.framework.base.BaseViewModel: void accept(io.reactivex.rxjava3.disposables.Disposable)
 com.ved.framework.utils.bland.code.CacheDiskStaticUtils: org.json.JSONArray getJSONArray(java.lang.String,org.json.JSONArray)
 com.ved.framework.utils.bland.code.JsonUtils: java.lang.Object getValueByType(java.lang.String,java.lang.String,java.lang.Object,byte)
@@ -3753,7 +3753,7 @@ com.ved.framework.utils.bland.code.MessengerUtils$ServerService$1
 com.ved.framework.binding.command.ResponseCommand: ResponseCommand(com.ved.framework.binding.command.BindingFunction,com.ved.framework.binding.command.BindingFunction)
 com.ved.framework.R$drawable: int btn_checkbox_unchecked_to_checked_mtrl_animation
 com.ved.framework.R$style: int TextAppearance_MaterialComponents_Headline5
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,com.ved.framework.net.IMethod,java.lang.Class,int,boolean,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,com.ved.framework.net.IMethod,java.lang.Class,int,boolean,com.ved.framework.net.IResponse)
 com.ved.framework.crash.CustomActivityOnCrash: android.app.Application application
 com.ved.framework.widget.NoScrollViewPager
 com.ved.framework.utils.SpanUtils: android.widget.TextView mTextView
@@ -6423,7 +6423,7 @@ com.ved.framework.utils.bland.code.ThreadUtils$LinkedBlockingQueue4Util: ThreadU
 com.ved.framework.utils.bland.code.CollectionUtils: java.util.LinkedList newLinkedList(java.lang.Object[])
 com.ved.framework.R$color: int switch_thumb_disabled_material_light
 com.ved.framework.R$styleable: int WheelFullDatePickerStyle_canSetUpFutureTime
-com.ved.framework.net.ARequest: void parseError(com.ved.framework.base.BaseViewModel,boolean,com.ved.framework.net.IResponse,com.ved.framework.http.ResponseThrowable,android.app.Activity)
+com.ved.framework.net.ARequest2: void parseError(com.ved.framework.base.BaseViewModel,boolean,com.ved.framework.net.IResponse,com.ved.framework.http.ResponseThrowable,android.app.Activity)
 com.ved.framework.R$styleable: int Constraint_flow_firstHorizontalBias
 com.ved.framework.utils.bland.code.BarUtils: java.lang.String TAG_STATUS_BAR
 com.ved.framework.utils.bland.code.KeyboardUtils$3: void onGlobalLayout()
@@ -6546,7 +6546,7 @@ com.ved.framework.R$attr: int drawable_selected_height
 com.ved.framework.R$drawable: int ps_ic_trans_1px
 com.ved.framework.utils.bland.code.PbFileUtil: java.lang.String[] splitFileName(java.lang.String)
 com.ved.framework.utils.TimeUtils: java.lang.String getCurrentTimeMask(long)
-com.ved.framework.net.ARequest: ARequest()
+com.ved.framework.net.ARequest2: ARequest()
 com.ved.framework.databinding.AbBindingImpl: void executeBindings()
 com.ved.framework.config.GlideOptions: com.bumptech.glide.request.BaseRequestOptions error(android.graphics.drawable.Drawable)
 com.ved.framework.utils.ByteUtil: byte[] asciiToBcd(java.lang.String)
@@ -6558,7 +6558,7 @@ com.ved.framework.utils.RomUtils: boolean isSamsung()
 com.ved.framework.R$attr: int singleTextSize
 com.ved.framework.R$styleable: int[] ViewBackgroundHelper
 com.ved.framework.base.BaseViewModel$UIChangeLiveData: com.ved.framework.bus.event.SingleLiveEvent onResumeEvent
-com.ved.framework.net.ARequest: void parseError(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse,com.ved.framework.http.ResponseThrowable)
+com.ved.framework.net.ARequest2: void parseError(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse,com.ved.framework.http.ResponseThrowable)
 com.ved.framework.R$animator: int mtrl_extended_fab_state_list_animator
 com.ved.framework.R$string: int album_cancel
 com.ved.framework.utils.bland.code.EncryptUtils: byte[] decrypt3DES(byte[],byte[],java.lang.String,byte[])
@@ -6985,7 +6985,7 @@ com.ved.framework.R$styleable: int ConstraintLayout_Layout_guidelineUseRtl
 com.ved.framework.entity.ListViewScrollDataWrapper: int totalItemCount
 com.ved.framework.R$styleable: int Constraint_animate_relativeTo
 com.ved.framework.utils.RedDotUtil: android.graphics.Bitmap generatorNumIcon2(android.content.Context,android.graphics.Bitmap,boolean,java.lang.String)
-com.ved.framework.net.ARequest: void parseError(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.ISeatError,java.lang.String,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: void parseError(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.ISeatError,java.lang.String,com.ved.framework.net.IResponse)
 com.ved.framework.utils.CorpseUtils$fetch$1$1: java.lang.Object invokeSuspend(java.lang.Object)
 com.ved.framework.R$styleable: int ConstraintOverride_android_scaleX
 com.ved.framework.utils.FileUtils: long getLength(java.lang.String)
@@ -7431,7 +7431,7 @@ com.ved.framework.R$id: int select_dialog_listview
 com.ved.framework.R$style: int TextAppearance_MaterialComponents_Chip
 com.ved.framework.utils.RxUtils: io.reactivex.rxjava3.core.ObservableTransformer schedulersTransformer()
 com.ved.framework.R$color: int abc_primary_text_material_light
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(boolean,com.ved.framework.base.BaseViewModel,com.ved.framework.net.IMethod,java.lang.Class,android.view.View,com.ved.framework.net.ISeatSuccess,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(boolean,com.ved.framework.base.BaseViewModel,com.ved.framework.net.IMethod,java.lang.Class,android.view.View,com.ved.framework.net.ISeatSuccess,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse)
 com.ved.framework.bus.WeakAction: com.ved.framework.binding.command.BindingConsumer consumer
 com.ved.framework.R$styleable: int ConstraintSet_android_layout_height
 com.ved.framework.utils.SDCardUtils$SDCardInfo: java.lang.String toString()
@@ -7791,7 +7791,7 @@ com.ved.framework.utils.bland.code.CacheDiskUtils: int mMaxCount
 com.ved.framework.binding.command.BindingAction: void call()
 com.ved.framework.utils.bland.code.NetworkUtils$NetworkChangedReceiver$3: com.ved.framework.utils.bland.code.NetworkUtils$NetworkChangedReceiver this$0
 com.ved.framework.R$styleable: int CalendarView_scheme_text_color
-com.ved.framework.net.ARequest: void parseError(com.ved.framework.base.BaseViewModel,boolean,java.lang.String,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: void parseError(com.ved.framework.base.BaseViewModel,boolean,java.lang.String,com.ved.framework.net.IResponse)
 com.ved.framework.R$attr: int colorPrimaryDark
 com.ved.framework.utils.glide.GlideManager$1: int[] $SwitchMap$com$ved$framework$utils$glide$GlideType
 com.ved.framework.R$layout: int mtrl_calendar_month_navigation
@@ -8426,7 +8426,7 @@ com.ved.framework.utils.bland.code.UtilsTransActivity$TransActivityDelegate: voi
 com.ved.framework.R$attr: int md_btnstacked_gravity
 com.ved.framework.utils.bland.code.CacheMemoryUtils: int DEFAULT_MAX_COUNT
 com.ved.framework.R$id: int tv_current_data_time
-com.ved.framework.net.ARequest: void parseSuccess(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.IResponse,java.lang.Object)
+com.ved.framework.net.ARequest2: void parseSuccess(boolean,com.ved.framework.base.BaseViewModel,android.view.View,com.ved.framework.net.IResponse,java.lang.Object)
 com.ved.framework.utils.CalendarUtil: java.text.SimpleDateFormat format12
 com.ved.framework.utils.StringUtils: java.lang.String upperFirstLetter(java.lang.String)
 com.ved.framework.bus.event.SnackbarMessage: void observe(androidx.lifecycle.LifecycleOwner,com.ved.framework.bus.event.SnackbarMessage$SnackbarObserver)
@@ -9798,7 +9798,7 @@ com.ved.framework.utils.RomUtils: boolean isGoogle()
 com.ved.framework.utils.bland.code.PermissionUtils$SingleCallback
 com.ved.framework.utils.bland.code.ToastUtils: boolean isLong
 com.ved.framework.utils.bland.code.ReflectUtils: java.lang.Object proxy(java.lang.Class)
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(boolean,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,android.view.View,com.ved.framework.net.ISeatSuccess,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(boolean,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,android.view.View,com.ved.framework.net.ISeatSuccess,com.ved.framework.net.ISeatError,com.ved.framework.net.IResponse)
 com.ved.framework.utils.RegexUtils: boolean checkBlankSpace(java.lang.String)
 com.ved.framework.binding.viewadapter.view.ViewAdapter: void maxHeight(android.view.View,int)
 com.ved.framework.R$styleable: int ConstraintLayout_Layout_android_paddingEnd
@@ -10191,7 +10191,7 @@ com.ved.framework.utils.bland.code.ThreadUtils$SyncValue: ThreadUtils$SyncValue(
 com.ved.framework.R$styleable: int MaterialComponentsTheme_colorAccent
 com.ved.framework.R$color: int androidx_core_ripple_material_light
 com.ved.framework.utils.bland.code.FileIOUtils: boolean writeFileFromBytesByStream(java.lang.String,byte[],boolean)
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,com.ved.framework.net.IResponse)
 com.ved.framework.utils.bland.code.SpanUtils: SpanUtils(android.widget.TextView)
 com.ved.framework.R$styleable: int ConstraintOverride_flow_firstHorizontalBias
 com.ved.framework.utils.bland.code.ToastUtils: void showLong(int)
@@ -12808,7 +12808,7 @@ com.ved.framework.base.OnlyOpaqueCompatFragmentActivity: boolean isTranslucentOr
 com.ved.framework.R$styleable: int RangeSlider_values
 com.ved.framework.R$styleable: int Theme_editTextColor
 com.ved.framework.R$drawable: int material_ic_clear_black_24dp
-com.ved.framework.net.ARequest: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,int,com.ved.framework.net.IResponse)
+com.ved.framework.net.ARequest2: io.reactivex.rxjava3.subjects.PublishSubject request(android.app.Activity,com.ved.framework.base.BaseViewModel,java.lang.Class,com.ved.framework.net.IMethod,int,com.ved.framework.net.IResponse)
 com.ved.framework.R$styleable: int Variant_constraints
 com.ved.framework.R$attr: int srlTextTimeMarginTop
 com.ved.framework.R$styleable: int LinearLayoutCompat_dividerPadding
@@ -13264,7 +13264,7 @@ com.ved.framework.R$attr: int chipIconVisible
 com.ved.framework.widget.SpacingItemDecoration: int dpToPx(int,android.content.Context)
 com.ved.framework.R$attr: int chipIconTint
 com.ved.framework.R$id: int test_radiobutton_app_button_tint
-com.ved.framework.net.ARequest: void exceptionHandling(android.app.Activity,java.lang.String,int)
+com.ved.framework.net.ARequest2: void exceptionHandling(android.app.Activity,java.lang.String,int)
 com.ved.framework.config.GlideRequest: com.bumptech.glide.request.BaseRequestOptions error(android.graphics.drawable.Drawable)
 com.ved.framework.R$styleable: int CalendarView_year_view_week_height
 com.ved.framework.config.GlideOptions: com.bumptech.glide.request.BaseRequestOptions useUnlimitedSourceGeneratorsPool(boolean)
@@ -15127,7 +15127,7 @@ com.ved.framework.utils.ImageUtils: java.lang.String getImagePath(android.net.Ur
 com.ved.framework.utils.SpanUtils$CustomImageSpan: SpanUtils$CustomImageSpan(android.net.Uri,int,com.ved.framework.utils.SpanUtils$1)
 com.ved.framework.R$styleable: int SmartRefreshLayout_srlEnablePreviewInEditMode
 com.ved.framework.bus.event.SnackbarMessage$1: void onChanged(java.lang.Integer)
-com.ved.framework.net.ARequest
+com.ved.framework.net.ARequest2
 com.ved.framework.utils.TimeUtils: java.lang.String strToTime(double)
 com.ved.framework.R$attr: int indicatorDrawable
 com.ved.framework.widget.PinchImageView: boolean onTouchEvent(android.view.MotionEvent)

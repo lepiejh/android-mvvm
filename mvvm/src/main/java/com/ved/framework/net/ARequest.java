@@ -12,7 +12,10 @@ import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
+import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.Utils;
+
+import java.util.Map;
 
 import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.core.Observable;
@@ -20,8 +23,6 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
-import kotlin.Unit;
-import kotlin.jvm.functions.Function0;
 
 /**
  * 网络请求
@@ -37,163 +38,103 @@ import kotlin.jvm.functions.Function0;
  *
  */
 public abstract class ARequest<T, K> {
+    private Activity activity;
+    private BaseViewModel viewModel;
+    private Class<? extends T> service;
+    private IMethod<T, K> method;
+    private int index = 0;
+    private boolean isLoading = false;
+    private View viewState;
+    private ISeatSuccess seatSuccess;
+    private ISeatError seatError;
+    private IResponse<K> response;
+    private Map<String, String> headers;
 
-    /**
-     * 可自定义code 封装处理    继承 ApiDisposableObserver
-     */
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, @Nullable IResponse<K> iResponse) {
-        return request(activity, viewModel, service, method, 0, iResponse);
+    public ARequest<T, K> withActivity(Activity activity) {
+        this.activity = activity;
+        return this;
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, boolean isLoading, @Nullable IResponse<K> iResponse) {
-        return request(activity, viewModel, service, method, 0, isLoading, iResponse);
+    public ARequest<T, K> withViewModel(BaseViewModel viewModel) {
+        this.viewModel = viewModel;
+        return this;
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, @Nullable IResponse<K> iResponse) {
-        return request(activity, viewModel, method, service,index,false,iResponse);
+    public ARequest<T, K> withService(Class<? extends T> service) {
+        this.service = service;
+        return this;
     }
 
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method, int index, boolean isLoading, @Nullable IResponse<K> iResponse) {
-        return request(activity, viewModel, method, service,index,isLoading,iResponse);
+    public ARequest<T, K> withMethod(IMethod<T, K> method) {
+        this.method = method;
+        return this;
     }
 
-    public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel, @Nullable Class<? extends T> service, @Nullable IMethod<T, K> method,  View view,ISeatSuccess seatSuccess,ISeatError seatError, @Nullable IResponse<K> iResponse) {
-        return request(isLoading,viewModel, method, service,view,seatSuccess,seatError,iResponse);
+    public ARequest<T, K> withIndex(int index) {
+        this.index = index;
+        return this;
+    }
+
+    public ARequest<T, K> withIsLoading(boolean isLoading) {
+        this.isLoading = isLoading;
+        return this;
+    }
+
+    public ARequest<T, K> withViewState(View viewState) {
+        this.viewState = viewState;
+        return this;
+    }
+
+    public ARequest<T, K> withSeatSuccess(ISeatSuccess seatSuccess) {
+        this.seatSuccess = seatSuccess;
+        return this;
+    }
+
+    public ARequest<T, K> withSeatError(ISeatError seatError) {
+        this.seatError = seatError;
+        return this;
+    }
+
+    public ARequest<T, K> withResponse(IResponse<K> response) {
+        this.response = response;
+        return this;
+    }
+
+    public ARequest<T, K> withHeaders(Map<String, String> headers) {
+        this.headers = headers;
+        return this;
+    }
+
+    public PublishSubject<Object> build(){
+        return request(activity,viewModel,method,service,viewState,seatSuccess,seatError,headers,index,isLoading,response);
     }
 
     @SuppressLint("CheckResult")
-    public PublishSubject<Object> request(boolean isLoading,@Nullable BaseViewModel viewModel,@Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,View view,ISeatSuccess seatSuccess,ISeatError seatError,@Nullable IResponse<K> iResponse) {
+    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel,
+                                          @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,
+                                          View view,ISeatSuccess seatSuccess,ISeatError seatError,Map<String, String> headers,
+                                          int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
         PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
         if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
             if (iResponse != null) {
                 iResponse.onError("网络异常",false);
             }
-            if (view != null) {
+            if (view != null && seatSuccess != null) {
                 //手机无网络
                 seatSuccess.onNoNetworkView();
             }
-        } else {
-            if (view!= null) {
-                seatSuccess.onStateView();
-            }
-            if (isLoading&&viewModel!=null)
-            {
-                viewModel.showDialog();
-            }
-            try {
-                final String[] msg = new String[1];
-                if (method != null) {
-                    Observable o = method.method(RetrofitClient.getInstance().create(service, 0, null, (message, code) -> {
-                        if (code!=Configure.getCode())
-                        {
-                            msg[0] =message;
-                        }
-                    },viewModel,iResponse));
-                    if (viewModel != null) {
-                        o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
-                    }
-                    o.compose(RxUtils.schedulersTransformer())
-                    .compose(observable -> observable
-                            .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
-                                KLog.e(throwable.getMessage());
-                                parseError( isLoading,viewModel,view,seatError,msg[0], iResponse);
-                                return Observable.error(throwable);
-                            }))
-                    .takeUntil(lifecycleDisposable)
-                    .subscribe((Consumer<K>) response -> parseSuccess(isLoading,viewModel,view, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError( isLoading,viewModel,view,seatError, iResponse, throwable));
-                }
-            } catch (Exception e) {
-                KLog.e(e.getMessage());
-                if (view!= null && seatError != null) {
-                    seatError.onErrorView();
-                }
-            }
-        }
-        return lifecycleDisposable;
-    }
-
-
-    private void parseSuccess(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState, IResponse<K> iResponse, K response) {
-        if (viewState!= null) {
-            viewState.setVisibility(View.GONE);
-        }
-        if (isLoading && viewModel!=null)
-        {
-            viewModel.dismissDialog();
-        }
-        if (iResponse != null) {
-            iResponse.onSuccess(response);
-        }
-    }
-
-    private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState,ISeatError seatError,String msg,IResponse<K> iResponse) {
-
-        try {
-            if (isLoading && viewModel!=null)
-            {
-                viewModel.dismissDialog();
-            }
-
-            if (viewState!= null) {
-                seatError.onErrorView();
-            }
-            iResponse.onError(msg,false);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,View viewState,ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable) {
-        KLog.e(throwable.message);
-        if (isLoading && viewModel!=null)
-        {
-            viewModel.dismissDialog();
-        }
-        if (viewState!= null) {
-            seatError.onErrorView();
-            if (throwable.getCause() instanceof ResultException)
-            {
-                ResultException resultException = (ResultException) throwable.getCause();
-                seatError.onErrorView();
-                seatError.onErrorHandler(resultException.getErrCode());
-
-                if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                    if (iResponse != null) {
-                        iResponse.onError(throwable.message,false);
-                    }
-                    seatError.onEmptyView();
-                } else {
-                    if (iResponse != null) {
-                        iResponse.onError(resultException.getErrMsg(),false);
-                    }
-                    seatError.onEmptyView();
-                }
-            } else {
-                if (iResponse != null) {
-                    iResponse.onError(throwable.message,false);
-                }
-                seatError.onEmptyView(throwable.message);
-            }
-
-        }
-    }
-
-    @SuppressLint("CheckResult")
-    public PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel, @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
-        PublishSubject<Object> lifecycleDisposable = PublishSubject.create();
-        if (NetUtil.getNetWorkStart(Utils.getContext()) == 1) {
-            if (iResponse != null) {
-                iResponse.onError("网络异常",false);
-            }
             exceptionHandling(activity, "网络异常", -1);
         } else {
+            if (view!= null && seatSuccess != null) {
+                seatSuccess.onStateView();
+            }
             if (isLoading && viewModel != null) {
                 viewModel.showDialog();
             }
             try {
                 final String[] msg = new String[1];
                 if (method != null) {
-                    Observable o = method.method(RetrofitClient.getInstance().create(service, index, null, (message, code) -> {
+                    Observable o = method.method(RetrofitClient.getInstance().create(service, index, headers, (message, code) -> {
                         if (code!= Configure.getCode())
                         {
                             msg[0] =message;
@@ -203,18 +144,24 @@ public abstract class ARequest<T, K> {
                         o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
                     }
                     o.compose(RxUtils.schedulersTransformer())
-                    .compose(observable -> observable
+                            .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         KLog.e(throwable.getMessage());
-                                        parseError(viewModel, isLoading,msg[0], iResponse);
+                                        parseError(isLoading,viewModel,msg[0],view,seatError,iResponse,null,activity);
                                         return Observable.error(throwable);
                                     }))
-                    .takeUntil(lifecycleDisposable)
-                    .subscribe((Consumer<K>) response -> parseSuccess(viewModel, isLoading, iResponse, response),(Consumer<ResponseThrowable>) throwable -> parseError(viewModel, isLoading, iResponse, throwable, activity));
+                            .takeUntil(lifecycleDisposable)
+                            .subscribe((Consumer<K>) response ->
+                                            parseSuccess(viewModel,view, isLoading, iResponse, response),
+                                    (Consumer<ResponseThrowable>) throwable ->
+                                            parseError(isLoading,viewModel, null,view,seatError,iResponse, throwable, activity));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                    if (view!= null && seatError != null) {
+                        seatError.onErrorView();
+                    }
                     if (isLoading && viewModel != null){
                         viewModel.dismissDialog();
                     }
@@ -229,16 +176,10 @@ public abstract class ARequest<T, K> {
         return lifecycleDisposable;
     }
 
-    private void parseError(@Nullable BaseViewModel viewModel, boolean isLoading, String msg,IResponse<K> iResponse) {
-        if (isLoading && viewModel != null) {
-            viewModel.dismissDialog();
+    private void parseSuccess(@Nullable BaseViewModel viewModel, View viewState,boolean isLoading, IResponse<K> iResponse, K response) {
+        if (viewState!= null) {
+            viewState.setVisibility(View.GONE);
         }
-        if (iResponse != null) {
-            iResponse.onError(msg,false);
-        }
-    }
-
-    private void parseSuccess(@Nullable BaseViewModel viewModel, boolean isLoading, IResponse<K> iResponse, K response) {
         if (isLoading && viewModel != null) {
             viewModel.dismissDialog();
         }
@@ -247,26 +188,48 @@ public abstract class ARequest<T, K> {
         }
     }
 
-    private void parseError(@Nullable BaseViewModel viewModel, boolean isLoading, IResponse<K> iResponse, ResponseThrowable throwable, Activity activity) {
-        KLog.e(throwable.message);
-        if (isLoading && viewModel != null) {
+    private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,String error,View viewState,
+                            ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable, Activity activity) {
+        if (isLoading && viewModel!=null)
+        {
             viewModel.dismissDialog();
         }
-        if (throwable.getCause() instanceof ResultException) {
-            ResultException resultException = (ResultException) throwable.getCause();
-            exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
-            if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                if (iResponse != null) {
-                    iResponse.onError(throwable.message,false);
+        if (viewState!= null && seatError != null) {
+            seatError.onErrorView();
+        }
+        if (iResponse != null && StringUtils.isNotEmpty(error)) {
+            iResponse.onError(error,false);
+        }
+        if (throwable != null) {
+            KLog.e(throwable.message);
+            if (throwable.getCause() instanceof ResultException)
+            {
+                ResultException resultException = (ResultException) throwable.getCause();
+                exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
+                if (viewState!= null && seatError != null) {
+                    seatError.onErrorView();
+                    seatError.onErrorHandler(resultException.getErrCode());
+                }
+
+                if (TextUtils.isEmpty(resultException.getErrMsg())) {
+                    if (iResponse != null) {
+                        iResponse.onError(throwable.message,false);
+                    }
+                } else {
+                    if (iResponse != null) {
+                        iResponse.onError(resultException.getErrMsg(),false);
+                    }
+                }
+                if (viewState!= null && seatError != null) {
+                    seatError.onEmptyView();
                 }
             } else {
                 if (iResponse != null) {
-                    iResponse.onError(resultException.getErrMsg(),false);
+                    iResponse.onError(throwable.message,false);
                 }
-            }
-        } else {
-            if (iResponse != null) {
-                iResponse.onError(throwable.message,false);
+                if (seatError != null) {
+                    seatError.onEmptyView(throwable.message);
+                }
             }
         }
     }
