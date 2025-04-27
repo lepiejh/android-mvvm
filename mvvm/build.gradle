@@ -31,10 +31,16 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
+    repositories {
+        flatDir {
+            dirs 'libs'
+        }
+    }
 }
 
 dependencies {
-    compileOnly fileTree(include: ['*.jar'], dir: 'libs')
+    api fileTree(dir: "libs", include: ["*.jar","*.aar"])
     //support
     compileOnly rootProject.ext.support["support-v4"]
     compileOnly rootProject.ext.support["appcompat-v7"]
