@@ -152,20 +152,20 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     //注册ViewModel与View的契约UI回调事件
     protected void registorUIChangeLiveDataCallBack() {
         //加载对话框显示
-        viewModel.getUC().getShowDialogEvent().observe(this, (Observer<String>) title -> showDialog(title));
+        viewModel.getUC().getShowDialogEvent().observe(getViewLifecycleOwner(), (Observer<String>) title -> showDialog(title));
         //加载对话框消失
-        viewModel.getUC().getDismissDialogEvent().observe(this, (Observer<Void>) v -> dismissDialog());
-        viewModel.getUC().getRequestPermissionEvent().observe(this, (Observer<Map<String, Object>>) params -> {
+        viewModel.getUC().getDismissDialogEvent().observe(getViewLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
+        viewModel.getUC().getRequestPermissionEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
             String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
             requestPermission(iPermission,permissions);
         });
-        viewModel.getUC().getRequestCallPhoneEvent().observe(this, (Observer<Map<String, Object>>) params -> {
+        viewModel.getUC().getRequestCallPhoneEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
             callPhone(phoneNumber);
         });
         //跳入新页面
-        viewModel.getUC().getStartActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
+        viewModel.getUC().getStartActivityEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
             startActivity(clz, bundle);
@@ -177,16 +177,16 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
             startActivityForResult(clz,requestCode, bundle);
         });
         //跳入ContainerActivity
-        viewModel.getUC().getStartContainerActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
+        viewModel.getUC().getStartContainerActivityEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
             startContainerActivity(canonicalName, bundle);
         });
         //关闭界面
-        viewModel.getUC().getFinishEvent().observe(this, (Observer<Void>) v -> getActivity().finish());
+        viewModel.getUC().getFinishEvent().observe(getViewLifecycleOwner(), (Observer<Void>) v -> getActivity().finish());
         //关闭上一层
-        viewModel.getUC().getOnBackPressedEvent().observe(this, (Observer<Void>) v -> getActivity().onBackPressed());
-        viewModel.getUC().getOnLoadEvent().observe(this, o -> {
+        viewModel.getUC().getOnBackPressedEvent().observe(getViewLifecycleOwner(), (Observer<Void>) v -> getActivity().onBackPressed());
+        viewModel.getUC().getOnLoadEvent().observe(getViewLifecycleOwner(), o -> {
             if (isRegisterEventBus()) {
                 EventBusUtil.register(this);
             }
@@ -195,7 +195,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
             //注册RxBus
             viewModel.registerRxBus();
         });
-        viewModel.getUC().getOnResumeEvent().observe(this, o -> {
+        viewModel.getUC().getOnResumeEvent().observe(getViewLifecycleOwner(), o -> {
             if (menuVisibleTag && !isLoadData) {
                 isLoadData = true;
                 //页面数据初始化方法
