@@ -41,8 +41,8 @@ object CorpseUtils {
     +------+------+------+------+
     低地址                高地址
      */
-    fun toBytes(value: Any,boType: Int = 1): ByteArray {
-        return ByteBuffer.allocate(4).order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN).apply {
+    fun toBytes(value: Any, byte: Int = 4, boType: Int = 1): ByteArray {
+        return ByteBuffer.allocate(byte).order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN).apply {
             when(value){
                 is Float -> putFloat(value)
                 is Double -> putDouble(value)
