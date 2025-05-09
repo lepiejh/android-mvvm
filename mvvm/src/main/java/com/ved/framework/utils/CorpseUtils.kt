@@ -20,14 +20,13 @@ import java.nio.ByteOrder
 import java.util.*
 
 object CorpseUtils {
-    fun remove(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
+    fun trim(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
 
     fun bytesToHex(s: String?): String? = StringUtils.bytesToHex(s?.toByteArray(Charsets.UTF_8))
 
     /**
      * value is Float : 浮点数转 IEEE 754 字节数组
      * value is Int : int32转换为4字节数组
-     * 其它类型依此类推
      *
      * LITTLE_ENDIAN 存储  (小端序)
     内存地址增加方向 →
@@ -42,7 +41,7 @@ object CorpseUtils {
     +------+------+------+------+
     低地址                高地址
      */
-    fun floatToBytes(value: Any,boType: Int = 1): ByteArray {
+    fun toBytes(value: Any,boType: Int = 1): ByteArray {
         return ByteBuffer.allocate(4).order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN).apply {
             when(value){
                 is Float -> putFloat(value)
@@ -51,9 +50,7 @@ object CorpseUtils {
                 is Long -> putLong(value)
                 is Short -> putShort(value)
                 is Char -> putChar(value)
-                else ->{
-                    throw RuntimeException("Value data type mismatch")
-                }
+                else -> putInt(0)
             }
         }.array()
     }
