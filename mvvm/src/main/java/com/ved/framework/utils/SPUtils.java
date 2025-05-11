@@ -112,7 +112,11 @@ public final class SPUtils {
     }
 
     public double getDouble(String key,double defaultObject){
-        return (double) get(key,defaultObject);
+        try {
+            return (double) get(key,defaultObject);
+        } catch (Exception e) {
+            return 0.0;
+        }
     }
 
     public double getDouble(String key){
@@ -248,7 +252,6 @@ public final class SPUtils {
                 try {
                     base64 = Base64.encodeToString(value.getBytes(), Base64.DEFAULT);
                 } catch (Exception exception) {
-                    KLog.e(exception.getMessage());
                     return value;
                 }
                 return base64;
@@ -322,7 +325,6 @@ public final class SPUtils {
                 try {
                     base64 = new String(Base64.decode(value, Base64.DEFAULT));
                 } catch (Exception exception) {
-                    KLog.e(exception.getMessage());
                     return value;
                 }
                 return base64;
