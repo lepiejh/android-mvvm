@@ -17,7 +17,6 @@ import java.nio.ByteOrder
 import java.util.*
 
 object CorpseUtils {
-    private var lastJob: Job? = null
 
     fun trim(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
 
@@ -70,8 +69,7 @@ object CorpseUtils {
      * 延时执行某个动作
      */
     fun BaseViewModel<*>?.delayedAction(delay: Long,block: () -> Unit) {
-        lastJob?.cancel()  // 取消前一个任务
-        lastJob = this?.viewModelScope?.launch {
+        this?.viewModelScope?.launch {
             delay(delay)
             block()
         }
