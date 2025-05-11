@@ -8,10 +8,7 @@ import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
 import androidx.lifecycle.viewModelScope
 import com.ved.framework.base.BaseViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import okhttp3.Request
 import org.json.JSONObject
 import java.lang.reflect.Proxy
@@ -20,6 +17,8 @@ import java.nio.ByteOrder
 import java.util.*
 
 object CorpseUtils {
+    private var lastJob: Job? = null
+
     fun trim(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
 
     fun bytesToHex(s: String?): String? = StringUtils.bytesToHex(s?.toByteArray(Charsets.UTF_8))
@@ -70,10 +69,11 @@ object CorpseUtils {
     /**
      * 延时执行某个动作
      */
-    fun BaseViewModel<*>?.delayedAction(delayMillis: Long,action: () -> Unit) {
-        this?.viewModelScope?.launch {
-            delay(delayMillis) // 协程的delay函数
-            action.invoke()
+    fun BaseViewModel<*>?.delayedAction(delay: Long,block: () -> Unit) {
+        lastJob?.cancel()  // 取消前一个任务
+        lastJob = this?.viewModelScope?.launch {
+            delay(delay)
+            block()
         }
     }
 
