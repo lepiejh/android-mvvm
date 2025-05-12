@@ -49,7 +49,6 @@ public class DES {
             if (TextUtils.isEmpty(decryptString)) {
                 return decryptString;
             }
-
             // 2. Base64预处理
             String processedBase64 = decryptString.trim()
                     .replaceAll("[^A-Za-z0-9+/=_-]", "")
