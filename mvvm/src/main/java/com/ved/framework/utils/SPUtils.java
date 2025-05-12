@@ -114,7 +114,7 @@ public final class SPUtils {
         try {
             return StringUtils.parseDouble(get(key,defaultObject));
         } catch (Exception e) {
-            return 0.0;
+            return 0.0d;
         }
     }
 
