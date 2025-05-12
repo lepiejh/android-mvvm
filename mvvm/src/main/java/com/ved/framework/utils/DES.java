@@ -3,6 +3,7 @@ package com.ved.framework.utils;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
@@ -44,49 +45,104 @@ public class DES {
     }
 
     public static String decryptDES(String decryptString, String decryptKey, byte[] iv) {
+        // 1. 空值检查
+        if (TextUtils.isEmpty(decryptString)) {
+            KLog.w("Empty input string");
+            return decryptString;
+        }
+
         try {
-            // 1. 空值检查
-            if (TextUtils.isEmpty(decryptString)) {
-                return decryptString;
-            }
-            // 2. Base64预处理
-            String processedBase64 = decryptString.trim()
-                    .replaceAll("[^A-Za-z0-9+/=_-]", "")
-                    .replace('-', '+')
-                    .replace('_', '/');
-
-            // 3. 补全padding
-            switch (processedBase64.length() % 4) {
-                case 2: processedBase64 += "=="; break;
-                case 3: processedBase64 += "="; break;
+            // 2. Base64预处理（增强版）
+            String processedBase64 = preprocessBase64(decryptString);
+            if (processedBase64 == null) {
+                KLog.e("Invalid Base64 format after preprocessing");
+                return null;
             }
 
-            // 4. 解码
-            byte[] byteMi = Base64.decode(processedBase64, Base64.NO_WRAP);
+            // 3. Base64解码
+            byte[] byteMi;
+            try {
+                byteMi = Base64.decode(processedBase64, Base64.NO_WRAP);
+            } catch (IllegalArgumentException e) {
+                KLog.e("Base64 decoding failed. Processed: " + processedBase64);
+                return null;
+            }
 
-            // 5. 解密
-            byte[] keyBytes = Arrays.copyOf(decryptKey.getBytes(CHARSET), 24);
-            SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
+            // 4. 验证密文长度
+            if (byteMi.length % 8 != 0) { // DESede块大小是8字节
+                KLog.e("Invalid ciphertext length: " + byteMi.length);
+                return null;
+            }
 
-            IvParameterSpec ivSpec = new IvParameterSpec(iv);
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            // 5. 准备密钥和IV
+            byte[] keyBytes = normalizeKey(decryptKey);
+            if (keyBytes == null) {
+                KLog.e("Key normalization failed");
+                return null;
+            }
 
-            byte[] decryptedData = cipher.doFinal(byteMi);
-            return new String(decryptedData, CHARSET).trim();
+            // 6. 执行解密
+            return performDecryption(byteMi, keyBytes, iv);
 
-        } catch (IllegalArgumentException e) {
-            KLog.e("Base64 decoding failed. Input: '" + decryptString +
-                    "', Error: " + e.getMessage());
-            return null;
-        } catch (BadPaddingException e) {
-            KLog.e("Decryption failed (bad padding). Key/IV mismatch?");
-            return null;
         } catch (Exception e) {
-            KLog.e("Decryption error: " + e.getClass().getSimpleName() +
-                    " - " + e.getMessage());
+            KLog.e("Decryption failed. Input: " + abbreviate(decryptString) +
+                    ", Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;
         }
+    }
+
+    // 辅助方法：Base64预处理
+    private static String preprocessBase64(String input) {
+        if (input == null) return null;
+
+        // 移除所有非Base64字符
+        String cleaned = input.trim()
+                .replaceAll("[^A-Za-z0-9+/=_-]", "")
+                .replace('-', '+')
+                .replace('_', '/');
+
+        // 验证有效性
+        if (cleaned.isEmpty()) return null;
+
+        // 补全padding
+        switch (cleaned.length() % 4) {
+            case 2: cleaned += "=="; break;
+            case 3: cleaned += "="; break;
+        }
+
+        return cleaned;
+    }
+
+    // 辅助方法：密钥标准化
+    private static byte[] normalizeKey(String key) {
+        if (key == null) return null;
+
+        try {
+            byte[] keyBytes = key.getBytes(CHARSET);
+            return Arrays.copyOf(keyBytes, 24); // Triple DES需要24字节
+        } catch (UnsupportedEncodingException e) {
+            return null;
+        }
+    }
+
+    // 辅助方法：执行解密操作
+    private static String performDecryption(byte[] ciphertext, byte[] keyBytes, byte[] iv)
+            throws Exception {
+        SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
+        IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+        Cipher cipher = Cipher.getInstance(ALGORITHM);
+        cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
+        byte[] decryptedData = cipher.doFinal(ciphertext);
+        return new String(decryptedData, CHARSET).trim();
+    }
+
+    // 辅助方法：字符串缩写（用于日志）
+    private static String abbreviate(String s) {
+        if (s == null) return "null";
+        if (s.length() <= 20) return "'" + s + "'";
+        return "'" + s.substring(0, 10) + "..." + s.substring(s.length()-10) + "' (len=" + s.length() + ")";
     }
 
     public static String encrypt(String data) {

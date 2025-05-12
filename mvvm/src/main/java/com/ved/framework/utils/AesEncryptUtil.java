@@ -5,6 +5,7 @@ import android.util.Base64;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -51,31 +52,43 @@ public class AesEncryptUtil {
 
     public static String desEncrypt(String data, String key, String iv) {
         try {
-            // 1. 清理和验证输入
+            // 1. 增强输入检查
             if (TextUtils.isEmpty(data)) {
+                KLog.w("Empty input string");
                 return data;
             }
 
             // 2. Base64预处理
             String processedBase64 = data.trim()
+                    .replaceAll("\\s+", "")
                     .replaceAll("[^A-Za-z0-9+/=_-]", "")
                     .replace('-', '+')
                     .replace('_', '/');
 
-            // 3. 补全padding
-            switch (processedBase64.length() % 4) {
-                case 2: processedBase64 += "=="; break;
-                case 3: processedBase64 += "="; break;
+            // 3. 精确补全padding
+            int padding = (4 - processedBase64.length() % 4) % 4;
+            processedBase64 += "====".substring(0, padding);
+
+            // 4. Base64解码
+            byte[] encryptedData;
+            try {
+                encryptedData = android.util.Base64.decode(processedBase64, Base64.NO_WRAP);
+            } catch (IllegalArgumentException e) {
+                KLog.e("Base64 decode failed. Processed: " + processedBase64);
+                return null;
             }
 
-            // 4. 解码
-            byte[] encryptedData = android.util.Base64.decode(processedBase64, Base64.NO_WRAP);
+            // 5. 验证块大小
+            if (encryptedData.length % 16 != 0) {
+                KLog.e("Invalid ciphertext length: " + encryptedData.length);
+                return null;
+            }
 
-            // 5. 验证key和IV
+            // 6. 验证密钥和IV
             byte[] keyBytes = validateKey(key);
             byte[] ivBytes = validateIV(iv);
 
-            // 6. 执行解密
+            // 7. 执行解密
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
@@ -85,15 +98,16 @@ public class AesEncryptUtil {
             byte[] original = cipher.doFinal(encryptedData);
             return new String(original, CHARSET).trim();
 
-        } catch (IllegalArgumentException e) {
-            KLog.e("Invalid Base64: " + data + ", Error: " + e.getMessage());
-            return null;
         } catch (BadPaddingException e) {
-            KLog.e("Decryption failed (bad padding). Key/IV mismatch?");
+            KLog.e("Key/IV mismatch or corrupted data");
             return null;
-        }  catch (Exception e) {
-            KLog.e("Decryption failed. Input: '" + data +
-                    "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+        } catch (IllegalBlockSizeException e) {
+            KLog.e("Invalid block size. Possible causes: " +
+                    "1. Not encrypted data, 2. Corrupted data, 3. Wrong algorithm");
+            return null;
+        } catch (Exception e) {
+            KLog.e("Decryption failed. Error: " + e.getClass().getSimpleName() +
+                    ": " + e.getMessage());
             return null;
         }
     }
