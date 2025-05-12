@@ -57,7 +57,7 @@ public final class StringUtils {
             try {
                 bd = toBigDecimal(s);
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 bd = s;
             }
             return bd;
@@ -71,7 +71,7 @@ public final class StringUtils {
             try {
                 return Long.parseLong(s);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return 0L;
             }
         }
@@ -84,7 +84,7 @@ public final class StringUtils {
             try {
                 return Float.parseFloat(s);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return 0.0f;
             }
         }
@@ -97,7 +97,7 @@ public final class StringUtils {
             try {
                 return Double.parseDouble(s);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return 0.0d;
             }
         }
@@ -110,7 +110,7 @@ public final class StringUtils {
             try {
                 return Integer.parseInt(s);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return 0;
             }
         }
@@ -158,7 +158,7 @@ public final class StringUtils {
             try {
                 d = Integer.parseInt(s);
             } catch (NumberFormatException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             return d >= 0;
         }
@@ -459,7 +459,7 @@ public final class StringUtils {
         try {
             addressList = geocoder.getFromLocation(latitude, longitude, 1);
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         if (addressList != null && addressList.size() > 0) {
             return addressList.get(0);
@@ -564,7 +564,7 @@ public final class StringUtils {
         try {
             return Integer.valueOf(str, i).intValue();
         } catch (NumberFormatException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return 0;
         }
     }
@@ -578,7 +578,7 @@ public final class StringUtils {
         try {
             return str.substring(i2, i2 + 4);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "0";
         }
     }

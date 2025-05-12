@@ -42,6 +42,7 @@ public class AesEncryptUtil {
             return android.util.Base64.encodeToString(encrypted,android.util.Base64.NO_WRAP);
 
         } catch (Exception e) {
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -68,6 +69,7 @@ public class AesEncryptUtil {
             String originalString = new String(original,"utf-8").trim();
             return originalString;
         } catch (Exception e) {
+            KLog.e(e.getMessage());
             return null;
         }
     }

@@ -113,7 +113,7 @@ public final class SPUtils {
 
     public double getDouble(String key,double defaultObject){
         try {
-            return (double) get(key,defaultObject);
+            return StringUtils.parseDouble(get(key,defaultObject));
         } catch (Exception e) {
             return 0.0;
         }
@@ -140,9 +140,8 @@ public final class SPUtils {
             return false;
         }
         SharedPreferences.Editor editor = sp.edit();
-
         if (value instanceof String) {
-            return editor.putString(key, (String) encryptDES((String) value)).commit();
+            return editor.putString(key, encryptDES((String) value)).commit();
         } else if (value instanceof Boolean) {
             return editor.putBoolean(key, (Boolean) value).commit();
         } else if (value instanceof Float) {
@@ -151,10 +150,9 @@ public final class SPUtils {
             return editor.putInt(key, (Integer) value).commit();
         } else if (value instanceof Long) {
             return editor.putLong(key, (Long) value).commit();
-        } else if (value instanceof Set) {
-            throw new IllegalArgumentException("Value can not be Set object!");
+        }else {
+            return editor.putString(key, encryptDES(StringUtils.parseStr(value))).commit();
         }
-        return false;
     }
 
 
@@ -172,10 +170,9 @@ public final class SPUtils {
             return sp.getInt(key, (Integer) defaultValue);
         } else if (defaultValue instanceof Long) {
             return sp.getLong(key, (Long) defaultValue);
-        } else if (defaultValue instanceof Set) {
-            throw new IllegalArgumentException("Can not to get Set value!");
+        }else {
+            return decryptDES(sp.getString(key, StringUtils.parseStr(defaultValue)));
         }
-        return null;
     }
 
     public boolean contains(@Nullable String key) {

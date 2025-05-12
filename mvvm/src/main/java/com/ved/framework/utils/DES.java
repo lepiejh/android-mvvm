@@ -25,6 +25,7 @@ public class DES {
             byte[] encryptedData = cipher.doFinal(encryptString.getBytes());
             return Base64.encodeToString(encryptedData, Base64.DEFAULT);
         } catch (Exception e) {
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -43,6 +44,7 @@ public class DES {
             byte[] decryptedData = cipher.doFinal(byteMi);
             return new String(decryptedData);
         } catch (Exception e) {
+            KLog.e(e.getMessage());
             return null;
         }
     }
