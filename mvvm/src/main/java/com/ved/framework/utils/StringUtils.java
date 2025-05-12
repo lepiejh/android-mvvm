@@ -53,11 +53,9 @@ public final class StringUtils {
         if (isSpace(s)){
             return "0";
         }else {
-            // 移除所有非数字字符（保留负号、小数点、科学计数法e）
-            String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
             String bd;
             try {
-                bd = toBigDecimal(clean);
+                bd = toBigDecimal(s);
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 bd = s;
@@ -70,10 +68,8 @@ public final class StringUtils {
         if (isSpace(s)){
             return 0L;
         }
-        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
-        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
         try {
-            return Long.parseLong(clean);
+            return Long.parseLong(s);
         } catch (NumberFormatException e) {
             KLog.e(e.getMessage());
             return 0L;
@@ -84,10 +80,8 @@ public final class StringUtils {
         if (isSpace(s)){
             return 0.0f;
         }
-        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
-        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
         try {
-            return Float.parseFloat(clean);
+            return Float.parseFloat(s);
         } catch (NumberFormatException e) {
             KLog.e(e.getMessage());
             return 0.0f;
@@ -98,12 +92,10 @@ public final class StringUtils {
         if (isSpace(s)) {
             return 0.0d;
         }
-        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
-        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
         try {
-            return Double.parseDouble(clean);
+            return Double.parseDouble(s);
         } catch (NumberFormatException e) {
-            KLog.e("Failed to parse double: '" + s + "' -> Cleaned: '" + clean + "', Error: " + e.getMessage());
+            KLog.e(e.getMessage());
             return 0.0d;
         }
     }
@@ -112,10 +104,8 @@ public final class StringUtils {
         if (isSpace(s)){
             return 0;
         }
-        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
-        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
         try {
-            return Integer.parseInt(clean);
+            return Integer.parseInt(s);
         } catch (NumberFormatException e) {
             KLog.e(e.getMessage());
             return 0;
