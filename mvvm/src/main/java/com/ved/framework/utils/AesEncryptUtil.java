@@ -1,7 +1,9 @@
 package com.ved.framework.utils;
 
 import android.text.TextUtils;
+import android.util.Base64;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -54,20 +56,20 @@ public class AesEncryptUtil {
                 return data;
             }
 
-            // 2. 预处理Base64字符串
-            String cleanBase64 = data.trim()
-                    .replaceAll("\\s+", "")      // 移除所有空白字符
-                    .replace('-', '+')           // 处理URL安全的Base64
-                    .replace('_', '/');          // 处理URL安全的Base64
+            // 2. Base64预处理
+            String processedBase64 = data.trim()
+                    .replaceAll("[^A-Za-z0-9+/=_-]", "")
+                    .replace('-', '+')
+                    .replace('_', '/');
 
             // 3. 补全padding
-            switch (cleanBase64.length() % 4) {
-                case 2: cleanBase64 += "=="; break;
-                case 3: cleanBase64 += "="; break;
+            switch (processedBase64.length() % 4) {
+                case 2: processedBase64 += "=="; break;
+                case 3: processedBase64 += "="; break;
             }
 
             // 4. 解码
-            byte[] encryptedData = android.util.Base64.decode(cleanBase64, android.util.Base64.NO_WRAP);
+            byte[] encryptedData = android.util.Base64.decode(processedBase64, Base64.NO_WRAP);
 
             // 5. 验证key和IV
             byte[] keyBytes = validateKey(key);
@@ -86,7 +88,10 @@ public class AesEncryptUtil {
         } catch (IllegalArgumentException e) {
             KLog.e("Invalid Base64: " + data + ", Error: " + e.getMessage());
             return null;
-        } catch (Exception e) {
+        } catch (BadPaddingException e) {
+            KLog.e("Decryption failed (bad padding). Key/IV mismatch?");
+            return null;
+        }  catch (Exception e) {
             KLog.e("Decryption failed. Input: '" + data +
                     "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;

@@ -5,6 +5,7 @@ import android.util.Base64;
 
 import java.util.Arrays;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -44,25 +45,27 @@ public class DES {
 
     public static String decryptDES(String decryptString, String decryptKey, byte[] iv) {
         try {
+            // 1. 空值检查
             if (TextUtils.isEmpty(decryptString)) {
                 return decryptString;
             }
 
-            // 1. 清理Base64字符串
-            StringBuilder cleanBase64 = new StringBuilder(decryptString.trim()
-                    .replaceAll("\\s+", "")
+            // 2. Base64预处理
+            String processedBase64 = decryptString.trim()
+                    .replaceAll("[^A-Za-z0-9+/=_-]", "")
                     .replace('-', '+')
-                    .replace('_', '/'));
+                    .replace('_', '/');
 
-            // 2. 补全padding
-            while (cleanBase64.length() % 4 != 0) {
-                cleanBase64.append("=");
+            // 3. 补全padding
+            switch (processedBase64.length() % 4) {
+                case 2: processedBase64 += "=="; break;
+                case 3: processedBase64 += "="; break;
             }
 
-            // 3. 解码
-            byte[] byteMi = Base64.decode(cleanBase64.toString(), Base64.NO_WRAP);
+            // 4. 解码
+            byte[] byteMi = Base64.decode(processedBase64, Base64.NO_WRAP);
 
-            // 剩余解密逻辑保持不变
+            // 5. 解密
             byte[] keyBytes = Arrays.copyOf(decryptKey.getBytes(CHARSET), 24);
             SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
 
@@ -73,9 +76,16 @@ public class DES {
             byte[] decryptedData = cipher.doFinal(byteMi);
             return new String(decryptedData, CHARSET).trim();
 
+        } catch (IllegalArgumentException e) {
+            KLog.e("Base64 decoding failed. Input: '" + decryptString +
+                    "', Error: " + e.getMessage());
+            return null;
+        } catch (BadPaddingException e) {
+            KLog.e("Decryption failed (bad padding). Key/IV mismatch?");
+            return null;
         } catch (Exception e) {
-            KLog.e("Decryption failed. Input: '" + decryptString +
-                    "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
+            KLog.e("Decryption error: " + e.getClass().getSimpleName() +
+                    " - " + e.getMessage());
             return null;
         }
     }

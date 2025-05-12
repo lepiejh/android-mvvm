@@ -253,26 +253,28 @@ public final class SPUtils {
             if (StringUtils.isNotEmpty(encrypt)) {
                 return encrypt;
             } else {
-                if (!com.ved.framework.utils.Base64.isInvalidBase64(value)) {
-                    KLog.e("Not a valid Base64 string: " + value);
-                    return value;
+                // 1. 处理null和空字符串
+                if (value == null) {
+                    return null;
                 }
-                String base64 = null;
+                if (value.isEmpty()) {
+                    return "";
+                }
                 try {
-                    // 先去除可能的空白字符
-                    String cleanValue = StringUtils.trim(value).replaceAll("\\s+", "");
+                    // 2. 标准化字符编码
+                    byte[] bytes;
+                    bytes = value.getBytes(StandardCharsets.UTF_8);
 
-                    // 使用 NO_WRAP 避免换行符问题
-                    byte[] decodedBytes = Base64.decode(cleanValue, Base64.NO_WRAP);
-                    base64 = new String(decodedBytes, StandardCharsets.UTF_8);
-                } catch (IllegalArgumentException e) {
-                    KLog.e("Invalid Base64: " + value + ", Error: " + e.getMessage());
-                    return value;
+                    // 3. 编码为URL安全的Base64（无填充）
+                    return Base64.encodeToString(bytes, Base64.NO_WRAP)
+                            .replace('+', '-')
+                            .replace('/', '_')
+                            .replace("=", "");
+
                 } catch (Exception e) {
-                    KLog.e("Unexpected error decoding: " + value + ", Error: " + e.getMessage());
-                    return value;
+                    KLog.e(e.getMessage());
+                    return value; // 返回原始值或根据需求返回null
                 }
-                return base64;
             }
         }
     }
@@ -339,17 +341,22 @@ public final class SPUtils {
             if (StringUtils.isNotEmpty(desEncrypt)){
                 return desEncrypt;
             }else {
-                if (!com.ved.framework.utils.Base64.isInvalidBase64(value)) {
-                    KLog.e("Not a valid Base64 string: " + value);
-                    return value;
-                }
                 String base64 = null;
                 try {
-                    // 先去除可能的空白字符
-                    String cleanValue = StringUtils.trim(value).replaceAll("\\s+", "");
+                    // 2. Base64预处理
+                    String processedBase64 = StringUtils.trim(value)
+                            .replaceAll("[^A-Za-z0-9+/=_-]", "")
+                            .replace('-', '+')
+                            .replace('_', '/');
 
-                    // 使用 NO_WRAP 避免换行符问题
-                    byte[] decodedBytes = Base64.decode(cleanValue, Base64.NO_WRAP);
+                    // 3. 补全padding
+                    switch (processedBase64.length() % 4) {
+                        case 2: processedBase64 += "=="; break;
+                        case 3: processedBase64 += "="; break;
+                    }
+
+                    // 4. 解码
+                    byte[] decodedBytes = Base64.decode(processedBase64, Base64.NO_WRAP);
                     base64 = new String(decodedBytes, StandardCharsets.UTF_8);
                 } catch (IllegalArgumentException e) {
                     KLog.e("Invalid Base64: " + value + ", Error: " + e.getMessage());
