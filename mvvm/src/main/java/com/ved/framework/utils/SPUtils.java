@@ -270,7 +270,6 @@ public final class SPUtils {
                             .replace('+', '-')
                             .replace('/', '_')
                             .replace("=", "");
-
                 } catch (Exception e) {
                     KLog.e(e.getMessage());
                     return value; // 返回原始值或根据需求返回null
