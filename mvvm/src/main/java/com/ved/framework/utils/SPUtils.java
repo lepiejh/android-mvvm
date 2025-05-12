@@ -111,11 +111,7 @@ public final class SPUtils {
     }
 
     public double getDouble(String key,double defaultObject){
-        try {
-            return StringUtils.parseDouble(get(key,defaultObject));
-        } catch (Exception e) {
-            return 0.0d;
-        }
+        return StringUtils.parseDouble(get(key,defaultObject));
     }
 
     public double getDouble(String key){
@@ -157,7 +153,19 @@ public final class SPUtils {
 
     public Object getValue(@Nullable String key, @Nullable Object defaultValue) {
         if (null == sp) {
-            return null;
+            if (defaultValue instanceof String) {
+                return decryptDES("");
+            } else if (defaultValue instanceof Boolean) {
+                return false;
+            } else if (defaultValue instanceof Float) {
+                return 0f;
+            } else if (defaultValue instanceof Integer) {
+                return 0;
+            } else if (defaultValue instanceof Long) {
+                return 0L;
+            }else {
+                return "";
+            }
         }
         if (defaultValue instanceof String) {
             return decryptDES(sp.getString(key, (String) defaultValue));
@@ -307,7 +315,7 @@ public final class SPUtils {
 
     private String decryptDES(@Nullable String value) {
         if (TextUtils.isEmpty(value)) {
-            return null;
+            return "";
         }
         String decryptDES = DES.desEncrypt(value);
         if (StringUtils.isNotEmpty(decryptDES)){

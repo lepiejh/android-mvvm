@@ -117,7 +117,7 @@ public final class StringUtils {
     }
 
     public static String parseStr(Object o){
-        return String.valueOf(o);
+        return o == null ? "" : String.valueOf(o);
     }
 
     public static int parseInt(Object o){
@@ -129,6 +129,9 @@ public final class StringUtils {
     }
 
     public static double parseDouble(Object o){
+        if (o == null) {
+            return 0.0d;
+        }
         return parseDouble(parseStr(o));
     }
 
