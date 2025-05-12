@@ -245,6 +245,10 @@ public final class SPUtils {
         if (TextUtils.isEmpty(value)) {
             return "";
         }
+        //数字类型不做加密
+        if (RegexUtils.isNumber(value)){
+            return value;
+        }
         String encryptDes = DES.encrypt(value);
         if (StringUtils.isNotEmpty(encryptDes)) {
             return encryptDes;
@@ -331,6 +335,10 @@ public final class SPUtils {
     private String decryptDES(@Nullable String value) {
         if (TextUtils.isEmpty(value)) {
             return "";
+        }
+        //数字类型不做解密
+        if (RegexUtils.isNumber(value)){
+            return value;
         }
         String decryptDES = DES.desEncrypt(value);
         if (StringUtils.isNotEmpty(decryptDES)){

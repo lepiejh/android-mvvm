@@ -7,6 +7,23 @@ package com.ved.framework.utils.constant;
 public final class RegexConstants {
 
     /**
+     * 整型（int/short/long）
+     */
+    public static final String INTEGER_REGEX = "^-?\\d+$";
+    /**
+     * 浮点型（float/double）
+     */
+    public static final String FLOAT_REGEX = "^-?\\d+\\.\\d+$";
+    /**
+     * 科学计数法
+     */
+    public static final String SCIENTIFIC_REGEX = "^-?\\d+(\\.\\d+)?[eE][+-]?\\d+$";
+    /**
+     * 综合所有数字类型
+     */
+    public static final String NUMBER_REGEX = "^-?(\\d+|\\d+\\.\\d+|\\d+(\\.\\d+)?[eE][+-]?\\d+)$";
+
+    /**
      * 正则：手机号（简单）
      */
     public static final String REGEX_MOBILE_SIMPLE = "^[1][3-9]\\d{9}$";

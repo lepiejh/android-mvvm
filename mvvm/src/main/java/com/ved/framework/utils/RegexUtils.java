@@ -22,6 +22,27 @@ public final class RegexUtils {
     ///////////////////////////////////////////////////////////////////////////
 
     /**
+     * 检查字符串是否为整数（int/short/long）
+     */
+    public static boolean isInteger(String str) {
+        return str != null && str.matches(RegexConstants.INTEGER_REGEX);
+    }
+
+    /**
+     * 检查字符串是否为浮点数（float/double）
+     */
+    public static boolean isFloat(String str) {
+        return str != null && (str.matches(RegexConstants.FLOAT_REGEX) || str.matches(RegexConstants.SCIENTIFIC_REGEX));
+    }
+
+    /**
+     * 检查字符串是否为数字（包含所有数字类型）
+     */
+    public static boolean isNumber(String str) {
+        return str != null && str.matches(RegexConstants.NUMBER_REGEX);
+    }
+
+    /**
      * 验证手机号（简单）
      *
      * @param input 待验证文本
