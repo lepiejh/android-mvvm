@@ -119,7 +119,7 @@ public final class SPUtils {
     }
 
     public double getDouble(String key){
-        return getDouble(key,0d);
+        return getDouble(key,0.0d);
     }
 
     public void putString(String key, String value){
