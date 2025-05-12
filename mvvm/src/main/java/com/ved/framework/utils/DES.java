@@ -20,7 +20,6 @@ public class DES {
                 return encryptString;
             }
 
-            // Ensure key is exactly 24 bytes (for Triple DES)
             byte[] keyBytes = Arrays.copyOf(encryptKey.getBytes(CHARSET), 24);
             SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
 
@@ -29,9 +28,16 @@ public class DES {
             cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
 
             byte[] encryptedData = cipher.doFinal(encryptString.getBytes(CHARSET));
-            return Base64.encodeToString(encryptedData, Base64.NO_WRAP);
+
+            // 使用URL安全的Base64编码便于传输
+            return Base64.encodeToString(encryptedData, Base64.NO_WRAP)
+                    .replace('+', '-')
+                    .replace('/', '_')
+                    .replace("=", "");
+
         } catch (Exception e) {
-            KLog.e("encryptDES encryptString : "+encryptString+" ,Encryption error: " + e.getMessage());
+            KLog.e("Encryption failed. Input: '" + encryptString +
+                    "', Error: " + e.getMessage());
             return null;
         }
     }
@@ -42,19 +48,34 @@ public class DES {
                 return decryptString;
             }
 
-            // Ensure key is exactly 24 bytes (for Triple DES)
+            // 1. 清理Base64字符串
+            StringBuilder cleanBase64 = new StringBuilder(decryptString.trim()
+                    .replaceAll("\\s+", "")
+                    .replace('-', '+')
+                    .replace('_', '/'));
+
+            // 2. 补全padding
+            while (cleanBase64.length() % 4 != 0) {
+                cleanBase64.append("=");
+            }
+
+            // 3. 解码
+            byte[] byteMi = Base64.decode(cleanBase64.toString(), Base64.NO_WRAP);
+
+            // 剩余解密逻辑保持不变
             byte[] keyBytes = Arrays.copyOf(decryptKey.getBytes(CHARSET), 24);
             SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
 
-            byte[] byteMi = Base64.decode(decryptString, Base64.NO_WRAP);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
 
             byte[] decryptedData = cipher.doFinal(byteMi);
             return new String(decryptedData, CHARSET).trim();
+
         } catch (Exception e) {
-            KLog.e("decryptDES decryptString : "+decryptString+" ,Decryption error: " + e.getMessage());
+            KLog.e("Decryption failed. Input: '" + decryptString +
+                    "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;
         }
     }

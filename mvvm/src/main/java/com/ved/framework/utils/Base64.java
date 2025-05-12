@@ -129,4 +129,14 @@ public class Base64 {
         }
     }
 
+    public static boolean isInvalidBase64(String str) {
+        if (str == null) return true;
+        try {
+            android.util.Base64.decode(str, android.util.Base64.NO_WRAP);
+            return false;
+        } catch (IllegalArgumentException e) {
+            return true;
+        }
+    }
+
 }

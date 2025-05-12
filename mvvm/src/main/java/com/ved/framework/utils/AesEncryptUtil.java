@@ -1,5 +1,7 @@
 package com.ved.framework.utils;
 
+import android.text.TextUtils;
+
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -14,10 +16,16 @@ public class AesEncryptUtil {
 
     public static String encrypt(String data, String key, String iv) {
         try {
-            // Validate key and IV length
+            // 1. 验证输入
+            if (TextUtils.isEmpty(data)) {
+                return data;
+            }
+
+            // 2. 验证key和IV
             byte[] keyBytes = validateKey(key);
             byte[] ivBytes = validateIV(iv);
 
+            // 3. 执行加密
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
@@ -25,21 +33,47 @@ public class AesEncryptUtil {
             cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
 
             byte[] encrypted = cipher.doFinal(data.getBytes(CHARSET));
-            return android.util.Base64.encodeToString(encrypted, android.util.Base64.NO_WRAP);
+
+            // 4. 生成URL安全的Base64（无padding）
+            return android.util.Base64.encodeToString(encrypted, android.util.Base64.NO_WRAP)
+                    .replace('+', '-')
+                    .replace('/', '_')
+                    .replace("=", "");
+
         } catch (Exception e) {
-            KLog.e("encrypt data : "+data+" ,Encryption error: " + e.getMessage());
+            KLog.e("Encryption failed. Input: '" + data +
+                    "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;
         }
     }
 
     public static String desEncrypt(String data, String key, String iv) {
         try {
-            // Validate key and IV length
+            // 1. 清理和验证输入
+            if (TextUtils.isEmpty(data)) {
+                return data;
+            }
+
+            // 2. 预处理Base64字符串
+            String cleanBase64 = data.trim()
+                    .replaceAll("\\s+", "")      // 移除所有空白字符
+                    .replace('-', '+')           // 处理URL安全的Base64
+                    .replace('_', '/');          // 处理URL安全的Base64
+
+            // 3. 补全padding
+            switch (cleanBase64.length() % 4) {
+                case 2: cleanBase64 += "=="; break;
+                case 3: cleanBase64 += "="; break;
+            }
+
+            // 4. 解码
+            byte[] encryptedData = android.util.Base64.decode(cleanBase64, android.util.Base64.NO_WRAP);
+
+            // 5. 验证key和IV
             byte[] keyBytes = validateKey(key);
             byte[] ivBytes = validateIV(iv);
 
-            byte[] encryptedData = android.util.Base64.decode(data, android.util.Base64.NO_WRAP);
-
+            // 6. 执行解密
             SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
             IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
@@ -48,8 +82,13 @@ public class AesEncryptUtil {
 
             byte[] original = cipher.doFinal(encryptedData);
             return new String(original, CHARSET).trim();
+
+        } catch (IllegalArgumentException e) {
+            KLog.e("Invalid Base64: " + data + ", Error: " + e.getMessage());
+            return null;
         } catch (Exception e) {
-            KLog.e("desEncrypt data : "+data+" ,Decryption error: " + e.getMessage());
+            KLog.e("Decryption failed. Input: '" + data +
+                    "', Error: " + e.getClass().getSimpleName() + ": " + e.getMessage());
             return null;
         }
     }

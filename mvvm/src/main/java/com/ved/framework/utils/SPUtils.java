@@ -10,6 +10,7 @@ import com.ved.framework.utils.bland.code.Utils;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -252,11 +253,23 @@ public final class SPUtils {
             if (StringUtils.isNotEmpty(encrypt)) {
                 return encrypt;
             } else {
+                if (!com.ved.framework.utils.Base64.isInvalidBase64(value)) {
+                    KLog.e("Not a valid Base64 string: " + value);
+                    return value;
+                }
                 String base64 = null;
                 try {
-                    base64 = Base64.encodeToString(value.getBytes(), Base64.DEFAULT);
-                } catch (Exception exception) {
-                    KLog.e("encryptDES value : "+value+"  ,"+exception.getMessage());
+                    // 先去除可能的空白字符
+                    String cleanValue = StringUtils.trim(value).replaceAll("\\s+", "");
+
+                    // 使用 NO_WRAP 避免换行符问题
+                    byte[] decodedBytes = Base64.decode(cleanValue, Base64.NO_WRAP);
+                    base64 = new String(decodedBytes, StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException e) {
+                    KLog.e("Invalid Base64: " + value + ", Error: " + e.getMessage());
+                    return value;
+                } catch (Exception e) {
+                    KLog.e("Unexpected error decoding: " + value + ", Error: " + e.getMessage());
                     return value;
                 }
                 return base64;
@@ -326,11 +339,23 @@ public final class SPUtils {
             if (StringUtils.isNotEmpty(desEncrypt)){
                 return desEncrypt;
             }else {
+                if (!com.ved.framework.utils.Base64.isInvalidBase64(value)) {
+                    KLog.e("Not a valid Base64 string: " + value);
+                    return value;
+                }
                 String base64 = null;
                 try {
-                    base64 = new String(Base64.decode(value, Base64.DEFAULT));
-                } catch (Exception exception) {
-                    KLog.e("decryptDES value : "+value+"  ,"+exception.getMessage());
+                    // 先去除可能的空白字符
+                    String cleanValue = StringUtils.trim(value).replaceAll("\\s+", "");
+
+                    // 使用 NO_WRAP 避免换行符问题
+                    byte[] decodedBytes = Base64.decode(cleanValue, Base64.NO_WRAP);
+                    base64 = new String(decodedBytes, StandardCharsets.UTF_8);
+                } catch (IllegalArgumentException e) {
+                    KLog.e("Invalid Base64: " + value + ", Error: " + e.getMessage());
+                    return value;
+                } catch (Exception e) {
+                    KLog.e("Unexpected error decoding: " + value + ", Error: " + e.getMessage());
                     return value;
                 }
                 return base64;
