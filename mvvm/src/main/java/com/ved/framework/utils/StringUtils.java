@@ -53,9 +53,11 @@ public final class StringUtils {
         if (isSpace(s)){
             return "0";
         }else {
+            // 移除所有非数字字符（保留负号、小数点、科学计数法e）
+            String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
             String bd;
             try {
-                bd = toBigDecimal(s);
+                bd = toBigDecimal(clean);
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 bd = s;
@@ -67,52 +69,56 @@ public final class StringUtils {
     public static long parseLong(String s){
         if (isSpace(s)){
             return 0L;
-        }else {
-            try {
-                return Long.parseLong(s);
-            } catch (NumberFormatException e) {
-                KLog.e(e.getMessage());
-                return 0L;
-            }
+        }
+        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
+        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
+        try {
+            return Long.parseLong(clean);
+        } catch (NumberFormatException e) {
+            KLog.e(e.getMessage());
+            return 0L;
         }
     }
 
     public static float parseFloat(String s){
         if (isSpace(s)){
             return 0.0f;
-        }else {
-            try {
-                return Float.parseFloat(s);
-            } catch (NumberFormatException e) {
-                KLog.e(e.getMessage());
-                return 0.0f;
-            }
+        }
+        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
+        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
+        try {
+            return Float.parseFloat(clean);
+        } catch (NumberFormatException e) {
+            KLog.e(e.getMessage());
+            return 0.0f;
         }
     }
 
-    public static double parseDouble(String s){
-        if (isSpace(s)){
+    public static double parseDouble(String s) {
+        if (isSpace(s)) {
             return 0.0d;
-        }else {
-            try {
-                return Double.parseDouble(trim(s));
-            } catch (NumberFormatException e) {
-                KLog.e(s+" ,"+e.getMessage());
-                return 0.0d;
-            }
+        }
+        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
+        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
+        try {
+            return Double.parseDouble(clean);
+        } catch (NumberFormatException e) {
+            KLog.e("Failed to parse double: '" + s + "' -> Cleaned: '" + clean + "', Error: " + e.getMessage());
+            return 0.0d;
         }
     }
 
     public static int parseInt(String s){
         if (isSpace(s)){
             return 0;
-        }else {
-            try {
-                return Integer.parseInt(s);
-            } catch (NumberFormatException e) {
-                KLog.e(e.getMessage());
-                return 0;
-            }
+        }
+        // 移除所有非数字字符（保留负号、小数点、科学计数法e）
+        String clean = trim(s).replaceAll("[^\\d.Ee+-]", "");
+        try {
+            return Integer.parseInt(clean);
+        } catch (NumberFormatException e) {
+            KLog.e(e.getMessage());
+            return 0;
         }
     }
 
