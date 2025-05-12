@@ -27,7 +27,7 @@ public class AesEncryptUtil {
             byte[] encrypted = cipher.doFinal(data.getBytes(CHARSET));
             return android.util.Base64.encodeToString(encrypted, android.util.Base64.NO_WRAP);
         } catch (Exception e) {
-            KLog.e("Encryption error: " + e.getMessage());
+            KLog.e("encrypt data : "+data+" ,Encryption error: " + e.getMessage());
             return null;
         }
     }
@@ -49,7 +49,7 @@ public class AesEncryptUtil {
             byte[] original = cipher.doFinal(encryptedData);
             return new String(original, CHARSET).trim();
         } catch (Exception e) {
-            KLog.e("Decryption error: " + e.getMessage());
+            KLog.e("desEncrypt data : "+data+" ,Decryption error: " + e.getMessage());
             return null;
         }
     }

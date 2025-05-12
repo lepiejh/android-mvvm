@@ -256,6 +256,7 @@ public final class SPUtils {
                 try {
                     base64 = Base64.encodeToString(value.getBytes(), Base64.DEFAULT);
                 } catch (Exception exception) {
+                    KLog.e("encryptDES value : "+value+"  ,"+exception.getMessage());
                     return value;
                 }
                 return base64;
@@ -329,6 +330,7 @@ public final class SPUtils {
                 try {
                     base64 = new String(Base64.decode(value, Base64.DEFAULT));
                 } catch (Exception exception) {
+                    KLog.e("decryptDES value : "+value+"  ,"+exception.getMessage());
                     return value;
                 }
                 return base64;

@@ -31,7 +31,7 @@ public class DES {
             byte[] encryptedData = cipher.doFinal(encryptString.getBytes(CHARSET));
             return Base64.encodeToString(encryptedData, Base64.NO_WRAP);
         } catch (Exception e) {
-            KLog.e("Encryption error: " + e.getMessage());
+            KLog.e("encryptDES encryptString : "+encryptString+" ,Encryption error: " + e.getMessage());
             return null;
         }
     }
@@ -54,7 +54,7 @@ public class DES {
             byte[] decryptedData = cipher.doFinal(byteMi);
             return new String(decryptedData, CHARSET).trim();
         } catch (Exception e) {
-            KLog.e("Decryption error: " + e.getMessage());
+            KLog.e("decryptDES decryptString : "+decryptString+" ,Decryption error: " + e.getMessage());
             return null;
         }
     }
