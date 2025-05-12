@@ -70,7 +70,7 @@ public class DES {
 
             // 4. 验证密文长度
             if (byteMi.length % 8 != 0) { // DESede块大小是8字节
-                KLog.e("Invalid ciphertext length: " + byteMi.length);
+                KLog.e("Invalid ciphertext length: " + byteMi.length+"  ,byteMi : "+ Arrays.toString(byteMi));
                 return null;
             }
 

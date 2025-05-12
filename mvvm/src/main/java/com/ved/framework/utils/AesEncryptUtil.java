@@ -3,6 +3,8 @@ package com.ved.framework.utils;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import java.util.Arrays;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
@@ -80,7 +82,7 @@ public class AesEncryptUtil {
 
             // 5. 验证块大小
             if (encryptedData.length % 16 != 0) {
-                KLog.e("Invalid ciphertext length: " + encryptedData.length);
+                KLog.e("Invalid ciphertext length: " + encryptedData.length+" ,encryptedData : "+ Arrays.toString(encryptedData));
                 return null;
             }
 
