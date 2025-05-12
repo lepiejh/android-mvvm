@@ -1,35 +1,30 @@
 package com.ved.framework.utils;
 
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import android.util.Base64;
 
-import java.nio.charset.StandardCharsets;
-
-/**
- * AES 加密
- * 使用AES-128-CBC加密模式，key需要为16位,key和iv可以相同！
- */
 public class AesEncryptUtil {
-    /**
-     * 加密方法
-     * @param data  要加密的数据
-     * @param key 加密key
-     * @param iv 加密iv
-     * @return 加密的结果
-     * @throws Exception
-     */
+    private static final String TRANSFORMATION = "AES/CBC/PKCS5Padding";
+    private static final String CHARSET = "UTF-8";
+
+    // Default 16-byte key and IV (128-bit AES)
+    private static final String DEFAULT_KEY = "1234567890abcdef"; // Exactly 16 ASCII characters
+    private static final String DEFAULT_IV = "1234567890abcdef"; // Exactly 16 ASCII characters
+
     public static String encrypt(String data, String key, String iv) {
         try {
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); // Changed to PKCS5Padding
-            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            // Validate key and IV length
+            byte[] keyBytes = validateKey(key);
+            byte[] ivBytes = validateIV(iv);
 
-            cipher.init(Cipher.ENCRYPT_MODE, keyspec, ivspec);
-            byte[] encrypted = cipher.doFinal(data.getBytes(StandardCharsets.UTF_8)); // No manual padding needed
+            SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
 
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey, ivSpec);
+
+            byte[] encrypted = cipher.doFinal(data.getBytes(CHARSET));
             return android.util.Base64.encodeToString(encrypted, android.util.Base64.NO_WRAP);
         } catch (Exception e) {
             KLog.e("Encryption error: " + e.getMessage());
@@ -37,49 +32,51 @@ public class AesEncryptUtil {
         }
     }
 
-    /**
-     * 解密方法
-     * @param data 要解密的数据
-     * @param key  解密key
-     * @param iv 解密iv
-     * @return 解密的结果
-     * @throws Exception
-     */
     public static String desEncrypt(String data, String key, String iv) {
         try {
-            byte[] encrypted1 = Base64.decode(data, Base64.NO_WRAP); // Ensure NO_WRAP
+            // Validate key and IV length
+            byte[] keyBytes = validateKey(key);
+            byte[] ivBytes = validateIV(iv);
 
-            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding"); // Changed to PKCS5Padding
-            SecretKeySpec keyspec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8), "AES");
-            IvParameterSpec ivspec = new IvParameterSpec(iv.getBytes(StandardCharsets.UTF_8));
+            byte[] encryptedData = android.util.Base64.decode(data, android.util.Base64.NO_WRAP);
 
-            cipher.init(Cipher.DECRYPT_MODE, keyspec, ivspec);
-            byte[] original = cipher.doFinal(encrypted1);
-            return new String(original, StandardCharsets.UTF_8).trim();
+            SecretKeySpec secretKey = new SecretKeySpec(keyBytes, "AES");
+            IvParameterSpec ivSpec = new IvParameterSpec(ivBytes);
+
+            Cipher cipher = Cipher.getInstance(TRANSFORMATION);
+            cipher.init(Cipher.DECRYPT_MODE, secretKey, ivSpec);
+
+            byte[] original = cipher.doFinal(encryptedData);
+            return new String(original, CHARSET).trim();
         } catch (Exception e) {
             KLog.e("Decryption error: " + e.getMessage());
             return null;
         }
     }
 
-    /**
-     * 使用默认的key和iv加密
-     * @param data
-     * @return
-     * @throws Exception
-     */
+    // Helper method to ensure 16-byte key
+    private static byte[] validateKey(String key) throws Exception {
+        byte[] keyBytes = key.getBytes(CHARSET);
+        if (keyBytes.length != 16) {
+            throw new IllegalArgumentException("Key must be exactly 16 bytes (128-bit)");
+        }
+        return keyBytes;
+    }
+
+    // Helper method to ensure 16-byte IV
+    private static byte[] validateIV(String iv) throws Exception {
+        byte[] ivBytes = iv.getBytes(CHARSET);
+        if (ivBytes.length != 16) {
+            throw new IllegalArgumentException("IV must be exactly 16 bytes");
+        }
+        return ivBytes;
+    }
+
     public static String encrypt(String data) {
-        return encrypt(data, "1234567890adbcde", "1234567890hjlkew");
+        return encrypt(data, DEFAULT_KEY, DEFAULT_IV);
     }
 
-    /**
-     * 使用默认的key和iv解密
-     * @param data
-     * @return
-     * @throws Exception
-     */
     public static String desEncrypt(String data) {
-        return desEncrypt(data, "1234567890adbcde", "1234567890hjlkew");
+        return desEncrypt(data, DEFAULT_KEY, DEFAULT_IV);
     }
-
 }

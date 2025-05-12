@@ -3,15 +3,12 @@ package com.ved.framework.utils;
 import android.text.TextUtils;
 import android.util.Base64;
 
-import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-/**
- * 使用DES加密模式，key需要为32位
- */
 public class DES {
     private static final String CHARSET = "UTF-8";
     private static final String ALGORITHM = "DESede/CBC/PKCS5Padding";
@@ -23,14 +20,14 @@ public class DES {
                 return encryptString;
             }
 
-            byte[] keyBytes = encryptKey.getBytes(StandardCharsets.UTF_8);
-            byte[] tripleDesKey = new byte[24];
-            System.arraycopy(keyBytes, 0, tripleDesKey, 0, Math.min(keyBytes.length, 24));
+            // Ensure key is exactly 24 bytes (for Triple DES)
+            byte[] keyBytes = Arrays.copyOf(encryptKey.getBytes(CHARSET), 24);
+            SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
 
-            IvParameterSpec zeroIv = new IvParameterSpec(iv);
-            SecretKeySpec key = new SecretKeySpec(tripleDesKey, TRANSFORMATION);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, key, zeroIv);
+            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+
             byte[] encryptedData = cipher.doFinal(encryptString.getBytes(CHARSET));
             return Base64.encodeToString(encryptedData, Base64.NO_WRAP);
         } catch (Exception e) {
@@ -45,17 +42,17 @@ public class DES {
                 return decryptString;
             }
 
-            byte[] keyBytes = decryptKey.getBytes(StandardCharsets.UTF_8);
-            byte[] tripleDesKey = new byte[24];
-            System.arraycopy(keyBytes, 0, tripleDesKey, 0, Math.min(keyBytes.length, 24));
+            // Ensure key is exactly 24 bytes (for Triple DES)
+            byte[] keyBytes = Arrays.copyOf(decryptKey.getBytes(CHARSET), 24);
+            SecretKeySpec key = new SecretKeySpec(keyBytes, TRANSFORMATION);
 
             byte[] byteMi = Base64.decode(decryptString, Base64.NO_WRAP);
-            IvParameterSpec zeroIv = new IvParameterSpec(iv);
-            SecretKeySpec key = new SecretKeySpec(tripleDesKey, TRANSFORMATION);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, key, zeroIv);
+            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+
             byte[] decryptedData = cipher.doFinal(byteMi);
-            return new String(decryptedData, CHARSET);
+            return new String(decryptedData, CHARSET).trim();
         } catch (Exception e) {
             KLog.e("Decryption error: " + e.getMessage());
             return null;

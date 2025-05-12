@@ -95,7 +95,7 @@ public final class StringUtils {
             return 0.0d;
         }else {
             try {
-                return Double.parseDouble(s);
+                return Double.parseDouble(trim(s));
             } catch (NumberFormatException e) {
                 KLog.e(e.getMessage());
                 return 0.0d;
