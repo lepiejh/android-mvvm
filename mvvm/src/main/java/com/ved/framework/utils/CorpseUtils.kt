@@ -56,11 +56,21 @@ object CorpseUtils {
     /**
      * 线程切换
      */
-    fun BaseViewModel<*>?.fetch(ioAction: (() -> Unit)?,mainAction: (() -> Unit)?){
-        this?.viewModelScope?.launch(Dispatchers.IO) {
-            ioAction?.invoke()
-            withContext(Dispatchers.Main){
-                mainAction?.invoke()
+    fun <T : BaseViewModel<*>> T?.fetchWithCancel(
+        ioAction: suspend CoroutineScope.() -> Unit,
+        uiAction: suspend () -> Unit = {},
+        onError: (Throwable) -> Unit = { it.printStackTrace() },
+        onCancel: () -> Unit = {}
+    ): Job? {
+        return this?.viewModelScope?.launch {
+            try {
+                val ioJob = launch(Dispatchers.IO) { ioAction() }
+                ioJob.join()
+                uiAction()
+            } catch (e: CancellationException) {
+                onCancel()
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { onError(e) }
             }
         }
     }
