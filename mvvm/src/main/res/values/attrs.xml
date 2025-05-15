@@ -416,7 +416,7 @@
     <attr name="blood_state" format="string" />
     <attr name="blood_sugar_proportion" format="string" />
     <attr name="blood_sugar_fluctuate" format="string" />
-    <attr name="blood_sugar_reachts" format="string" />
+    <attr name="blood_sugar_react" format="string" />
     <attr name="blood_sugar_high" format="string" />
     <attr name="blood_sugar_low" format="string" />
     <attr name="blood_sugar_normal" format="string" />
@@ -428,12 +428,12 @@
     <attr name="card_value" format="string" />
     <attr name="card_unit" format="string" />
     <attr name="card_weight" format="string" />
-    <attr name="plan_text_01" format="string" />
-    <attr name="plan_text_02" format="string" />
-    <attr name="plan_text_03" format="string" />
-    <attr name="plan_text_04" format="string" />
-    <attr name="plan_problem_01" format="string" />
-    <attr name="plan_problem_02" format="string" />
+    <attr name="plan_text_one" format="string" />
+    <attr name="plan_text_tow" format="string" />
+    <attr name="plan_text_three" format="string" />
+    <attr name="plan_text_four" format="string" />
+    <attr name="plan_problem_one" format="string" />
+    <attr name="plan_problem_tow" format="string" />
     <attr name="plan_price" format="string" />
     <attr name="width_run_progress" format="integer" />
     <attr name="left_run_progress" format="integer" />
