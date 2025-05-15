@@ -57,10 +57,10 @@ object CorpseUtils {
      * 线程切换
      */
     fun <T : BaseViewModel<*>> T?.fetchWithCancel(
-        ioAction: suspend CoroutineScope.() -> Unit,
+        ioAction: suspend CoroutineScope.() -> Unit = {},
         uiAction: suspend () -> Unit = {},
-        onError: (Throwable) -> Unit = { it.printStackTrace() },
-        onCancel: () -> Unit = {}
+        onError: (Throwable) -> Unit = { KLog.e(it.message) },
+        onCancel: (Throwable) -> Unit = { KLog.e(it.message) }
     ): Job? {
         return this?.viewModelScope?.launch {
             try {
@@ -68,7 +68,7 @@ object CorpseUtils {
                 ioJob.join()
                 uiAction()
             } catch (e: CancellationException) {
-                onCancel()
+                onCancel(e)
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) { onError(e) }
             }

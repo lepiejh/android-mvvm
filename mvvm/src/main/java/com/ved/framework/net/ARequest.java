@@ -23,6 +23,12 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
+import kotlin.Unit;
+import kotlin.coroutines.Continuation;
+import kotlin.jvm.functions.Function0;
+import kotlin.jvm.functions.Function1;
+import kotlin.jvm.functions.Function2;
+import kotlinx.coroutines.CoroutineScope;
 
 /**
  * 网络请求
@@ -158,7 +164,7 @@ public abstract class ARequest<T, K> {
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
-                CorpseUtils.INSTANCE.fetch(viewModel, null, () -> {
+                CorpseUtils.INSTANCE.fetchWithCancel(viewModel, (coroutineScope, continuation) -> null, continuation -> {
                     if (view!= null && seatError != null) {
                         seatError.onErrorView();
                     }
@@ -170,7 +176,7 @@ public abstract class ARequest<T, K> {
                     }
                     exceptionHandling(activity, "连接服务器失败或其他异常", -2);
                     return null;
-                });
+                }, throwable -> null, throwable -> null);
             }
         }
         return lifecycleDisposable;
