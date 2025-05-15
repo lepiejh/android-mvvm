@@ -24,7 +24,6 @@
     <attr format="reference" name="currentView"/>
     <attr format="string" name="decimal_tow"/>
     <attr format="string" name="time_format"/>
-    <attr format="integer" name="view_visible"/>
     <attr format="integer" name="format_type"/>
     <attr format="boolean" name="isThrottleFirst"/>
     <attr format="boolean" name="isVisible"/>

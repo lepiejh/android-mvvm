@@ -15,11 +15,9 @@ import com.ved.framework.binding.command.BindingCommand;
 import com.ved.framework.listener.OnViewGlobalLayoutListener;
 import com.ved.framework.utils.CalendarUtil;
 import com.ved.framework.utils.CorpseUtils;
-import com.ved.framework.utils.DisplayUtil;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.TimeUtils;
-import com.ved.framework.utils.Utils;
 
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
@@ -143,20 +141,6 @@ public class ViewAdapter {
     @BindingAdapter(value = {"time_format","format_type"}, requireAll = false)
     public static void timeFormat(TextView view, final String timeFormat, final int formatType) {
         view.setText(TimeUtils.f_long_2_str(StringUtils.parseLong(timeFormat),CalendarUtil.getFormat(formatType)));
-    }
-
-    /**
-     * view的显示隐藏  第二种方式
-     * @param view               显示隐藏的视图
-     * @param visibility         必须为三种类型  1. View.VISIBLE  2.View.INVISIBLE  3.View.GONE
-     */
-    @BindingAdapter(value = {"view_visible"}, requireAll = false)
-    public static void viewVisible(View view, final int visibility) {
-        try {
-            view.setVisibility(visibility);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     /**
