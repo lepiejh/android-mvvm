@@ -18,8 +18,6 @@ import java.util.*
 
 object CorpseUtils {
 
-    fun trim(s: String?): String? = s?.replace("[\r\n]".toRegex(), "")?.replace(" ", "")
-
     fun bytesToHex(s: String?): String? = StringUtils.bytesToHex(s?.toByteArray(Charsets.UTF_8))
 
     /**
