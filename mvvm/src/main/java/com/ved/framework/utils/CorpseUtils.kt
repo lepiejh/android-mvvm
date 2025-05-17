@@ -52,8 +52,7 @@ object CorpseUtils {
     }
 
     fun toInt16t(bytes: List<Byte>) : Short{
-        val speedBytes = bytes.toByteArray() // 小端序 → 高字节在前
-        return ByteBuffer.wrap(speedBytes)
+        return ByteBuffer.wrap(bytes.toByteArray())  // 小端序 → 高字节在前
             .order(ByteOrder.BIG_ENDIAN) // 高字节在前
             .short // 读取为有符号 short（int16_t）
     }
