@@ -51,9 +51,14 @@ object CorpseUtils {
         }.array()
     }
 
-    fun toInt16t(bytes: List<Byte>) : Short{
-        return ByteBuffer.wrap(bytes.toByteArray())  // 小端序 → 高字节在前
-            .order(ByteOrder.BIG_ENDIAN) // 高字节在前
+    /**
+     * 字节数值转int16_t
+     * boType == 1 :  小端序 → bytes 高字节在前(ByteOrder.BIG_ENDIAN)
+     * boType == 2 :  大端序 → bytes 低字节在前(ByteOrder.LITTLE_ENDIAN)
+     */
+    fun toInt16t(bytes: List<Byte>,boType: Int = 1) : Short{
+        return ByteBuffer.wrap(bytes.toByteArray())
+            .order(if (boType == 1) ByteOrder.BIG_ENDIAN else ByteOrder.LITTLE_ENDIAN)
             .short // 读取为有符号 short（int16_t）
     }
 
