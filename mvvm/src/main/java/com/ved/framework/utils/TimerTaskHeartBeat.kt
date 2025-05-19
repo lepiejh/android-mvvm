@@ -9,7 +9,7 @@ class TimerTaskHeartBeat{
     private var timerTask: TimerTask? = null
     private var heartbeatTimer: ScheduledExecutorService? = null
 
-    fun startTimer(period: Long = 5,callBack: () -> Unit) {
+    fun startTimer(period: Long = 3,callBack: () -> Unit) {
         try {
             if (heartbeatTimer == null || !(heartbeatTimer?.isShutdown == false && heartbeatTimer?.isTerminated == false)){
                 heartbeatTimer = Executors.newScheduledThreadPool(5)
