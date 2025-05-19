@@ -412,12 +412,14 @@ public final class StringUtils {
         }
     }
 
-    public static boolean startsWith(String s){
-        String trim = trim(s);
-        if (isSpace(trim)){
+    public static boolean startsWith(String s,String h){
+        if (isSpace(s)){
             return false;
         }
-        return trim.startsWith(s);
+        if (isSpace(h)){
+            return false;
+        }
+        return trim(s).startsWith(trim(h));
     }
 
     public static String trim(String s){
