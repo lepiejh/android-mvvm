@@ -573,11 +573,17 @@ public final class StringUtils {
     }
 
     public static String parseDataByIndex(String str, int i) {
+        if (str == null) {
+            return "0";
+        }
         int i2 = ((i - 1) * 4) + 6;
+        if (i <= 0 || i2 < 0 || i2 >= str.length()) {
+            return "0";
+        }
+        int endIndex = Math.min(i2 + 4, str.length());
         try {
-            return str.substring(i2, i2 + 4);
+            return str.substring(i2, endIndex);
         } catch (Exception e) {
-            KLog.e(e.getMessage());
             return "0";
         }
     }
