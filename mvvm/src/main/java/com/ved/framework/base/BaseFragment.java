@@ -19,6 +19,7 @@ import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -127,15 +128,21 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
                 //如果没有指定泛型参数，则默认使用BaseViewModel
                 modelClass = BaseViewModel.class;
             }
-            viewModel = (VM) createViewModel(this, modelClass);
+            try {
+                viewModel = (VM) createViewModel(this, modelClass);
+            } catch (Exception e) {
+                KLog.e("Failed to create ViewModel: " + e.getMessage());
+            }
         }
-        binding.setVariable(viewModelId, viewModel);
-        //支持LiveData绑定xml，数据改变，UI自动会更新
-        binding.setLifecycleOwner(this);
-        //让ViewModel拥有View的生命周期感应
-        getLifecycle().addObserver(viewModel);
-        //注入RxLifecycle生命周期
-        viewModel.injectLifecycleProvider(this);
+        if (binding != null && viewModel != null) {
+            binding.setVariable(viewModelId, viewModel);
+            //支持LiveData绑定xml，数据改变，UI自动会更新
+            binding.setLifecycleOwner(this);
+            //让ViewModel拥有View的生命周期感应
+            getLifecycle().addObserver(viewModel);
+            //注入RxLifecycle生命周期
+            viewModel.injectLifecycleProvider(this);
+        }
     }
 
     public boolean customDialog(){
