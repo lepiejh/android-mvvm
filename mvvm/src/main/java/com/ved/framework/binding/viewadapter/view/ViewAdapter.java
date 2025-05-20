@@ -277,6 +277,11 @@ public class ViewAdapter {
                 DpiUtils.dip2px(view.getContext(),padding));
     }
 
+    @BindingAdapter("android:text")
+    public static void setText(TextView textView,Object obj){
+        textView.setText(StringUtils.parseStr(obj));
+    }
+
     @BindingAdapter("android:gravity")
     public static void setGravity(TextView textView,int gravity){
         textView.setGravity(gravity);
