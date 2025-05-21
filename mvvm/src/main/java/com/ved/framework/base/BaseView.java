@@ -1,6 +1,7 @@
 package com.ved.framework.base;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 
 import com.mumu.dialog.MMLoading;
@@ -18,7 +19,9 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.lifecycle.ViewModelProviders;
 
 public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -33,7 +36,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
 
     protected void initViewDataBinding(Bundle savedInstanceState) {
         if (getLifecycleOwner() instanceof FragmentActivity) {
-            binding = DataBindingUtil.setContentView(getContext(), initContentView(savedInstanceState));
+            binding = DataBindingUtil.setContentView(getActivity(), initContentView(savedInstanceState));
             getBinding(binding);
         }
         int viewModelId = initVariableId();
@@ -56,12 +59,12 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         if (null == viewModel) {
             synchronized (this) {
                 if (null == viewModel) {
-                    Class<?> modelClass = resolveViewModelClass();
+                    Class modelClass = resolveViewModelClass();
                     KLog.d("Creating ViewModel of type: " + modelClass.getName());
 
                     try {
                         // 1. 尝试标准方式创建
-                        viewModel = createViewModelWithProvider(modelClass);
+                        viewModel = (VM) createViewModelWithProvider(modelClass);
 
                         // 2. 回退到反射创建
                         if (viewModel == null) {
@@ -71,7 +74,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
                         // 3. 终极回退方案
                         if (viewModel == null && !BaseViewModel.class.equals(modelClass)) {
                             KLog.w("Falling back to BaseViewModel");
-                            viewModel = createViewModelWithProvider(BaseViewModel.class);
+                            viewModel = (VM) createViewModelWithProvider(BaseViewModel.class);
                         }
 
                         // 最终检查
@@ -125,12 +128,12 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         }
     }
 
-    private VM createViewModelWithProvider(Class modelClass) {
+    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
         try {
             if (getLifecycleOwner() instanceof FragmentActivity) {
-                return (VM) new ViewModelProvider((FragmentActivity) getLifecycleOwner()).get(modelClass);
+                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
             } else if (getLifecycleOwner() instanceof Fragment) {
-                return (VM) new ViewModelProvider((Fragment) getLifecycleOwner()).get(modelClass);
+                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
             }
             return null;
         } catch (Exception e) {
@@ -163,14 +166,14 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
             if (mvvmDialog()) {
                 showDialog(title,true);
             } else {
-                DialogManager.Companion.getInstance().showProgressDialog(getContext(),title);
+                DialogManager.Companion.getInstance().showProgressDialog(getActivity(),title);
             }
         }
     }
 
     public void showDialog(String title,boolean isShowMessage) {
         if (mmLoading == null) {
-            MMLoading.Builder builder = new MMLoading.Builder(getContext())
+            MMLoading.Builder builder = new MMLoading.Builder(getActivity())
                     .setMessage(title)
                     .setShowMessage(isShowMessage)
                     .setCancelable(false)
@@ -178,7 +181,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
             mmLoading = builder.create();
         }else {
             mmLoading.dismiss();
-            MMLoading.Builder builder = new MMLoading.Builder(getContext())
+            MMLoading.Builder builder = new MMLoading.Builder(getActivity())
                     .setMessage(title)
                     .setShowMessage(isShowMessage)
                     .setCancelable(false)
@@ -217,7 +220,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
 
     protected abstract boolean customDialog();
 
-    protected abstract Activity getContext();
+    protected abstract Activity getActivity();
 
     protected abstract LifecycleOwner getLifecycleOwner();
 
