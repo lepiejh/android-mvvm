@@ -8,14 +8,17 @@ import com.orhanobut.dialog.manager.DialogManager;
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.utils.KLog;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ViewModelProvider;
 
 public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -51,12 +54,36 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         if (viewModel == null) {
             synchronized (this) {
                 if (viewModel == null) {
-                    Class modelClass = resolveViewModelClass();
-                    viewModel = (VM) ViewModelFactory.create(modelClass, getLifecycleOwner());
+                    Class<?> modelClass = resolveViewModelClass();
+                    KLog.d("Creating ViewModel of type: " + modelClass.getName());
 
-                    if (viewModel == null) {
-                        KLog.e("Failed to create ViewModel");
-                        viewModel = (VM) ViewModelFactory.create(BaseViewModel.class, getLifecycleOwner());
+                    try {
+                        // 1. 尝试标准方式创建
+                        viewModel = createViewModelWithProvider(modelClass);
+
+                        // 2. 回退到反射创建
+                        if (viewModel == null) {
+                            viewModel = createViewModelWithReflection(modelClass);
+                        }
+
+                        // 3. 终极回退方案
+                        if (viewModel == null && !BaseViewModel.class.equals(modelClass)) {
+                            KLog.w("Falling back to BaseViewModel");
+                            viewModel = createViewModelWithProvider(BaseViewModel.class);
+                        }
+
+                        // 最终检查
+                        if (viewModel == null) {
+                            throw new IllegalStateException("Failed to create ViewModel after all attempts");
+                        }
+
+                        // 类型验证
+                        if (!modelClass.isInstance(viewModel)) {
+                            throw new ClassCastException("Created ViewModel is not of type " + modelClass.getName());
+                        }
+                    } catch (Exception e) {
+                        KLog.e("ViewModel creation error: " + e.getMessage());
+                        throw new RuntimeException("Failed to create ViewModel", e);
                     }
                 }
             }
@@ -68,34 +95,59 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         try {
             // 方法1：尝试通过泛型获取
             Type type = getClass().getGenericSuperclass();
-            while (!(type instanceof ParameterizedType) && type != null && type instanceof Class) {
-                type = ((Class<?>) type).getGenericSuperclass();
-            }
-
-            if (type instanceof ParameterizedType) {
-                Type[] types = ((ParameterizedType) type).getActualTypeArguments();
-                if (types.length > 1) {
-                    Type actualType = types[1];
-                    if (actualType instanceof Class) {
-                        return (Class<?>) actualType;
-                    } else if (actualType instanceof ParameterizedType) {
-                        return (Class<?>) ((ParameterizedType) actualType).getRawType();
+            while (type != null) {
+                if (type instanceof ParameterizedType) {
+                    Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+                    if (types.length > 1 && types[1] instanceof Class) {
+                        return (Class<?>) types[1];
                     }
+                }
+
+                if (type instanceof Class) {
+                    type = ((Class<?>) type).getGenericSuperclass();
+                } else {
+                    break;
                 }
             }
 
-            // 方法2：尝试通过注解获取（备用方案）
+            // 方法2：尝试通过注解获取
             ViewModelClass annotation = getClass().getAnnotation(ViewModelClass.class);
             if (annotation != null) {
                 return annotation.value();
             }
 
-            // 方法3：使用默认 BaseViewModel
-            return BaseViewModel.class;
+            throw new IllegalStateException("Cannot determine ViewModel class");
         } catch (Exception e) {
             KLog.e("Failed to resolve ViewModel class: " + e.getMessage());
-            return BaseViewModel.class;
+            throw new RuntimeException("Cannot determine ViewModel type", e);
         }
+    }
+
+    private VM createViewModelWithProvider(Class modelClass) {
+        try {
+            if (getLifecycleOwner() instanceof FragmentActivity) {
+                return (VM) new ViewModelProvider((FragmentActivity) getLifecycleOwner()).get(modelClass);
+            } else if (getLifecycleOwner() instanceof Fragment) {
+                return (VM) new ViewModelProvider((Fragment) getLifecycleOwner()).get(modelClass);
+            }
+            return null;
+        } catch (Exception e) {
+            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private VM createViewModelWithReflection(Class<?> modelClass) {
+        try {
+            Constructor<?> constructor = modelClass.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            return (VM) constructor.newInstance();
+        } catch (NoSuchMethodException e) {
+            KLog.w("No default constructor for " + modelClass.getSimpleName());
+        } catch (Exception e) {
+            KLog.e("Reflective ViewModel creation failed: " + e.getMessage());
+        }
+        return null;
     }
 
     public void showDialog() {
