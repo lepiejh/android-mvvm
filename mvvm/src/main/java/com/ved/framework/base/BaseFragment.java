@@ -205,7 +205,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         //加载对话框显示
         viewModel.getUC().getShowDialogEvent().observe(getViewLifecycleOwner(), (Observer<String>) title -> showDialog(title));
         //加载对话框消失
-        viewModel.getUC().getDismissDialogEvent().observe(getViewLifecycleOwner(), (Observer<Void>) v -> baseView.dismissDialog());
+        viewModel.getUC().getDismissDialogEvent().observe(getViewLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
         viewModel.getUC().getRequestPermissionEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
             String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
@@ -387,6 +387,10 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public void initViewObservable() {
 
+    }
+
+    public void dismissDialog() {
+        baseView.dismissDialog();
     }
 
     public boolean isBackPressed() {

@@ -255,7 +255,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         //加载对话框显示
         viewModel.getUC().getShowDialogEvent().observe(this, (Observer<String>) this::showDialog);
         //加载对话框消失
-        viewModel.getUC().getDismissDialogEvent().observe(this, (Observer<Void>) v -> baseView.dismissDialog());
+        viewModel.getUC().getDismissDialogEvent().observe(this, (Observer<Void>) v -> dismissDialog());
         //跳入新页面
         viewModel.getUC().getStartActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
             Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
@@ -547,6 +547,10 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         if (event != null) {
             viewModel.receiveStickyEvent(event);
         }
+    }
+
+    public void dismissDialog() {
+        baseView.dismissDialog();
     }
 
     @Override
