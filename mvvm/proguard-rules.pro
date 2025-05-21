@@ -15,8 +15,6 @@
 -keep interface android.support.annotation.** { *; }
 
 #gson
--keepattributes Signature
--keepattributes *Annotation*
 -keep class com.google.gson.stream.** { *; }
 -keep class com.sunloto.shandong.bean.** { *; }
 
@@ -25,8 +23,6 @@
 -dontwarn jp.wasabeef.glide.transformations.**
 
 #okhttp
--keepattributes Signature
--keepattributes *Annotation*
 -keep class com.squareup.okhttp.** { *; }
 -keep interface com.squareup.okhttp.** { *; }
 -keep class okhttp3.** { *; }
@@ -189,3 +185,6 @@
      void *(**On*Event);
  }
  -keep class com.ved.framework.** { *; }
+ -keepclassmembers class * extends androidx.lifecycle.ViewModel {
+     <init>(...);
+ }

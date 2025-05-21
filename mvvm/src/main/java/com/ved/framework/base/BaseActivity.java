@@ -8,7 +8,6 @@ import android.os.Bundle;
 import com.blankj.swipepanel.SwipePanel;
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
-import com.ved.framework.BR;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
@@ -25,6 +24,7 @@ import com.ved.framework.utils.phone.PhoneUtils;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -38,10 +38,10 @@ import androidx.lifecycle.ViewModelProviders;
 
 public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView{
     protected V binding;
-    protected VM viewModel;
     private int viewModelId;
 //    private MaterialDialog dialog;
     private MMLoading mmLoading;
+    private volatile VM viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -147,28 +147,20 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         viewModelId = initVariableId();
         viewModel = initViewModel();
         if (viewModel == null) {
-            Class modelClass;
-            Type type = getClass().getGenericSuperclass();
-            if (type instanceof ParameterizedType) {
-                modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
-            } else {
-                //如果没有指定泛型参数，则默认使用BaseViewModel
-                modelClass = BaseViewModel.class;
-            }
-            try {
-                viewModel = (VM) createViewModel(this, modelClass);
-            } catch (Exception e) {
-                KLog.e("Failed to create ViewModel: " + e.getMessage());
-            }
+            viewModel = ensureViewModelCreated();
         }
-        //关联ViewModel
-        binding.setVariable(viewModelId, viewModel);
-        //支持LiveData绑定xml，数据改变，UI自动会更新
-        binding.setLifecycleOwner(this);
-        //让ViewModel拥有View的生命周期感应
-        getLifecycle().addObserver(viewModel);
-        //注入RxLifecycle生命周期
-        viewModel.injectLifecycleProvider(this);
+        if (binding != null && viewModel != null) {
+            //关联ViewModel
+            binding.setVariable(viewModelId, viewModel);
+            //支持LiveData绑定xml，数据改变，UI自动会更新
+            binding.setLifecycleOwner(this);
+            //让ViewModel拥有View的生命周期感应
+            getLifecycle().addObserver(viewModel);
+            //注入RxLifecycle生命周期
+            viewModel.injectLifecycleProvider(this);
+        } else {
+            KLog.e("Critical: Binding or ViewModel is null");
+        }
     }
 
     //刷新布局
@@ -402,7 +394,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @return BR的id
      */
     public int initVariableId(){
-        return BR.viewModel;
+        return Constant.variableId;
     }
 
     /**
@@ -424,13 +416,85 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     }
 
-    /**
-     * 创建ViewModel
-     *
-     * @param cls
-     * @param <T>
-     * @return
-     */
+    protected VM ensureViewModelCreated() {
+        if (viewModel == null) {
+            synchronized (this) { // 同步锁防止多线程重复创建
+                if (viewModel == null) { // 双重检查锁定
+                    Class<?> modelClass = resolveViewModelClass();
+                    viewModel = createViewModelSafely(modelClass);
+
+                    // 终极回退方案
+                    if (viewModel == null) {
+                        viewModel = (VM) createViewModel(this,BaseViewModel.class);
+                        KLog.w("Using fallback BaseViewModel");
+                    }
+
+                    if (viewModel == null) {
+                        throw new IllegalStateException("ViewModel creation failed after all attempts");
+                    }
+                }
+            }
+        }
+        return viewModel;
+    }
+
+    private Class<?> resolveViewModelClass() {
+        try {
+            // 方法1：尝试通过泛型获取
+            Type type = getClass().getGenericSuperclass();
+            while (!(type instanceof ParameterizedType) && type != null && type instanceof Class) {
+                type = ((Class<?>) type).getGenericSuperclass();
+            }
+
+            if (type instanceof ParameterizedType) {
+                Type[] types = ((ParameterizedType) type).getActualTypeArguments();
+                if (types.length > 1) {
+                    Type actualType = types[1];
+                    if (actualType instanceof Class) {
+                        return (Class<?>) actualType;
+                    } else if (actualType instanceof ParameterizedType) {
+                        return (Class<?>) ((ParameterizedType) actualType).getRawType();
+                    }
+                }
+            }
+
+            // 方法2：尝试通过注解获取（备用方案）
+            ViewModelClass annotation = getClass().getAnnotation(ViewModelClass.class);
+            if (annotation != null) {
+                return annotation.value();
+            }
+
+            // 方法3：使用默认 BaseViewModel
+            return BaseViewModel.class;
+        } catch (Exception e) {
+            KLog.e("Failed to resolve ViewModel class: " + e.getMessage());
+            return BaseViewModel.class;
+        }
+    }
+
+    private VM createViewModelSafely(Class modelClass) {
+        try {
+            // 尝试标准方式创建
+            ViewModel viewModel = createViewModel(this, modelClass);
+            if (viewModel != null) {
+                return (VM) viewModel;
+            }
+
+            // 尝试反射创建（备用方案）
+            try {
+                Constructor<?> constructor = modelClass.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                return (VM) constructor.newInstance();
+            } catch (NoSuchMethodException e) {
+                KLog.w("No default constructor for " + modelClass.getSimpleName());
+            }
+
+        } catch (Exception e) {
+            KLog.e("Failed to create ViewModel: " + e.getMessage());
+        }
+        return null;
+    }
+
     public <T extends ViewModel> T createViewModel(FragmentActivity activity, Class<T> cls) {
         return ViewModelProviders.of(activity).get(cls);
     }
