@@ -99,7 +99,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
     private Class<?> resolveViewModelClass() {
         try {
             // 方法1：尝试通过泛型获取
-            Type type = getClass().getGenericSuperclass();
+            Type type = getLifecycleOwner().getClass().getGenericSuperclass();
             while (type != null) {
                 if (type instanceof ParameterizedType) {
                     Type[] types = ((ParameterizedType) type).getActualTypeArguments();
@@ -116,7 +116,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
             }
 
             // 方法2：尝试通过注解获取
-            ViewModelClass annotation = getClass().getAnnotation(ViewModelClass.class);
+            ViewModelClass annotation = getLifecycleOwner().getClass().getAnnotation(ViewModelClass.class);
             if (annotation != null) {
                 return annotation.value();
             }
