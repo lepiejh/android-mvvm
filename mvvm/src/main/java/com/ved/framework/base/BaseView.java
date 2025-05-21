@@ -48,7 +48,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         if (binding != null && viewModel != null) {
             binding.setVariable(viewModelId, viewModel);
             binding.setLifecycleOwner(getLifecycleOwner());
-            getLifecycle().addObserver(viewModel);
+            getBaseLifecycle().addObserver(viewModel);
             viewModel.injectLifecycleProvider(getLifecycleProvider());
         } else {
             KLog.e("Critical: Binding or ViewModel is null");
@@ -224,7 +224,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
 
     protected abstract LifecycleOwner getLifecycleOwner();
 
-    protected abstract Lifecycle getLifecycle();
+    protected abstract Lifecycle getBaseLifecycle();
 
     protected abstract LifecycleProvider getLifecycleProvider();
 

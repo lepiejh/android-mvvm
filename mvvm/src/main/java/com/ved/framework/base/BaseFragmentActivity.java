@@ -90,7 +90,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         }
 
         @Override
-        protected Lifecycle getLifecycle() {
+        protected Lifecycle getBaseLifecycle() {
             return getLifecycle();
         }
 

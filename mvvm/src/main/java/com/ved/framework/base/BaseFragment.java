@@ -94,7 +94,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected Lifecycle getLifecycle() {
+        protected Lifecycle getBaseLifecycle() {
             return getLifecycle();
         }
 

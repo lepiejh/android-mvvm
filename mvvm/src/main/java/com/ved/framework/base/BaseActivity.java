@@ -109,7 +109,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected Lifecycle getLifecycle() {
+        protected Lifecycle getBaseLifecycle() {
             return BaseActivity.this.getLifecycle();
         }
 
