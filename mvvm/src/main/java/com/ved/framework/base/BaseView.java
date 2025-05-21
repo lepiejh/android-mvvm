@@ -1,7 +1,6 @@
 package com.ved.framework.base;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
 
 import com.mumu.dialog.MMLoading;
@@ -20,7 +19,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
 abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
