@@ -23,12 +23,12 @@ import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.lifecycle.ViewModelProviders;
 
-public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
+abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected volatile VM viewModel;
     private MMLoading mmLoading;
 
-    public final void initialize(Bundle savedInstanceState) {
+    protected final void initialize(Bundle savedInstanceState) {
         initParam();
         initViewDataBinding(savedInstanceState);
         registerUIChangeLiveDataCallBack();
@@ -155,11 +155,11 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         return null;
     }
 
-    public void showDialog() {
+    protected void showDialog() {
         showDialog("加载中...");
     }
 
-    public void showDialog(String title){
+    protected void showDialog(String title){
         if (customDialog()) {
             showCustomDialog();
         } else {
@@ -171,7 +171,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         }
     }
 
-    public void showDialog(String title,boolean isShowMessage) {
+    protected void showDialog(String title,boolean isShowMessage) {
         if (mmLoading == null) {
             MMLoading.Builder builder = new MMLoading.Builder(getActivity())
                     .setMessage(title)
@@ -192,7 +192,7 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         mmLoading.show();
     }
 
-    public void dismissDialog() {
+    protected void dismissDialog() {
         if (customDialog()) {
             dismissCustomDialog();
         } else {
@@ -203,6 +203,12 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
             }else {
                 DialogManager.Companion.getInstance().dismiss();
             }
+        }
+    }
+
+    protected void onDestroyView() {
+        if (binding != null) {
+            binding.unbind();
         }
     }
 
