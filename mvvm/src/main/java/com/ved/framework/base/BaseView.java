@@ -204,12 +204,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
-    protected void onDestroyView() {
-        if (binding != null) {
-            binding.unbind();
-        }
-    }
-
     protected abstract void getBinding(V binding);
 
     protected abstract void getViewModel(VM viewModel);
