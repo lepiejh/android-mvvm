@@ -1,6 +1,5 @@
 package com.ved.framework.utils;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 
@@ -12,10 +11,6 @@ import androidx.annotation.NonNull;
  */
 public final class Utils {
 
-    @SuppressLint("StaticFieldLeak")
-    private static Context context;
-    private static Application app;
-
     private Utils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
@@ -26,16 +21,7 @@ public final class Utils {
      * @param context 上下文
      */
     public static void init(@NonNull final Application context) {
-        Utils.app = context;
-        Utils.context = context.getApplicationContext();
         com.ved.framework.utils.bland.code.Utils.init(context);
-    }
-
-    public static Application getApplication(){
-        if (app != null) {
-            return app;
-        }
-        throw new NullPointerException("should be initialized in application");
     }
 
     /**
@@ -44,9 +30,6 @@ public final class Utils {
      * @return ApplicationContext
      */
     public static Context getContext() {
-        if (context != null) {
-            return context;
-        }
-        throw new NullPointerException("should be initialized in application");
+        return com.ved.framework.utils.bland.code.Utils.getApplication().getApplicationContext();
     }
 }

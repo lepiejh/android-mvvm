@@ -3,8 +3,8 @@ package com.ved.framework.utils.bland.code;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
-import android.content.Context;
-import android.util.Log;
+
+import com.ved.framework.utils.KLog;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
@@ -18,7 +18,7 @@ public final class Utils {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
-    public static Context getContext() {
+    public static Application getApplication() {
         if (sApp != null) {
             return sApp;
         }
@@ -33,7 +33,7 @@ public final class Utils {
      */
     public static void init(final Application app) {
         if (app == null) {
-            Log.e("Utils", "app is null.");
+            KLog.e("Utils", "app is null.");
             return;
         }
         if (sApp == null) {
@@ -59,7 +59,7 @@ public final class Utils {
         if (sApp != null) return sApp;
         init(UtilsBridge.getApplicationByReflect());
         if (sApp == null) throw new NullPointerException("reflect failed.");
-        Log.i("Utils", UtilsBridge.getCurrentProcessName() + " reflect app success.");
+        KLog.i("Utils", UtilsBridge.getCurrentProcessName() + " reflect app success.");
         return sApp;
     }
 
