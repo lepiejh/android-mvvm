@@ -53,9 +53,9 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
     }
 
     protected VM ensureViewModelCreated() {
-        if (viewModel == null) {
+        if (null == viewModel) {
             synchronized (this) {
-                if (viewModel == null) {
+                if (null == viewModel) {
                     Class<?> modelClass = resolveViewModelClass();
                     KLog.d("Creating ViewModel of type: " + modelClass.getName());
 
