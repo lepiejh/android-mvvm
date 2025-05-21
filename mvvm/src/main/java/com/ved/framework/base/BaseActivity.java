@@ -41,7 +41,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     private int viewModelId;
 //    private MaterialDialog dialog;
     private MMLoading mmLoading;
-    private volatile VM viewModel;
+    protected volatile VM viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

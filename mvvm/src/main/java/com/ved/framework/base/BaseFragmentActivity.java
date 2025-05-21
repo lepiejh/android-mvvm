@@ -42,7 +42,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     private int viewModelId;
     private MMLoading mmLoading;
     private ImmersionBar mImmersionBar;
-    private volatile VM viewModel;
+    protected volatile VM viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

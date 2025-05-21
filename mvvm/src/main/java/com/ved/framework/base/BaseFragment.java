@@ -44,7 +44,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     private MMLoading mmLoading;
     protected boolean menuVisibleTag =false;
     protected boolean isLoadData = false;
-    private volatile VM viewModel;
+    protected volatile VM viewModel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
