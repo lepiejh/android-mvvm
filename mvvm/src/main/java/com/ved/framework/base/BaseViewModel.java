@@ -12,7 +12,6 @@ import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
-import com.ved.framework.utils.bland.code.Utils;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -38,10 +37,6 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
     private Disposable mEventSubscription;
-
-    public BaseViewModel() {
-        this(Utils.getApplication());
-    }
 
     public BaseViewModel(Application application) {
         this(application,null);
