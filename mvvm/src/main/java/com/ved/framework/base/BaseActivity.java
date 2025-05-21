@@ -1,6 +1,7 @@
 package com.ved.framework.base;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -8,6 +9,7 @@ import android.os.Bundle;
 import com.blankj.swipepanel.SwipePanel;
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
+import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
@@ -32,26 +34,87 @@ import java.util.Map;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 
 public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView{
-    protected V binding;
-    private int viewModelId;
-//    private MaterialDialog dialog;
-    private MMLoading mmLoading;
-    protected volatile VM viewModel;
+    private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
+        @Override
+        protected void registerUIChangeLiveDataCallBack() {
+            BaseActivity.this.registorUIChangeLiveDataCallBack();
+        }
+
+        @Override
+        protected int initContentView(Bundle savedInstanceState) {
+            return BaseActivity.this.initContentView(savedInstanceState);
+        }
+
+        @Override
+        protected void initParam() {
+            BaseActivity.this.initParam();
+        }
+
+        @Override
+        protected int initVariableId() {
+            return Constant.variableId;
+        }
+
+        @Override
+        protected VM initViewModel() {
+            return BaseActivity.this.initViewModel();
+        }
+
+        @Override
+        protected void dismissCustomDialog() {
+            BaseActivity.this.dismissCustomDialog();
+        }
+
+        @Override
+        protected boolean mvvmDialog() {
+            return BaseActivity.this.mvvmDialog();
+        }
+
+        @Override
+        protected void showCustomDialog() {
+            BaseActivity.this.showCustomDialog();
+        }
+
+        @Override
+        protected boolean customDialog() {
+            return BaseActivity.this.customDialog();
+        }
+
+        @Override
+        protected Activity getContext() {
+            return BaseActivity.this;
+        }
+
+        @Override
+        protected LifecycleOwner getLifecycleOwner() {
+            return BaseActivity.this;
+        }
+
+        @Override
+        protected Lifecycle getLifecycle() {
+            return BaseActivity.this.getLifecycle();
+        }
+
+        @Override
+        protected LifecycleProvider getLifecycleProvider() {
+            return BaseActivity.this;
+        }
+    };
+
+    protected V binding = baseView.binding;
+    protected volatile VM viewModel = baseView.viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //页面接受的参数方法
-        initParam();
-        //私有的初始化Databinding和ViewModel方法
-        initViewDataBinding(savedInstanceState);
-        //私有的ViewModel与View的契约事件回调逻辑
-        registorUIChangeLiveDataCallBack();
+        baseView.initialize(savedInstanceState);
     }
 
     private void initSwipeBack() {
@@ -135,38 +198,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-    }
-
-    /**
-     * 注入绑定
-     */
-    private void initViewDataBinding(Bundle savedInstanceState) {
-        //DataBindingUtil类需要在project的build中配置 dataBinding {enabled true }, 同步后会自动关联android.databinding包
-        binding = DataBindingUtil.setContentView(this, initContentView(savedInstanceState));
-        viewModelId = initVariableId();
-        viewModel = initViewModel();
-        if (viewModel == null) {
-            viewModel = ensureViewModelCreated();
-        }
-        if (binding != null && viewModel != null) {
-            //关联ViewModel
-            binding.setVariable(viewModelId, viewModel);
-            //支持LiveData绑定xml，数据改变，UI自动会更新
-            binding.setLifecycleOwner(this);
-            //让ViewModel拥有View的生命周期感应
-            getLifecycle().addObserver(viewModel);
-            //注入RxLifecycle生命周期
-            viewModel.injectLifecycleProvider(this);
-        } else {
-            KLog.e("Critical: Binding or ViewModel is null");
-        }
-    }
-
-    //刷新布局
-    public void refreshLayout() {
-        if (viewModel != null) {
-            binding.setVariable(viewModelId, viewModel);
         }
     }
 
@@ -264,56 +295,17 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     protected void requestCallPhone(boolean denied){}
 
     public void showDialog(){
-        showDialog("加载中...");
+        baseView.showDialog();
     }
 
     public void showDialog(String title){
-        if (customDialog()) {
-            showCustomDialog();
-        } else {
-            if (mvvmDialog()) {
-                showDialog(title,true);
-            } else {
-                DialogManager.Companion.getInstance().showProgressDialog(this,title);
-            }
-        }
+        baseView.showDialog(title);
     }
 
     public void showCustomDialog(){}
 
-    public void showDialog(String title,boolean isShowMessage) {
-        if (mmLoading == null) {
-            MMLoading.Builder builder = new MMLoading.Builder(this)
-                    .setMessage(title)
-                    .setShowMessage(isShowMessage)
-                    .setCancelable(false)
-                    .setCancelOutside(false);
-            mmLoading = builder.create();
-        }else {
-            mmLoading.dismiss();
-            MMLoading.Builder builder = new MMLoading.Builder(this)
-                    .setMessage(title)
-                    .setShowMessage(isShowMessage)
-                    .setCancelable(false)
-                    .setCancelOutside(false);
-            mmLoading = builder.create();
-        }
-        mmLoading.getWindow().setDimAmount(0f);
-        mmLoading.show();
-    }
-
     public void dismissDialog() {
-        if (customDialog()) {
-            dismissCustomDialog();
-        } else {
-            if (mvvmDialog()) {
-                if (mmLoading != null && mmLoading.isShowing()) {
-                    mmLoading.dismiss();
-                }
-            }else {
-                DialogManager.Companion.getInstance().dismiss();
-            }
-        }
+        baseView.dismissDialog();
     }
 
     public void dismissCustomDialog(){}
@@ -414,89 +406,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public void initViewObservable() {
 
-    }
-
-    protected VM ensureViewModelCreated() {
-        if (viewModel == null) {
-            synchronized (this) { // 同步锁防止多线程重复创建
-                if (viewModel == null) { // 双重检查锁定
-                    Class<?> modelClass = resolveViewModelClass();
-                    viewModel = createViewModelSafely(modelClass);
-
-                    // 终极回退方案
-                    if (viewModel == null) {
-                        viewModel = (VM) createViewModel(this,BaseViewModel.class);
-                        KLog.w("Using fallback BaseViewModel");
-                    }
-
-                    if (viewModel == null) {
-                        throw new IllegalStateException("ViewModel creation failed after all attempts");
-                    }
-                }
-            }
-        }
-        return viewModel;
-    }
-
-    private Class<?> resolveViewModelClass() {
-        try {
-            // 方法1：尝试通过泛型获取
-            Type type = getClass().getGenericSuperclass();
-            while (!(type instanceof ParameterizedType) && type != null && type instanceof Class) {
-                type = ((Class<?>) type).getGenericSuperclass();
-            }
-
-            if (type instanceof ParameterizedType) {
-                Type[] types = ((ParameterizedType) type).getActualTypeArguments();
-                if (types.length > 1) {
-                    Type actualType = types[1];
-                    if (actualType instanceof Class) {
-                        return (Class<?>) actualType;
-                    } else if (actualType instanceof ParameterizedType) {
-                        return (Class<?>) ((ParameterizedType) actualType).getRawType();
-                    }
-                }
-            }
-
-            // 方法2：尝试通过注解获取（备用方案）
-            ViewModelClass annotation = getClass().getAnnotation(ViewModelClass.class);
-            if (annotation != null) {
-                return annotation.value();
-            }
-
-            // 方法3：使用默认 BaseViewModel
-            return BaseViewModel.class;
-        } catch (Exception e) {
-            KLog.e("Failed to resolve ViewModel class: " + e.getMessage());
-            return BaseViewModel.class;
-        }
-    }
-
-    private VM createViewModelSafely(Class modelClass) {
-        try {
-            // 尝试标准方式创建
-            ViewModel viewModel = createViewModel(this, modelClass);
-            if (viewModel != null) {
-                return (VM) viewModel;
-            }
-
-            // 尝试反射创建（备用方案）
-            try {
-                Constructor<?> constructor = modelClass.getDeclaredConstructor();
-                constructor.setAccessible(true);
-                return (VM) constructor.newInstance();
-            } catch (NoSuchMethodException e) {
-                KLog.w("No default constructor for " + modelClass.getSimpleName());
-            }
-
-        } catch (Exception e) {
-            KLog.e("Failed to create ViewModel: " + e.getMessage());
-        }
-        return null;
-    }
-
-    public <T extends ViewModel> T createViewModel(FragmentActivity activity, Class<T> cls) {
-        return ViewModelProviders.of(activity).get(cls);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
