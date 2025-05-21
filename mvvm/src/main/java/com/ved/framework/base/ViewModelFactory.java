@@ -39,7 +39,7 @@ public class ViewModelFactory extends ViewModelProvider.NewInstanceFactory {
     @Override
     public <T extends ViewModel> T create(Class<T> modelClass) {
         if (modelClass.isAssignableFrom(BaseViewModel.class)) {
-            return (T) new BaseViewModel(mApplication,null);
+            return (T) new BaseViewModel(mApplication);
         }
         //反射动态实例化ViewModel
         try {

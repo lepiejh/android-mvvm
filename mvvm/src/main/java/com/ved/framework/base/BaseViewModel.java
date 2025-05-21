@@ -40,7 +40,11 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     private Disposable mEventSubscription;
 
     public BaseViewModel() {
-        this(Utils.getApplication(),null);
+        this(Utils.getApplication());
+    }
+
+    public BaseViewModel(Application application) {
+        this(application,null);
     }
 
     public BaseViewModel(Application application,M model) {
