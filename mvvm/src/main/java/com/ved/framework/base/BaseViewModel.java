@@ -1,5 +1,6 @@
 package com.ved.framework.base;
 
+import android.app.Application;
 import android.os.Bundle;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
@@ -39,11 +40,11 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     private Disposable mEventSubscription;
 
     public BaseViewModel() {
-        this(null);
+        this(Utils.getApplication(),null);
     }
 
-    public BaseViewModel(M model) {
-        super(Utils.getApplication());
+    public BaseViewModel(Application application,M model) {
+        super(application);
         this.model = model;
         mCompositeDisposable = new CompositeDisposable();
     }
