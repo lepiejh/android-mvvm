@@ -63,6 +63,16 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
+        protected void getBinding(V binding) {
+            BaseActivity.this.binding = binding;
+        }
+
+        @Override
+        protected void getViewModel(VM viewModel) {
+            BaseActivity.this.viewModel = viewModel;
+        }
+
+        @Override
         protected VM initViewModel() {
             return BaseActivity.this.initViewModel();
         }
@@ -108,8 +118,8 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
     };
 
-    protected V binding = baseView.binding;
-    protected volatile VM viewModel = baseView.viewModel;
+    protected V binding;
+    protected VM viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -190,8 +200,8 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
             if (viewModel != null) {
                 viewModel.removeRxBus();
             }
-            if(binding != null){
-                binding.unbind();
+            if(baseView.binding != null){
+                baseView.binding.unbind();
             }
             if (isRegisterEventBus()) {
                 EventBusUtil.unregister(this);

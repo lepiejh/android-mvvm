@@ -48,6 +48,16 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
         @Override
+        protected void getBinding(V binding) {
+
+        }
+
+        @Override
+        protected void getViewModel(VM viewModel) {
+            BaseFragment.this.viewModel = viewModel;
+        }
+
+        @Override
         protected VM initViewModel() {
             return BaseFragment.this.initViewModel();
         }
@@ -114,7 +124,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     };
 
     protected V binding;
-    protected volatile VM viewModel = baseView.viewModel;
+    protected VM viewModel;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

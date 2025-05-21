@@ -44,6 +44,16 @@ import androidx.lifecycle.ViewModelProviders;
 public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends RxAppCompatFragmentActivity implements IBaseView, ViewTreeObserver.OnGlobalLayoutListener{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
         @Override
+        protected void getBinding(V binding) {
+            BaseFragmentActivity.this.binding = binding;
+        }
+
+        @Override
+        protected void getViewModel(VM viewModel) {
+            BaseFragmentActivity.this.viewModel = viewModel;
+        }
+
+        @Override
         protected VM initViewModel() {
             return BaseFragmentActivity.this.initViewModel();
         }
@@ -109,9 +119,9 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         }
     };
 
-    protected V binding = baseView.binding;
+    protected V binding;
     private ImmersionBar mImmersionBar;
-    protected volatile VM viewModel = baseView.viewModel;
+    protected VM viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

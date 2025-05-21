@@ -31,13 +31,14 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
     protected void initViewDataBinding(Bundle savedInstanceState) {
         if (getLifecycleOwner() instanceof FragmentActivity) {
             binding = DataBindingUtil.setContentView(getContext(), initContentView(savedInstanceState));
+            getBinding(binding);
         }
         int viewModelId = initVariableId();
         viewModel = initViewModel();
         if (viewModel == null) {
             viewModel = ensureViewModelCreated();
         }
-
+        getViewModel(viewModel);
         if (binding != null && viewModel != null) {
             binding.setVariable(viewModelId, viewModel);
             binding.setLifecycleOwner(getLifecycleOwner());
@@ -149,6 +150,10 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
             }
         }
     }
+
+    protected abstract void getBinding(V binding);
+
+    protected abstract void getViewModel(VM viewModel);
 
     protected abstract VM initViewModel();
 
