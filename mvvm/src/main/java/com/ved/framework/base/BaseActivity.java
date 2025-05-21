@@ -155,7 +155,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
                 //如果没有指定泛型参数，则默认使用BaseViewModel
                 modelClass = BaseViewModel.class;
             }
-            viewModel = (VM) createViewModel(this, modelClass);
+            try {
+                viewModel = (VM) createViewModel(this, modelClass);
+            } catch (Exception e) {
+                KLog.e("Failed to create ViewModel: " + e.getMessage());
+            }
         }
         //关联ViewModel
         binding.setVariable(viewModelId, viewModel);
