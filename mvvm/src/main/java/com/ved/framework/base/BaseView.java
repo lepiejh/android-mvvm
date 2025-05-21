@@ -38,7 +38,9 @@ public abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewMod
         }
         int viewModelId = initVariableId();
         viewModel = initViewModel();
-        viewModel = ensureViewModelCreated();
+        if (viewModel == null) {
+            viewModel = ensureViewModelCreated();
+        }
         getViewModel(viewModel);
         if (binding != null && viewModel != null) {
             binding.setVariable(viewModelId, viewModel);
