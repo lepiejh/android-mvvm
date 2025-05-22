@@ -22,8 +22,6 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import androidx.databinding.DataBindingUtil;
@@ -33,8 +31,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProviders;
 
 abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
