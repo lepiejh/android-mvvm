@@ -1,7 +1,6 @@
 package com.ved.framework.base;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
@@ -212,7 +211,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         viewModel.getUC().getOnBackPressedEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> getActivity().onBackPressed());
 
         viewModel.getUC().getOnLoadEvent().observe(getLifecycleOwner(), o -> {
-            if (getLifecycleOwner() instanceof Activity){
+            if (getLifecycleOwner() instanceof FragmentActivity){
                 initView();
                 initSwipeBack();
             }
@@ -312,8 +311,8 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        if (getLifecycleOwner() instanceof Activity) {
-            ((Activity) getLifecycleOwner()).startActivityForResult(intent, requestCode);
+        if (getLifecycleOwner() instanceof FragmentActivity) {
+            ((FragmentActivity) getLifecycleOwner()).startActivityForResult(intent, requestCode);
         } else if (getLifecycleOwner() instanceof Fragment) {
             ((Fragment) getLifecycleOwner()).startActivityForResult(intent, requestCode);
         }
@@ -372,8 +371,8 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
-        if (getLifecycleOwner() instanceof Activity) {
-            RxPermission.requestPermission((Activity) getLifecycleOwner(), iPermission, permissions);
+        if (getLifecycleOwner() instanceof FragmentActivity) {
+            RxPermission.requestPermission((FragmentActivity) getLifecycleOwner(), iPermission, permissions);
         } else if (getLifecycleOwner() instanceof Fragment) {
             RxPermission.requestPermission((Fragment) getLifecycleOwner(), iPermission, permissions);
         }
@@ -450,7 +449,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     protected abstract boolean customDialog();
 
-    protected abstract Activity getActivity();
+    protected abstract FragmentActivity getActivity();
 
     protected abstract Context getContext();
 
