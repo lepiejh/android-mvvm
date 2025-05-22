@@ -22,9 +22,6 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import androidx.databinding.DataBindingUtil;
@@ -34,8 +31,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProviders;
 
 abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -54,9 +49,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             getBinding(binding);
         }
         viewModel = initViewModel();
-        if (null == viewModel) {
-            viewModel = ensureViewModelCreated();
-        }
         getViewModel(viewModel);
         if (binding != null && viewModel != null) {
             binding.setVariable(Constant.variableId, viewModel);
@@ -68,166 +60,68 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
-    protected VM ensureViewModelCreated() {
-        if (null == viewModel) {
-            synchronized (this) {
-                if (null == viewModel) {
-                    Class modelClass = resolveViewModelClass();
-                    KLog.d("Creating ViewModel of type: " + modelClass.getName());
-
-                    try {
-                        // 1. 尝试标准方式创建
-                        viewModel = (VM) createViewModelWithProvider(modelClass);
-
-                        // 2. 回退到反射创建
-                        if (viewModel == null) {
-                            viewModel = createViewModelWithReflection(modelClass);
-                        }
-
-                        // 3. 终极回退方案
-                        if (viewModel == null && !BaseViewModel.class.equals(modelClass)) {
-                            KLog.w("Falling back to BaseViewModel");
-                            viewModel = (VM) createViewModelWithProvider(BaseViewModel.class);
-                        }
-
-                        // 最终检查
-                        if (viewModel == null) {
-                            throw new IllegalStateException("Failed to create ViewModel after all attempts");
-                        }
-
-                        // 类型验证
-                        if (!modelClass.isInstance(viewModel)) {
-                            throw new ClassCastException("Created ViewModel is not of type " + modelClass.getName());
-                        }
-                    } catch (Exception e) {
-                        KLog.e("ViewModel creation error: " + e.getMessage());
-                        throw new RuntimeException("Failed to create ViewModel", e);
-                    }
-                }
-            }
-        }
-        return viewModel;
-    }
-
-    private Class<?> resolveViewModelClass() {
-        try {
-            // 方法1：尝试通过泛型获取
-            Type type = getLifecycleOwner().getClass().getGenericSuperclass();
-            while (type != null) {
-                if (type instanceof ParameterizedType) {
-                    Type[] types = ((ParameterizedType) type).getActualTypeArguments();
-                    if (types.length > 1 && types[1] instanceof Class) {
-                        return (Class<?>) types[1];
-                    }
-                }
-
-                if (type instanceof Class) {
-                    type = ((Class<?>) type).getGenericSuperclass();
-                } else {
-                    break;
-                }
-            }
-
-            // 方法2：尝试通过注解获取
-            ViewModelClass annotation = getLifecycleOwner().getClass().getAnnotation(ViewModelClass.class);
-            if (annotation != null) {
-                return annotation.value();
-            }
-
-            throw new IllegalStateException("Cannot determine ViewModel class");
-        } catch (Exception e) {
-            KLog.e("Failed to resolve ViewModel class: " + e.getMessage());
-            throw new RuntimeException("Cannot determine ViewModel type", e);
-        }
-    }
-
-    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
-        try {
-            if (getLifecycleOwner() instanceof FragmentActivity) {
-                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
-            } else if (getLifecycleOwner() instanceof Fragment) {
-                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
-            }
-            return null;
-        } catch (Exception e) {
-            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    private VM createViewModelWithReflection(Class<?> modelClass) {
-        try {
-            Constructor<?> constructor = modelClass.getDeclaredConstructor();
-            constructor.setAccessible(true);
-            return (VM) constructor.newInstance();
-        } catch (NoSuchMethodException e) {
-            KLog.w("No default constructor for " + modelClass.getSimpleName());
-        } catch (Exception e) {
-            KLog.e("Reflective ViewModel creation failed: " + e.getMessage());
-        }
-        return null;
-    }
-
     private void registerUIChangeLiveDataCallBack() {
-        viewModel.getUC().getShowDialogEvent().observe(getLifecycleOwner(), (Observer<String>) this::showDialog);
-        viewModel.getUC().getDismissDialogEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
+        if (viewModel != null) {
+            viewModel.getUC().getShowDialogEvent().observe(getLifecycleOwner(), (Observer<String>) this::showDialog);
+            viewModel.getUC().getDismissDialogEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
 
-        viewModel.getUC().getRequestPermissionEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-            IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
-            String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
-            requestPermission(iPermission, permissions);
-        });
+            viewModel.getUC().getRequestPermissionEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+                IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
+                String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
+                requestPermission(iPermission, permissions);
+            });
 
-        viewModel.getUC().getRequestCallPhoneEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-            String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            callPhone(phoneNumber);
-        });
+            viewModel.getUC().getRequestCallPhoneEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+                String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
+                callPhone(phoneNumber);
+            });
 
-        viewModel.getUC().getStartActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startActivity(clz, bundle);
-        });
+            viewModel.getUC().getStartActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+                Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+                startActivity(clz, bundle);
+            });
 
-        viewModel.getUC().getStartActivityForResultEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
-            startActivityForResult(clz, requestCode, bundle);
-        });
+            viewModel.getUC().getStartActivityForResultEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+                Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+                int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
+                startActivityForResult(clz, requestCode, bundle);
+            });
 
-        viewModel.getUC().getStartContainerActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-            String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startContainerActivity(canonicalName, bundle);
-        });
+            viewModel.getUC().getStartContainerActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+                String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
+                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+                startContainerActivity(canonicalName, bundle);
+            });
 
-        viewModel.getUC().getFinishEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> {
-            SoftKeyboardUtil.hideSoftKeyboard(getActivity());
-            getActivity().finish();
-        });
+            viewModel.getUC().getFinishEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> {
+                SoftKeyboardUtil.hideSoftKeyboard(getActivity());
+                getActivity().finish();
+            });
 
-        viewModel.getUC().getOnBackPressedEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> getActivity().onBackPressed());
+            viewModel.getUC().getOnBackPressedEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> getActivity().onBackPressed());
 
-        viewModel.getUC().getOnLoadEvent().observe(getLifecycleOwner(), o -> {
-            if (getLifecycleOwner() instanceof FragmentActivity){
-                initView();
-                initSwipeBack();
+            viewModel.getUC().getOnLoadEvent().observe(getLifecycleOwner(), o -> {
+                if (getLifecycleOwner() instanceof FragmentActivity){
+                    initView();
+                    initSwipeBack();
+                }
+                if (isRegisterEventBus()) {
+                    EventBusUtil.register(this);
+                }
+                //页面事件监听的方法，一般用于ViewModel层转到View层的事件注册
+                initViewObservable();
+                //注册RxBus
+                viewModel.registerRxBus();
+            });
+
+            viewModel.getUC().getReceiverEvent().observe(getLifecycleOwner(),o -> sendReceiver());
+
+            if (viewModel.getUC().getOnResumeEvent() != null && getLifecycleOwner() instanceof Fragment) {
+                viewModel.getUC().getOnResumeEvent().observe(getLifecycleOwner(),
+                        o -> initView());
             }
-            if (isRegisterEventBus()) {
-                EventBusUtil.register(this);
-            }
-            //页面事件监听的方法，一般用于ViewModel层转到View层的事件注册
-            initViewObservable();
-            //注册RxBus
-            viewModel.registerRxBus();
-        });
-
-        viewModel.getUC().getReceiverEvent().observe(getLifecycleOwner(),o -> sendReceiver());
-
-        if (viewModel.getUC().getOnResumeEvent() != null && getLifecycleOwner() instanceof Fragment) {
-            viewModel.getUC().getOnResumeEvent().observe(getLifecycleOwner(),
-                    o -> initView());
         }
     }
 

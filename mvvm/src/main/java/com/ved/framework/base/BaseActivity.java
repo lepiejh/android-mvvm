@@ -247,9 +247,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      *
      * @return 继承BaseViewModel的ViewModel
      */
-    public VM initViewModel() {
-        return null;
-    }
+    protected abstract VM initViewModel();
 
     @Override
     public void initData() {
