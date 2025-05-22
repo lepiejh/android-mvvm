@@ -10,10 +10,7 @@ import com.gyf.immersionbar.BarHide;
 import com.gyf.immersionbar.ImmersionBar;
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.R;
-import com.ved.framework.bus.Messenger;
-import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
-import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
@@ -21,12 +18,9 @@ import com.ved.framework.utils.KLog;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Map;
-
 import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
 
 public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends RxAppCompatFragmentActivity implements IBaseView, ViewTreeObserver.OnGlobalLayoutListener{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
@@ -234,17 +228,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     protected void onDestroy() {
         KLog.i(this.getLocalClassName()+" : onDestroy()");
         super.onDestroy();
-        //解除Messenger注册
-        Messenger.getDefault().unregister(viewModel);
-        if (viewModel != null) {
-            viewModel.removeRxBus();
-        }
-        if(binding != null){
-            binding.unbind();
-        }
-        if (isRegisterEventBus()) {
-            EventBusUtil.unregister(this);
-        }
+        baseView.onDestroy();
     }
 
     /**

@@ -8,8 +8,6 @@ import android.os.Bundle;
 import com.blankj.swipepanel.SwipePanel;
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.R;
-import com.ved.framework.bus.Messenger;
-import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
@@ -185,21 +183,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     protected void onDestroy() {
         KLog.i(this.getLocalClassName()+" : onDestroy()");
         super.onDestroy();
-        try {
-            //解除Messenger注册
-            Messenger.getDefault().unregister(viewModel);
-            if (viewModel != null) {
-                viewModel.removeRxBus();
-            }
-            if(baseView.binding != null){
-                baseView.binding.unbind();
-            }
-            if (isRegisterEventBus()) {
-                EventBusUtil.unregister(this);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        baseView.onDestroy();
     }
 
     protected void requestCallPhone(boolean denied){}

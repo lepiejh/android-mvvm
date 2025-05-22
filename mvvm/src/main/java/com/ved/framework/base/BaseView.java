@@ -10,6 +10,7 @@ import android.os.Bundle;
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
@@ -387,6 +388,24 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     public void sendReceiver(){
         sendReceiver(null);
+    }
+
+    protected void onDestroy() {
+        try {
+            //解除Messenger注册
+            Messenger.getDefault().unregister(viewModel);
+            if (viewModel != null) {
+                viewModel.removeRxBus();
+            }
+            if(binding != null){
+                binding.unbind();
+            }
+            if (isRegisterEventBus()) {
+                EventBusUtil.unregister(this);
+            }
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
     }
 
     protected abstract void initViewObservable();

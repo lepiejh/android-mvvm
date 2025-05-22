@@ -9,8 +9,6 @@ import android.view.ViewGroup;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.trello.rxlifecycle4.components.support.RxFragment;
-import com.ved.framework.bus.Messenger;
-import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
@@ -148,19 +146,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         menuVisibleTag = menuVisible;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (isRegisterEventBus()) {
-            EventBusUtil.unregister(this);
-        }
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -170,16 +155,9 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        //解除Messenger注册
-        Messenger.getDefault().unregister(viewModel);
-        if (viewModel != null) {
-            viewModel.removeRxBus();
-        }
-        if (binding != null) {
-            binding.unbind();
-        }
+    public void onDestroy() {
+        super.onDestroy();
+        baseView.onDestroy();
     }
 
     @Override
