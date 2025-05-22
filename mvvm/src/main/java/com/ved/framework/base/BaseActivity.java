@@ -32,7 +32,8 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
         @Override
         protected VM ensureViewModelCreated() {
-            return BaseActivity.this.ensureViewModelCreated();
+            BaseActivity.this.viewModel = viewModelProxy.createViewModel();
+            return BaseActivity.this.viewModel;
         }
 
         @Override
@@ -114,10 +115,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     protected V binding;
     private VM viewModel;
+    private ViewModelProxy<VM> viewModelProxy;
 
     protected VM getViewModel(){
         if (null == viewModel){
-            viewModel = ensureViewModelCreated();
+            viewModel = viewModelProxy.createViewModel();
         }
         return viewModel;
     }
@@ -125,16 +127,17 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        viewModelProxy = new ViewModelProxyImpl<>(this);
         baseView.initialize(savedInstanceState);
     }
 
-    public <T extends ViewModel> T createViewModel(FragmentActivity fragmentActivity, Class<T> cls) {
+  /*  public <T extends ViewModel> T createViewModel(FragmentActivity fragmentActivity, Class<T> cls) {
         return ViewModelProviders.of(fragmentActivity).get(cls);
     }
 
-    /**
+    *//**
      * 如果放到BaseView里面可能获取不到viewModel
-     */
+     *//*
     private VM ensureViewModelCreated(){
         Class modelClass;
         Type type = getClass().getGenericSuperclass();
@@ -146,7 +149,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
         viewModel = (VM) createViewModel(this, modelClass);
         return viewModel;
-    }
+    }*/
 
     public boolean isSwipeBack() {
         return false;
