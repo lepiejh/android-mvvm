@@ -22,6 +22,8 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Map;
 
 import androidx.databinding.DataBindingUtil;
@@ -31,10 +33,12 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProviders;
 
 abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
-    protected volatile VM viewModel;
+    protected VM viewModel;
     private MMLoading mmLoading;
 
     protected final void initialize(Bundle savedInstanceState) {
@@ -48,7 +52,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             binding = DataBindingUtil.setContentView(getActivity(), initContentView(savedInstanceState));
             getBinding(binding);
         }
-        viewModel = initViewModel();
+        viewModel = ensureViewModelCreated();
         getViewModel(viewModel);
         if (binding != null && viewModel != null) {
             binding.setVariable(Constant.variableId, viewModel);
@@ -123,6 +127,33 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                         o -> initView());
             }
         }
+    }
+
+    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
+        try {
+            if (getLifecycleOwner() instanceof FragmentActivity) {
+                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
+            } else if (getLifecycleOwner() instanceof Fragment) {
+                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
+            }
+            return null;
+        } catch (Exception e) {
+            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    protected VM ensureViewModelCreated(){
+        Class modelClass;
+        Type type = getClass().getGenericSuperclass();
+        if (type instanceof ParameterizedType) {
+            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
+        } else {
+            //如果没有指定泛型参数，则默认使用BaseViewModel
+            modelClass = BaseViewModel.class;
+        }
+        viewModel = (VM) createViewModelWithProvider(modelClass);
+        return viewModel;
     }
 
     protected void showDialog() {
@@ -331,8 +362,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract void getBinding(V binding);
 
     protected abstract void getViewModel(VM viewModel);
-
-    protected abstract VM initViewModel();
 
     protected abstract void dismissCustomDialog();
 

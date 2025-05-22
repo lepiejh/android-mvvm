@@ -70,11 +70,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected VM initViewModel() {
-            return BaseFragment.this.initViewModel();
-        }
-
-        @Override
         protected void dismissCustomDialog() {
             BaseFragment.this.dismissCustomDialog();
         }
@@ -131,7 +126,14 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     };
 
     protected V binding;
-    protected VM viewModel;
+    private VM viewModel;
+
+    protected VM getViewModel(){
+        if (null == viewModel){
+            viewModel = baseView.ensureViewModelCreated();
+        }
+        return viewModel;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -256,13 +258,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
      * @return 布局layout的id
      */
     public abstract int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
-
-    /**
-     * 初始化ViewModel
-     *
-     * @return 继承BaseViewModel的ViewModel
-     */
-    protected abstract VM initViewModel();
 
     @Override
     public void initData() {
