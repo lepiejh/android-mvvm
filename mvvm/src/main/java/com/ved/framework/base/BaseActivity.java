@@ -31,11 +31,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected void initParam() {
-            BaseActivity.this.initParam();
-        }
-
-        @Override
         protected VM ensureViewModelCreated() {
             BaseActivity.this.viewModel = BaseActivity.this.ensureViewModelCreated();
             return BaseActivity.this.viewModel;
@@ -123,7 +118,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     protected VM getViewModel(){
         if (null == viewModel){
-            viewModel = baseView.ensureViewModelCreated();
+            viewModel = ensureViewModelCreated();
         }
         return viewModel;
     }
@@ -131,6 +126,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initParam();
         baseView.initialize(savedInstanceState);
     }
 
@@ -138,6 +134,9 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         return ViewModelProviders.of(activity).get(cls);
     }
 
+    /**
+     * 如果放到BaseView里面可能获取不到viewModel
+     */
     private VM ensureViewModelCreated(){
         Class modelClass;
         Type type = getClass().getGenericSuperclass();

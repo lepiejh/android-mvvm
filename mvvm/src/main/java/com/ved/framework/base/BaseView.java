@@ -42,7 +42,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     private MMLoading mmLoading;
 
     protected final void initialize(Bundle savedInstanceState) {
-        initParam();
         initViewDataBinding(savedInstanceState);
         registerUIChangeLiveDataCallBack();
     }
@@ -357,6 +356,4 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract LifecycleProvider getLifecycleProvider();
 
     protected abstract int initContentView(Bundle savedInstanceState);
-
-    protected abstract void initParam();
 }

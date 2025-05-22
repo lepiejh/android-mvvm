@@ -125,11 +125,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         protected int initContentView(Bundle savedInstanceState) {
             return 0;
         }
-
-        @Override
-        protected void initParam() {
-
-        }
     };
 
     protected V binding;
@@ -137,7 +132,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     protected VM getViewModel(){
         if (null == viewModel){
-            viewModel = baseView.ensureViewModelCreated();
+            viewModel = ensureViewModelCreated();
         }
         return viewModel;
     }
@@ -178,6 +173,9 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         return ViewModelProviders.of(fragment).get(cls);
     }
 
+    /**
+     * 如果放到BaseView里面可能获取不到viewModel
+     */
     private VM ensureViewModelCreated(){
         Class modelClass;
         Type type = getClass().getGenericSuperclass();
@@ -190,6 +188,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         viewModel = (VM) createViewModel(this, modelClass);
         return viewModel;
     }
+
     public abstract void loadData();
 
     /**
