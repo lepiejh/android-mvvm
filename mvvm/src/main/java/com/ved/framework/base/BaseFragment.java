@@ -1,6 +1,5 @@
 package com.ved.framework.base;
 
-import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -96,7 +96,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected Activity getActivity() {
+        protected FragmentActivity getActivity() {
             return BaseFragment.this.getActivity();
         }
 

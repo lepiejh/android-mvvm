@@ -1,6 +1,5 @@
 package com.ved.framework.base;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -15,6 +14,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -98,7 +98,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected Activity getActivity() {
+        protected FragmentActivity getActivity() {
             return BaseActivity.this;
         }
 
