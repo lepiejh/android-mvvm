@@ -14,19 +14,13 @@ import com.ved.framework.permission.IPermission;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProviders;
 
 public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView {
 
@@ -170,26 +164,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         super.onViewCreated(view, savedInstanceState);
         baseView.initialize(savedInstanceState);
     }
-
-  /*  public <T extends ViewModel> T createViewModel(Fragment fragment, Class<T> cls) {
-        return ViewModelProviders.of(fragment).get(cls);
-    }
-
-    *//**
-     * 如果放到BaseView里面可能获取不到viewModel
-     *//*
-    private VM ensureViewModelCreated(){
-        Class modelClass;
-        Type type = getClass().getGenericSuperclass();
-        if (type instanceof ParameterizedType) {
-            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
-        } else {
-            //如果没有指定泛型参数，则默认使用BaseViewModel
-            modelClass = BaseViewModel.class;
-        }
-        viewModel = (VM) createViewModel(this, modelClass);
-        return viewModel;
-    }*/
 
     public abstract void loadData();
 
