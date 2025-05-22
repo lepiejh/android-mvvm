@@ -11,29 +11,20 @@ import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
-import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
-import com.ved.framework.utils.SoftKeyboardUtil;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Map;
-
 import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
 
 public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
-        @Override
-        protected void registerUIChangeLiveDataCallBack() {
-            BaseActivity.this.registorUIChangeLiveDataCallBack();
-        }
 
         @Override
         protected int initContentView(Bundle savedInstanceState) {
@@ -48,6 +39,28 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected int initVariableId() {
             return Constant.variableId;
+        }
+
+        @Override
+        protected void sendReceiver() {
+            BaseActivity.this.sendReceiver();
+        }
+
+        @Override
+        protected void initViewObservable() {
+            BaseActivity.this.initViewObservable();
+        }
+
+        @Override
+        protected boolean isRegisterEventBus() {
+            return BaseActivity.this.isRegisterEventBus();
+        }
+
+        @Override
+        protected void initView() {
+            //页面数据初始化方法
+            BaseActivity.this.initData();
+            BaseActivity.this.initSwipeBack();
         }
 
         @Override
@@ -207,65 +220,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }
-
-
-    /**
-     * =====================================================================
-     **/
-    //注册ViewModel与View的契约UI回调事件
-    protected void registorUIChangeLiveDataCallBack() {
-        //加载对话框显示
-        viewModel.getUC().getShowDialogEvent().observe(this, (Observer<String>) title -> showDialog(title));
-        //加载对话框消失
-        viewModel.getUC().getDismissDialogEvent().observe(this, (Observer<Void>) v -> dismissDialog());
-        //跳入新页面
-        viewModel.getUC().getStartActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startActivity(clz, bundle);
-        });
-        viewModel.getUC().getReceiverEvent().observe(this, (Observer<Bundle>) this::sendReceiver);
-        viewModel.getUC().getStartActivityForResultEvent().observe(this, (Observer<Map<String, Object>>) params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
-            startActivityForResult(clz,requestCode, bundle);
-        });
-        viewModel.getUC().getRequestPermissionEvent().observe(this, (Observer<Map<String, Object>>) params -> {
-            IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
-            String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
-            requestPermission(iPermission,permissions);
-        });
-        viewModel.getUC().getRequestCallPhoneEvent().observe(this, (Observer<Map<String, Object>>) params -> {
-            String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            baseView.callPhone(phoneNumber);
-        });
-        //跳入ContainerActivity
-        viewModel.getUC().getStartContainerActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
-            String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startContainerActivity(canonicalName, bundle);
-        });
-        //关闭界面
-        viewModel.getUC().getFinishEvent().observe(this, (Observer<Void>) v -> {
-            SoftKeyboardUtil.hideSoftKeyboard(BaseActivity.this);
-            finish();
-        });
-        //关闭上一层
-        viewModel.getUC().getOnBackPressedEvent().observe(this, (Observer<Void>) v -> onBackPressed());
-        viewModel.getUC().getOnLoadEvent().observe(this, o -> {
-            //页面数据初始化方法
-            initData();
-            initSwipeBack();
-            if (isRegisterEventBus()) {
-                EventBusUtil.register(this);
-            }
-            //页面事件监听的方法，一般用于ViewModel层转到View层的事件注册
-            initViewObservable();
-            //注册RxBus
-            viewModel.registerRxBus();
-        });
     }
 
     protected void requestCallPhone(boolean denied){}

@@ -10,14 +10,19 @@ import android.os.Bundle;
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.ved.framework.bus.event.eventbus.EventBusUtil;
+import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
+import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
+import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Map;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
@@ -25,6 +30,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProviders;
 
@@ -159,6 +165,72 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
         return null;
     }
+
+    private void registerUIChangeLiveDataCallBack() {
+        viewModel.getUC().getShowDialogEvent().observe(getLifecycleOwner(), (Observer<String>) this::showDialog);
+        viewModel.getUC().getDismissDialogEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
+
+        viewModel.getUC().getRequestPermissionEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+            IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
+            String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
+            requestPermission(iPermission, permissions);
+        });
+
+        viewModel.getUC().getRequestCallPhoneEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+            String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
+            callPhone(phoneNumber);
+        });
+
+        viewModel.getUC().getStartActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            startActivity(clz, bundle);
+        });
+
+        viewModel.getUC().getStartActivityForResultEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
+            startActivityForResult(clz, requestCode, bundle);
+        });
+
+        viewModel.getUC().getStartContainerActivityEvent().observe(getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
+            String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            startContainerActivity(canonicalName, bundle);
+        });
+
+        viewModel.getUC().getFinishEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> {
+            SoftKeyboardUtil.hideSoftKeyboard(getActivity());
+            getActivity().finish();
+        });
+
+        viewModel.getUC().getOnBackPressedEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> getActivity().onBackPressed());
+
+        viewModel.getUC().getOnLoadEvent().observe(getLifecycleOwner(), o -> {
+            if (getLifecycleOwner() instanceof Activity){
+                initView();
+            }
+            if (isRegisterEventBus()) {
+                EventBusUtil.register(this);
+            }
+            //页面事件监听的方法，一般用于ViewModel层转到View层的事件注册
+            initViewObservable();
+            //注册RxBus
+            viewModel.registerRxBus();
+        });
+
+        if (viewModel.getUC().getReceiverEvent() != null && getLifecycleOwner() instanceof Activity) {
+            viewModel.getUC().getReceiverEvent().observe(getLifecycleOwner(),o -> sendReceiver());
+        }
+
+        if (viewModel.getUC().getOnResumeEvent() != null && getLifecycleOwner() instanceof Fragment) {
+            viewModel.getUC().getOnResumeEvent().observe(getLifecycleOwner(),
+                    o -> initView());
+        }
+    }
+
+    protected abstract void sendReceiver();
 
     protected void showDialog() {
         showDialog("加载中...");
@@ -306,6 +378,12 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
+    protected abstract void initViewObservable();
+
+    protected abstract boolean isRegisterEventBus();
+
+    protected abstract void initView();
+
     protected abstract void requestCallPhone(boolean denied);
 
     protected abstract void getBinding(V binding);
@@ -331,8 +409,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract Lifecycle getBaseLifecycle();
 
     protected abstract LifecycleProvider getLifecycleProvider();
-
-    protected abstract void registerUIChangeLiveDataCallBack();
 
     protected abstract int initContentView(Bundle savedInstanceState);
 
