@@ -323,7 +323,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @param clz 所跳转的目的Activity类
      */
     public void startActivity(Class<?> clz) {
-        startActivity(new Intent(this, clz));
+        baseView.startActivity(clz);
     }
 
     /**
@@ -333,19 +333,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @param bundle 跳转所携带的信息
      */
     public void startActivity(Class<?> clz, Bundle bundle) {
-        Intent intent = new Intent(this, clz);
-        if (bundle != null) {
-            intent.putExtras(bundle);
-        }
-        startActivity(intent);
+        baseView.startActivity(clz, bundle);
     }
 
     public void startActivityForResult(Class<?> clz,int requestCode, Bundle bundle) {
-        Intent intent = new Intent(this, clz);
-        if (bundle != null) {
-            intent.putExtras(bundle);
-        }
-        startActivityForResult(intent,requestCode);
+        baseView.startActivityForResult(clz, requestCode, bundle);
     }
 
     /**
@@ -354,7 +346,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @param canonicalName 规范名 : Fragment.class.getCanonicalName()
      */
     public void startContainerActivity(String canonicalName) {
-        startContainerActivity(canonicalName, null);
+        baseView.startContainerActivity(canonicalName);
     }
 
     /**
@@ -364,12 +356,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @param bundle        跳转所携带的信息
      */
     public void startContainerActivity(String canonicalName, Bundle bundle) {
-        Intent intent = new Intent(this, ContainerActivity.class);
-        intent.putExtra(ContainerActivity.FRAGMENT, canonicalName);
-        if (bundle != null) {
-            intent.putExtra(ContainerActivity.BUNDLE, bundle);
-        }
-        startActivity(intent);
+        baseView.startContainerActivity(canonicalName, bundle);
     }
 
     /**
@@ -386,15 +373,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @return 布局layout的id
      */
     public abstract int initContentView(Bundle savedInstanceState);
-
-    /**
-     * 初始化ViewModel的id
-     *
-     * @return BR的id
-     */
-    public int initVariableId(){
-        return Constant.variableId;
-    }
 
     /**
      * 初始化ViewModel
