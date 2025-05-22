@@ -1,6 +1,8 @@
 package com.ved.framework.base;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.mumu.dialog.MMLoading;
@@ -219,6 +221,8 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract boolean customDialog();
 
     protected abstract Activity getActivity();
+
+    protected abstract Context getContext();
 
     protected abstract LifecycleOwner getLifecycleOwner();
 

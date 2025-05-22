@@ -2,6 +2,7 @@ package com.ved.framework.base;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -77,6 +78,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected Activity getActivity() {
             return BaseFragment.this.getActivity();
+        }
+
+        @Override
+        protected Context getContext() {
+            return BaseFragment.this.getContext();
         }
 
         @Override
