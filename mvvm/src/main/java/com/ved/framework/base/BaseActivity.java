@@ -7,7 +7,6 @@ import android.os.Bundle;
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -29,11 +28,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected void initParam() {
             BaseActivity.this.initParam();
-        }
-
-        @Override
-        protected int initVariableId() {
-            return Constant.variableId;
         }
 
         @Override

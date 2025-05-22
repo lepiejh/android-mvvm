@@ -53,14 +53,13 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             binding = DataBindingUtil.setContentView(getActivity(), initContentView(savedInstanceState));
             getBinding(binding);
         }
-        int viewModelId = initVariableId();
         viewModel = initViewModel();
         if (null == viewModel) {
             viewModel = ensureViewModelCreated();
         }
         getViewModel(viewModel);
         if (binding != null && viewModel != null) {
-            binding.setVariable(viewModelId, viewModel);
+            binding.setVariable(Constant.variableId, viewModel);
             binding.setLifecycleOwner(getLifecycleOwner());
             getBaseLifecycle().addObserver(viewModel);
             viewModel.injectLifecycleProvider(getLifecycleProvider());
@@ -462,6 +461,4 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract int initContentView(Bundle savedInstanceState);
 
     protected abstract void initParam();
-
-    protected abstract int initVariableId();
 }

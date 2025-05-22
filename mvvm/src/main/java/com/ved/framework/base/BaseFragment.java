@@ -10,7 +10,6 @@ import com.trello.rxlifecycle4.LifecycleProvider;
 import com.trello.rxlifecycle4.components.support.RxFragment;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.utils.Constant;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -128,11 +127,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected void initParam() {
 
-        }
-
-        @Override
-        protected int initVariableId() {
-            return Constant.variableId;
         }
     };
 
