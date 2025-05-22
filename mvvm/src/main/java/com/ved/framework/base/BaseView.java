@@ -53,7 +53,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             getBinding(binding);
         }
         viewModel = ensureViewModelCreated();
-        getViewModel(viewModel);
         if (binding != null && viewModel != null) {
             binding.setVariable(Constant.variableId, viewModel);
             binding.setLifecycleOwner(getLifecycleOwner());
@@ -65,6 +64,9 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void registerUIChangeLiveDataCallBack() {
+        if (null == viewModel){
+            viewModel = ensureViewModelCreated();
+        }
         if (viewModel != null) {
             viewModel.getUC().getShowDialogEvent().observe(getLifecycleOwner(), (Observer<String>) this::showDialog);
             viewModel.getUC().getDismissDialogEvent().observe(getLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
@@ -127,33 +129,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                         o -> initView());
             }
         }
-    }
-
-    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
-        try {
-            if (getLifecycleOwner() instanceof FragmentActivity) {
-                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
-            } else if (getLifecycleOwner() instanceof Fragment) {
-                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
-            }
-            return null;
-        } catch (Exception e) {
-            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    protected VM ensureViewModelCreated(){
-        Class modelClass;
-        Type type = getGenericSuperclass();
-        if (type instanceof ParameterizedType) {
-            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
-        } else {
-            //如果没有指定泛型参数，则默认使用BaseViewModel
-            modelClass = BaseViewModel.class;
-        }
-        viewModel = (VM) createViewModelWithProvider(modelClass);
-        return viewModel;
     }
 
     protected void showDialog() {
@@ -349,7 +324,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
-    protected abstract Type getGenericSuperclass();
+    protected abstract VM ensureViewModelCreated();
 
     protected abstract boolean isSwipeBack();
 
@@ -362,8 +337,6 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected abstract void requestCallPhone(boolean denied);
 
     protected abstract void getBinding(V binding);
-
-    protected abstract void getViewModel(VM viewModel);
 
     protected abstract void dismissCustomDialog();
 

@@ -12,12 +12,15 @@ import com.ved.framework.utils.KLog;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+import androidx.lifecycle.ViewModel;
+import androidx.lifecycle.ViewModelProviders;
 
 public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
@@ -33,8 +36,9 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected Type getGenericSuperclass() {
-            return getClass().getGenericSuperclass();
+        protected VM ensureViewModelCreated() {
+            BaseActivity.this.viewModel = BaseActivity.this.ensureViewModelCreated();
+            return BaseActivity.this.viewModel;
         }
 
         @Override
@@ -66,11 +70,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected void getBinding(V binding) {
             BaseActivity.this.binding = binding;
-        }
-
-        @Override
-        protected void getViewModel(VM viewModel) {
-            BaseActivity.this.viewModel = viewModel;
         }
 
         @Override
@@ -133,6 +132,23 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         baseView.initialize(savedInstanceState);
+    }
+
+    public <T extends ViewModel> T createViewModel(FragmentActivity activity, Class<T> cls) {
+        return ViewModelProviders.of(activity).get(cls);
+    }
+
+    private VM ensureViewModelCreated(){
+        Class modelClass;
+        Type type = getClass().getGenericSuperclass();
+        if (type instanceof ParameterizedType) {
+            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
+        } else {
+            //如果没有指定泛型参数，则默认使用BaseViewModel
+            modelClass = BaseViewModel.class;
+        }
+        viewModel = (VM) createViewModel(this, modelClass);
+        return viewModel;
     }
 
     public boolean isSwipeBack() {
@@ -267,14 +283,14 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventBusCome(MessageEvent event) {
-        if (event != null) {
+        if (event != null && viewModel != null) {
             viewModel.receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onStickyEventBusCome(MessageEvent event) {
-        if (event != null) {
+        if (event != null && viewModel != null) {
             viewModel.receiveStickyEvent(event);
         }
     }
