@@ -220,17 +220,13 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             viewModel.registerRxBus();
         });
 
-        if (viewModel.getUC().getReceiverEvent() != null && getLifecycleOwner() instanceof Activity) {
-            viewModel.getUC().getReceiverEvent().observe(getLifecycleOwner(),o -> sendReceiver());
-        }
+        viewModel.getUC().getReceiverEvent().observe(getLifecycleOwner(),o -> sendReceiver());
 
         if (viewModel.getUC().getOnResumeEvent() != null && getLifecycleOwner() instanceof Fragment) {
             viewModel.getUC().getOnResumeEvent().observe(getLifecycleOwner(),
                     o -> initView());
         }
     }
-
-    protected abstract void sendReceiver();
 
     protected void showDialog() {
         showDialog("加载中...");
@@ -376,6 +372,21 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         } else if (getLifecycleOwner() instanceof Fragment) {
             RxPermission.requestPermission((Fragment) getLifecycleOwner(), iPermission, permissions);
         }
+    }
+
+    /**
+     * 发送广播
+     */
+    public void sendReceiver(Bundle bundle){
+        Intent intent = new Intent(Constant.RECEIVER_ACTION);
+        if (bundle != null){
+            intent.putExtras(bundle);
+        }
+        getContext().sendBroadcast(intent);
+    }
+
+    public void sendReceiver(){
+        sendReceiver(null);
     }
 
     protected abstract void initViewObservable();

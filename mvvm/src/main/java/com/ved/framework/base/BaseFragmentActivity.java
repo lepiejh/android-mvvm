@@ -30,9 +30,6 @@ import androidx.lifecycle.Observer;
 
 public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends RxAppCompatFragmentActivity implements IBaseView, ViewTreeObserver.OnGlobalLayoutListener{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
-        @Override
-        protected void sendReceiver() {
-        }
 
         @Override
         protected void initViewObservable() {

@@ -42,11 +42,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
-        protected void sendReceiver() {
-            BaseActivity.this.sendReceiver();
-        }
-
-        @Override
         protected void initViewObservable() {
             BaseActivity.this.initViewObservable();
         }
@@ -178,21 +173,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      */
     protected boolean isReceiver(){
         return false;
-    }
-
-    /**
-     * 发送广播
-     */
-    public void sendReceiver(Bundle bundle){
-        Intent intent = new Intent(Constant.RECEIVER_ACTION);
-        if (bundle != null){
-            intent.putExtras(bundle);
-        }
-        sendBroadcast(intent);
-    }
-
-    public void sendReceiver(){
-        sendReceiver(null);
     }
 
     /**

@@ -31,10 +31,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     protected boolean isLoadData = false;
 
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
-        @Override
-        protected void sendReceiver() {
-
-        }
 
         @Override
         protected void initViewObservable() {
