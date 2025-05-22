@@ -4,14 +4,14 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.WindowManager;
 
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
-
 import com.ved.framework.R;
 import com.ved.framework.databinding.AaBinding;
 
 import java.lang.ref.WeakReference;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 
 /**
