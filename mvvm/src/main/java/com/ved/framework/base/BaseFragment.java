@@ -14,6 +14,8 @@ import com.ved.framework.permission.IPermission;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.lang.reflect.Type;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
@@ -28,6 +30,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     protected boolean isLoadData = false;
 
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
+
+        @Override
+        protected Type getGenericSuperclass() {
+            return getClass().getGenericSuperclass();
+        }
 
         @Override
         protected boolean isSwipeBack() {

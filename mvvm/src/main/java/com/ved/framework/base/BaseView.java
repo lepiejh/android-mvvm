@@ -145,7 +145,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     protected VM ensureViewModelCreated(){
         Class modelClass;
-        Type type = getLifecycleOwner().getClass().getGenericSuperclass();
+        Type type = getGenericSuperclass();
         if (type instanceof ParameterizedType) {
             modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
         } else {
@@ -348,6 +348,8 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             KLog.e(e.getMessage());
         }
     }
+
+    protected abstract Type getGenericSuperclass();
 
     protected abstract boolean isSwipeBack();
 
