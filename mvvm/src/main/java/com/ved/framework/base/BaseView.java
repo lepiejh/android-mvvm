@@ -145,7 +145,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     protected VM ensureViewModelCreated(){
         Class modelClass;
-        Type type = getClass().getGenericSuperclass();
+        Type type = getLifecycleOwner().getClass().getGenericSuperclass();
         if (type instanceof ParameterizedType) {
             modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
         } else {
