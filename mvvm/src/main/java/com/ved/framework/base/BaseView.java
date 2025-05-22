@@ -1,14 +1,19 @@
 package com.ved.framework.base;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.ved.framework.permission.IPermission;
+import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.KLog;
+import com.ved.framework.utils.phone.PhoneUtils;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.ParameterizedType;
@@ -264,6 +269,44 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
         getContext().startActivity(intent);
     }
+
+    public void callPhone(String phoneNumber) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requestPermission(new IPermission() {
+                @Override
+                public void onGranted() {
+                    PhoneUtils.callPhone(phoneNumber);
+                }
+
+                @Override
+                public void onDenied(boolean denied) {
+                    requestCallPhone(denied);
+                }
+            }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
+        } else {
+            requestPermission(new IPermission() {
+                @Override
+                public void onGranted() {
+                    PhoneUtils.callPhone(phoneNumber);
+                }
+
+                @Override
+                public void onDenied(boolean denied) {
+                    requestCallPhone(denied);
+                }
+            }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
+        }
+    }
+
+    public void requestPermission(IPermission iPermission, String... permissions) {
+        if (getLifecycleOwner() instanceof Activity) {
+            RxPermission.requestPermission((Activity) getLifecycleOwner(), iPermission, permissions);
+        } else if (getLifecycleOwner() instanceof Fragment) {
+            RxPermission.requestPermission((Fragment) getLifecycleOwner(), iPermission, permissions);
+        }
+    }
+
+    protected abstract void requestCallPhone(boolean denied);
 
     protected abstract void getBinding(V binding);
 

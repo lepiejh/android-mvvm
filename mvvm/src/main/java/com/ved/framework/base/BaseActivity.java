@@ -1,10 +1,8 @@
 package com.ved.framework.base;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
 import com.blankj.swipepanel.SwipePanel;
@@ -15,12 +13,10 @@ import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
-import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -52,6 +48,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         @Override
         protected int initVariableId() {
             return Constant.variableId;
+        }
+
+        @Override
+        protected void requestCallPhone(boolean denied) {
+            BaseActivity.this.requestCallPhone(denied);
         }
 
         @Override
@@ -238,7 +239,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         });
         viewModel.getUC().getRequestCallPhoneEvent().observe(this, (Observer<Map<String, Object>>) params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            callPhone(phoneNumber);
+            baseView.callPhone(phoneNumber);
         });
         //跳入ContainerActivity
         viewModel.getUC().getStartContainerActivityEvent().observe(this, (Observer<Map<String, Object>>) params -> {
@@ -265,38 +266,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
             //注册RxBus
             viewModel.registerRxBus();
         });
-    }
-
-    public void requestPermission(IPermission iPermission,String... permissions){
-        RxPermission.requestPermission(this,iPermission,permissions);
-    }
-
-    public void callPhone(String phoneNumber){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            }, Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }else{
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            },Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }
     }
 
     protected void requestCallPhone(boolean denied){}
@@ -391,6 +360,10 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public void initViewObservable() {
 
+    }
+
+    public void requestPermission(IPermission iPermission, String... permissions) {
+        baseView.requestPermission(iPermission, permissions);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)

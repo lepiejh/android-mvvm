@@ -1,10 +1,7 @@
 package com.ved.framework.base;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -17,9 +14,7 @@ import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
-import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -40,6 +35,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     protected boolean isLoadData = false;
 
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
+        @Override
+        protected void requestCallPhone(boolean denied) {
+            BaseFragment.this.requestCallPhone(denied);
+        }
+
         @Override
         protected void getBinding(V binding) {
 
@@ -211,7 +211,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         });
         viewModel.getUC().getRequestCallPhoneEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            callPhone(phoneNumber);
+            baseView.callPhone(phoneNumber);
         });
         //跳入新页面
         viewModel.getUC().getStartActivityEvent().observe(getViewLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
@@ -264,41 +264,13 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     public void showCustomDialog(){}
 
-    public void callPhone(String phoneNumber){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            }, Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }else{
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            },Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }
-    }
-
     protected void requestCallPhone(boolean denied){}
 
     public void dismissCustomDialog(){
     }
 
     public void requestPermission(IPermission iPermission,String... permissions){
-        RxPermission.requestPermission(this,iPermission,permissions);
+        baseView.requestPermission(iPermission, permissions);
     }
 
     /**

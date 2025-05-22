@@ -1,9 +1,7 @@
 package com.ved.framework.base;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
@@ -17,10 +15,8 @@ import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
-import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -34,6 +30,11 @@ import androidx.lifecycle.Observer;
 
 public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends RxAppCompatFragmentActivity implements IBaseView, ViewTreeObserver.OnGlobalLayoutListener{
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
+        @Override
+        protected void requestCallPhone(boolean denied) {
+            BaseFragmentActivity.this.requestCallPhone(denied);
+        }
+
         @Override
         protected void getBinding(V binding) {
             BaseFragmentActivity.this.binding = binding;
@@ -266,7 +267,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
         });
         viewModel.getUC().getRequestCallPhoneEvent().observe(this, (Observer<Map<String, Object>>) params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            callPhone(phoneNumber);
+            baseView.callPhone(phoneNumber);
         });
         viewModel.getUC().getRequestPermissionEvent().observe(this, (Observer<Map<String, Object>>) params -> {
             IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
@@ -298,35 +299,7 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     }
 
     public void requestPermission(IPermission iPermission,String... permissions){
-        RxPermission.requestPermission(this,iPermission,permissions);
-    }
-
-    public void callPhone(String phoneNumber){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q){
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            }, Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }else{
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    requestCallPhone(denied);
-                }
-            },Manifest.permission.READ_PHONE_STATE,Manifest.permission.CALL_PHONE);
-        }
+        baseView.requestPermission(iPermission, permissions);
     }
 
     protected void requestCallPhone(boolean denied){}
