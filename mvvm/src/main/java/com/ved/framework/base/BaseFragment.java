@@ -137,7 +137,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     protected VM getViewModel(){
         if (null == viewModel){
-            viewModel = baseView.ensureViewModelCreated();
+            viewModel = ensureViewModelCreated();
         }
         return viewModel;
     }
