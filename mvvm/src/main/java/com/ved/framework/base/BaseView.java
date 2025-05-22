@@ -22,8 +22,6 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import androidx.databinding.DataBindingUtil;
@@ -33,8 +31,6 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProviders;
 
 abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -323,34 +319,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
-    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
-        try {
-            if (getLifecycleOwner() instanceof FragmentActivity) {
-                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
-            } else if (getLifecycleOwner() instanceof Fragment) {
-                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
-            }
-            return null;
-        } catch (Exception e) {
-            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
-            return null;
-        }
-    }
-
-    protected VM ensureViewModelCreated(){
-        Class modelClass;
-        Type type = getGenericSuperclass();
-        if (type instanceof ParameterizedType) {
-            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
-        } else {
-            //如果没有指定泛型参数，则默认使用BaseViewModel
-            modelClass = BaseViewModel.class;
-        }
-        viewModel = (VM) createViewModelWithProvider(modelClass);
-        return viewModel;
-    }
-
-    protected abstract Type getGenericSuperclass();
+    protected abstract VM ensureViewModelCreated();
 
     protected abstract boolean isSwipeBack();
 
