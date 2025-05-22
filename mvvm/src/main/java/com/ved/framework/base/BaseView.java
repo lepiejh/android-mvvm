@@ -7,15 +7,18 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.blankj.swipepanel.SwipePanel;
 import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.manager.DialogManager;
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
+import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
@@ -211,6 +214,7 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         viewModel.getUC().getOnLoadEvent().observe(getLifecycleOwner(), o -> {
             if (getLifecycleOwner() instanceof Activity){
                 initView();
+                initSwipeBack();
             }
             if (isRegisterEventBus()) {
                 EventBusUtil.register(this);
@@ -390,6 +394,20 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         sendReceiver(null);
     }
 
+    private void initSwipeBack() {
+        if (isSwipeBack()) {
+            final SwipePanel swipeLayout = new SwipePanel(getActivity());
+            swipeLayout.setLeftDrawable(R.drawable.ca);
+            swipeLayout.setLeftEdgeSize(DpiUtils.dip2px(getActivity(),16));
+            swipeLayout.setLeftSwipeColor(getActivity().getResources().getColor(R.color.colorPrimary));
+            swipeLayout.wrapView(getActivity().findViewById(android.R.id.content));
+            swipeLayout.setOnFullSwipeListener(direction -> {
+                swipeLayout.close(direction);
+                getActivity().finish();
+            });
+        }
+    }
+
     protected void onDestroy() {
         try {
             //解除Messenger注册
@@ -407,6 +425,8 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             KLog.e(e.getMessage());
         }
     }
+
+    protected abstract boolean isSwipeBack();
 
     protected abstract void initViewObservable();
 

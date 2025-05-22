@@ -31,6 +31,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
 
         @Override
+        protected boolean isSwipeBack() {
+            return false;
+        }
+
+        @Override
         protected void initViewObservable() {
             BaseFragment.this.initViewObservable();
         }

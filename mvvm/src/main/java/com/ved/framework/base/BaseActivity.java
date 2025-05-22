@@ -5,13 +5,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.blankj.swipepanel.SwipePanel;
 import com.trello.rxlifecycle4.LifecycleProvider;
-import com.ved.framework.R;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
-import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
@@ -40,6 +37,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         }
 
         @Override
+        protected boolean isSwipeBack() {
+            return BaseActivity.this.isSwipeBack();
+        }
+
+        @Override
         protected void initViewObservable() {
             BaseActivity.this.initViewObservable();
         }
@@ -53,7 +55,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         protected void initView() {
             //页面数据初始化方法
             BaseActivity.this.initData();
-            BaseActivity.this.initSwipeBack();
         }
 
         @Override
@@ -129,20 +130,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         baseView.initialize(savedInstanceState);
-    }
-
-    private void initSwipeBack() {
-        if (isSwipeBack()) {
-            final SwipePanel swipeLayout = new SwipePanel(this);
-            swipeLayout.setLeftDrawable(R.drawable.ca);
-            swipeLayout.setLeftEdgeSize(DpiUtils.dip2px(BaseActivity.this,16));
-            swipeLayout.setLeftSwipeColor(getResources().getColor(R.color.colorPrimary));
-            swipeLayout.wrapView(findViewById(android.R.id.content));
-            swipeLayout.setOnFullSwipeListener(direction -> {
-                swipeLayout.close(direction);
-                finish();
-            });
-        }
     }
 
     public boolean isSwipeBack() {

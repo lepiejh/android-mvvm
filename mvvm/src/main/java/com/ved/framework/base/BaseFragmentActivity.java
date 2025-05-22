@@ -26,6 +26,11 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
 
         @Override
+        protected boolean isSwipeBack() {
+            return BaseFragmentActivity.this.isSwipeBack();
+        }
+
+        @Override
         protected void initViewObservable() {
             BaseFragmentActivity.this.initViewObservable();
         }
@@ -305,6 +310,10 @@ public abstract class BaseFragmentActivity<V extends ViewDataBinding, VM extends
     @Override
     public void initParam() {
 
+    }
+
+    public boolean isSwipeBack() {
+        return false;
     }
 
     public boolean customDialog(){
