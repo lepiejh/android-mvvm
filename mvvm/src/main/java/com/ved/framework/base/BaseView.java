@@ -323,7 +323,34 @@ abstract class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
     }
 
-    protected abstract VM ensureViewModelCreated();
+    private <T extends ViewModel> T createViewModelWithProvider(Class<T> modelClass) {
+        try {
+            if (getLifecycleOwner() instanceof FragmentActivity) {
+                return ViewModelProviders.of((FragmentActivity) getLifecycleOwner()).get(modelClass);
+            } else if (getLifecycleOwner() instanceof Fragment) {
+                return ViewModelProviders.of((Fragment) getLifecycleOwner()).get(modelClass);
+            }
+            return null;
+        } catch (Exception e) {
+            KLog.w("ViewModelProvider creation failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    protected VM ensureViewModelCreated(){
+        Class modelClass;
+        Type type = getGenericSuperclass();
+        if (type instanceof ParameterizedType) {
+            modelClass = (Class) ((ParameterizedType) type).getActualTypeArguments()[1];
+        } else {
+            //如果没有指定泛型参数，则默认使用BaseViewModel
+            modelClass = BaseViewModel.class;
+        }
+        viewModel = (VM) createViewModelWithProvider(modelClass);
+        return viewModel;
+    }
+
+    protected abstract Type getGenericSuperclass();
 
     protected abstract boolean isSwipeBack();
 
