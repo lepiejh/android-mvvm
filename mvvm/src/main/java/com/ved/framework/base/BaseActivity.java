@@ -140,6 +140,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         baseView.showDialog(title);
     }
 
+    @Override
     public void showCustomDialog() {
     }
 
