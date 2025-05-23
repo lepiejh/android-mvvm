@@ -32,7 +32,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected VM viewModel;
     private MMLoading mmLoading;
-    private IBaseView<V,VM> iBaseView;
+    private final IBaseView<V,VM> iBaseView;
 
     protected BaseView(IBaseView<V, VM> iBaseView) {
         this.iBaseView = iBaseView;
