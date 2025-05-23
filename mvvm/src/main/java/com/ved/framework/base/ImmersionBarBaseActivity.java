@@ -127,7 +127,7 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
      * 设置状态栏背景颜色
      */
     public void setStatusBarColor(int color){
-        if (statusBarColorDef()) {
+        if (mImmersionBar != null && statusBarColorDef()) {
             mImmersionBar.statusBarColor(color).init();
         }
     }
@@ -136,7 +136,9 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
      * 设置状态栏字体的颜色
      */
     public void setStatusBarDarkFont(boolean blackFont){
-        mImmersionBar.statusBarDarkFont(blackFont).init();
+        if (mImmersionBar != null) {
+            mImmersionBar.statusBarDarkFont(blackFont).init();
+        }
     }
 
     /**
@@ -181,5 +183,11 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
     @Override
     public void onGlobalLayout() {
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        getWindow().getDecorView().getViewTreeObserver().removeOnGlobalLayoutListener(this);
+        super.onDestroy();
     }
 }
