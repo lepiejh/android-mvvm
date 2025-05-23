@@ -105,7 +105,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public Context getContext() {
+    public Context getViewContext() {
         return BaseFragment.this.getContext();
     }
 
@@ -115,7 +115,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public Lifecycle getBaseLifecycle() {
+    public Lifecycle getViewLifecycle() {
         return getLifecycle();
     }
 

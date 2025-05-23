@@ -64,7 +64,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public Context getContext() {
+    public Context getViewContext() {
         return BaseActivity.this;
     }
 
@@ -74,7 +74,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public Lifecycle getBaseLifecycle() {
+    public Lifecycle getViewLifecycle() {
         return BaseActivity.this.getLifecycle();
     }
 

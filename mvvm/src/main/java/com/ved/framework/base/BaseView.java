@@ -22,7 +22,6 @@ import com.ved.framework.utils.phone.PhoneUtils;
 
 import java.util.Map;
 
-import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -49,7 +48,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         if (binding != null && viewModel != null) {
             binding.setVariable(Constant.variableId, viewModel);
             binding.setLifecycleOwner(iBaseView.getLifecycleOwner());
-            iBaseView.getBaseLifecycle().addObserver(viewModel);
+            iBaseView.getViewLifecycle().addObserver(viewModel);
             viewModel.injectLifecycleProvider(iBaseView.getLifecycleProvider());
         } else {
             KLog.e("Critical: Binding or ViewModel is null");
@@ -181,7 +180,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param clz 所跳转的目的Activity类
      */
     protected void startActivity(Class<?> clz) {
-        iBaseView.getContext().startActivity(new Intent(iBaseView.getContext(), clz));
+        iBaseView.getViewContext().startActivity(new Intent(iBaseView.getViewContext(), clz));
     }
 
     /**
@@ -191,15 +190,15 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle 跳转所携带的信息
      */
     protected void startActivity(Class<?> clz, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getContext(), clz);
+        Intent intent = new Intent(iBaseView.getViewContext(), clz);
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        iBaseView.getContext().startActivity(intent);
+        iBaseView.getViewContext().startActivity(intent);
     }
 
     protected void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getContext(), clz);
+        Intent intent = new Intent(iBaseView.getViewContext(), clz);
         if (bundle != null) {
             intent.putExtras(bundle);
         }
@@ -226,12 +225,12 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle        跳转所携带的信息
      */
     protected void startContainerActivity(String canonicalName, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getContext(), ContainerActivity.class);
-        intent.putExtra(ContainerActivity.FRAGMENT, canonicalName);
+        Intent intent = new Intent(iBaseView.getViewContext(), ContainerActivity.class);
+        intent.putExtra(ParameterField.FRAGMENT, canonicalName);
         if (bundle != null) {
-            intent.putExtra(ContainerActivity.BUNDLE, bundle);
+            intent.putExtra(ParameterField.BUNDLE, bundle);
         }
-        iBaseView.getContext().startActivity(intent);
+        iBaseView.getViewContext().startActivity(intent);
     }
 
     public void callPhone(String phoneNumber) {
@@ -278,7 +277,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         if (bundle != null){
             intent.putExtras(bundle);
         }
-        iBaseView.getContext().sendBroadcast(intent);
+        iBaseView.getViewContext().sendBroadcast(intent);
     }
 
     public void sendReceiver(){

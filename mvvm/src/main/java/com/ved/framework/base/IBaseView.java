@@ -51,11 +51,11 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
 
     FragmentActivity FragmentActivity();
 
-    Context getContext();
+    Context getViewContext();
 
     LifecycleOwner getLifecycleOwner();
 
-    Lifecycle getBaseLifecycle();
+    Lifecycle getViewLifecycle();
 
     LifecycleProvider<?> getLifecycleProvider();
 }

@@ -6,6 +6,7 @@ import android.view.WindowManager;
 
 import com.ved.framework.R;
 import com.ved.framework.databinding.AaBinding;
+import com.ved.framework.entity.ParameterField;
 
 import java.lang.ref.WeakReference;
 
@@ -19,9 +20,6 @@ import androidx.fragment.app.FragmentTransaction;
  * 普通界面只需要编写Fragment,使用此Activity盛装,这样就不需要每个界面都在AndroidManifest中注册一遍
  */
 public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
-    private static final String FRAGMENT_TAG = "content_fragment_tag";
-    public static final String FRAGMENT = "fragment";
-    public static final String BUNDLE = "bundle";
     protected WeakReference<Fragment> mFragment;
 
     @Override
@@ -30,7 +28,7 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment = null;
         if (savedInstanceState != null) {
-            fragment = fm.getFragment(savedInstanceState, FRAGMENT_TAG);
+            fragment = fm.getFragment(savedInstanceState, ParameterField.FRAGMENT_TAG);
         }
         if (fragment == null) {
             fragment = initFromIntent(getIntent());
@@ -56,7 +54,7 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        getSupportFragmentManager().putFragment(outState, FRAGMENT_TAG, mFragment.get());
+        getSupportFragmentManager().putFragment(outState, ParameterField.FRAGMENT_TAG, mFragment.get());
     }
 
     protected Fragment initFromIntent(Intent data) {
@@ -65,13 +63,13 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
                     "you must provide a page info to display");
         }
         try {
-            String fragmentName = data.getStringExtra(FRAGMENT);
+            String fragmentName = data.getStringExtra(ParameterField.FRAGMENT);
             if (fragmentName == null || "".equals(fragmentName)) {
                 throw new IllegalArgumentException("can not find page fragmentName");
             }
             Class<?> fragmentClass = Class.forName(fragmentName);
             Fragment fragment = (Fragment) fragmentClass.newInstance();
-            Bundle args = data.getBundleExtra(BUNDLE);
+            Bundle args = data.getBundleExtra(ParameterField.BUNDLE);
             if (args != null) {
                 fragment.setArguments(args);
             }
