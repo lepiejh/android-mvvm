@@ -33,7 +33,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     protected M model;
     private UIChangeLiveData uc;
     //弱引用持有
-    private WeakReference<LifecycleProvider> lifecycle;
+    private WeakReference<LifecycleProvider<?>> lifecycle;
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
     private Disposable mEventSubscription;
@@ -67,14 +67,12 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
 
     /**
      * 注入RxLifecycle生命周期
-     *
-     * @param lifecycle
      */
-    public void injectLifecycleProvider(LifecycleProvider lifecycle) {
+    public void injectLifecycleProvider(LifecycleProvider<?> lifecycle) {
         this.lifecycle = new WeakReference<>(lifecycle);
     }
 
-    public LifecycleProvider getLifecycleProvider() {
+    public LifecycleProvider<?> getLifecycleProvider() {
         return lifecycle.get();
     }
 
@@ -300,7 +298,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         addSubscribe(disposable);
     }
 
-    public final class UIChangeLiveData extends SingleLiveEvent {
+    public static final class UIChangeLiveData extends SingleLiveEvent {
         private SingleLiveEvent<String> showDialogEvent;
         private SingleLiveEvent<Void> dismissDialogEvent;
         private SingleLiveEvent<Map<String, Object>> startActivityEvent;
