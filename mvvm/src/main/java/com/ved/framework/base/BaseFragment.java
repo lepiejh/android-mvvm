@@ -57,7 +57,6 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = DataBindingUtil.inflate(inflater, initContentView(inflater, container, savedInstanceState), container, false);
-        baseView.binding = binding;
         return binding.getRoot();
     }
 
