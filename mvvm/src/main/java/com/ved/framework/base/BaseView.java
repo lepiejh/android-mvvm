@@ -6,12 +6,10 @@ import android.os.Build;
 import android.os.Bundle;
 
 import com.blankj.swipepanel.SwipePanel;
-import com.mumu.dialog.MMLoading;
 import com.orhanobut.dialog.dialog.CustomDialogStrategy;
 import com.orhanobut.dialog.dialog.DefaultDialogStrategy;
 import com.orhanobut.dialog.dialog.IDialogStrategy;
 import com.orhanobut.dialog.dialog.MvvmDialogStrategy;
-import com.orhanobut.dialog.manager.DialogManager;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
@@ -34,7 +32,6 @@ import androidx.lifecycle.Observer;
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected VM viewModel;
-    private MMLoading mmLoading;
     private final IBaseView<V,VM> iBaseView;
     private IDialogStrategy dialogStrategy;
 
