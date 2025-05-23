@@ -165,16 +165,6 @@ public class ViewAdapter {
         }
     }
 
-    @BindingAdapter("android:text")
-    public static void text(TextView view, Object obj) {
-        if (obj instanceof Integer) {
-            // 特别处理整数情况
-            view.setText(String.valueOf((int)obj));
-        } else {
-            view.setText(String.valueOf(obj));
-        }
-    }
-
     @BindingAdapter("android:layout_marginTop")
     public static void setTopMargin(View view, int topMargin) {
         ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
@@ -300,30 +290,42 @@ public class ViewAdapter {
     }
 
     @BindingAdapter("android:textSize")
-    public static void setTextSize(TextView textView,int textSize){
+    public static void setTextSize(TextView textView,float textSize){
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
     }
 
-    @BindingAdapter("android:layout_width")
-    public static void setLayoutWidth(View textView,int layoutWidth){
-        ViewGroup.LayoutParams lp = textView.getLayoutParams();
-        if (layoutWidth == ViewGroup.LayoutParams.MATCH_PARENT || layoutWidth == ViewGroup.LayoutParams.WRAP_CONTENT){
-            lp.width = layoutWidth;
-        }else {
-            lp.width=DpiUtils.dip2px(textView.getContext(),layoutWidth);
-        }
-        textView.setLayoutParams(lp);
-    }
+    @BindingAdapter({"android:layout_width", "android:layout_height"})
+    public static void setLayoutSize(View view, Object width, Object height) {
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
 
-    @BindingAdapter("android:layout_height")
-    public static void setLayoutHeight(View textView,int layoutHeight){
-        ViewGroup.LayoutParams lp = textView.getLayoutParams();
-        if (layoutHeight == ViewGroup.LayoutParams.MATCH_PARENT || layoutHeight == ViewGroup.LayoutParams.WRAP_CONTENT){
-            lp.height = layoutHeight;
-        }else {
-            lp.height=DpiUtils.dip2px(textView.getContext(),layoutHeight);
+        // 创建基础LayoutParams（不依赖父容器）
+        if (lp == null) {
+            lp = new ViewGroup.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+            );
         }
-        textView.setLayoutParams(lp);
+
+        // 处理宽度
+        if (width instanceof Integer) {
+            int widthValue = (Integer) width;
+            lp.width = (widthValue == ViewGroup.LayoutParams.MATCH_PARENT ||
+                    widthValue == ViewGroup.LayoutParams.WRAP_CONTENT)
+                    ? widthValue
+                    : DpiUtils.dip2px(view.getContext(), widthValue);
+        }
+
+        // 处理高度
+        if (height instanceof Integer) {
+            int heightValue = (Integer) height;
+            lp.height = (heightValue == ViewGroup.LayoutParams.MATCH_PARENT ||
+                    heightValue == ViewGroup.LayoutParams.WRAP_CONTENT)
+                    ? heightValue
+                    : DpiUtils.dip2px(view.getContext(), heightValue);
+        }
+
+        // 设置LayoutParams
+        view.setLayoutParams(lp);
     }
 
     @BindingAdapter("android:drawableRight")
