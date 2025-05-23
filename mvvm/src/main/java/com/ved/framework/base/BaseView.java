@@ -7,6 +7,10 @@ import android.os.Bundle;
 
 import com.blankj.swipepanel.SwipePanel;
 import com.mumu.dialog.MMLoading;
+import com.orhanobut.dialog.dialog.CustomDialogStrategy;
+import com.orhanobut.dialog.dialog.DefaultDialogStrategy;
+import com.orhanobut.dialog.dialog.IDialogStrategy;
+import com.orhanobut.dialog.dialog.MvvmDialogStrategy;
 import com.orhanobut.dialog.manager.DialogManager;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
@@ -32,6 +36,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected VM viewModel;
     private MMLoading mmLoading;
     private final IBaseView<V,VM> iBaseView;
+    private IDialogStrategy dialogStrategy;
 
     protected BaseView(IBaseView<V, VM> iBaseView) {
         this.iBaseView = iBaseView;
@@ -40,6 +45,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected final void initialize(Bundle savedInstanceState) {
         initViewDataBinding(savedInstanceState);
         registerUIChangeLiveDataCallBack();
+        initDialogStrategy();
     }
 
     protected void initViewDataBinding(Bundle savedInstanceState) {
@@ -127,51 +133,22 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         showDialog("加载中...");
     }
 
-    protected void showDialog(String title){
+    private void initDialogStrategy() {
         if (iBaseView.customDialog()) {
-            iBaseView.showCustomDialog();
+            dialogStrategy = new CustomDialogStrategy(iBaseView);
+        } else if (iBaseView.mvvmDialog()) {
+            dialogStrategy = new MvvmDialogStrategy(iBaseView);
         } else {
-            if (iBaseView.mvvmDialog()) {
-                showDialog(title,true);
-            } else {
-                DialogManager.Companion.getInstance().showProgressDialog(iBaseView.FragmentActivity(),title);
-            }
+            dialogStrategy = new DefaultDialogStrategy(iBaseView);
         }
     }
 
-    protected void showDialog(String title,boolean isShowMessage) {
-        if (mmLoading == null) {
-            MMLoading.Builder builder = new MMLoading.Builder(iBaseView.FragmentActivity())
-                    .setMessage(title)
-                    .setShowMessage(isShowMessage)
-                    .setCancelable(false)
-                    .setCancelOutside(false);
-            mmLoading = builder.create();
-        }else {
-            mmLoading.dismiss();
-            MMLoading.Builder builder = new MMLoading.Builder(iBaseView.FragmentActivity())
-                    .setMessage(title)
-                    .setShowMessage(isShowMessage)
-                    .setCancelable(false)
-                    .setCancelOutside(false);
-            mmLoading = builder.create();
-        }
-        mmLoading.getWindow().setDimAmount(0f);
-        mmLoading.show();
+    protected void showDialog(String title){
+        dialogStrategy.show(title);
     }
 
     protected void dismissDialog() {
-        if (iBaseView.customDialog()) {
-            iBaseView.dismissCustomDialog();
-        } else {
-            if (iBaseView.mvvmDialog()) {
-                if (mmLoading != null && mmLoading.isShowing()) {
-                    mmLoading.dismiss();
-                }
-            }else {
-                DialogManager.Companion.getInstance().dismiss();
-            }
-        }
+        dialogStrategy.dismiss();
     }
 
     /**
