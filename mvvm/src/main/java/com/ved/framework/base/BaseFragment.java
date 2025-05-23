@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.trello.rxlifecycle4.android.FragmentEvent;
 import com.trello.rxlifecycle4.components.support.RxFragment;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
@@ -22,111 +23,18 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView {
+public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView<V, VM> {
 
-    protected boolean menuVisibleTag =false;
+    protected boolean menuVisibleTag = false;
     protected boolean isLoadData = false;
-
-    private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
-
-        @Override
-        protected VM ensureViewModelCreated() {
-            BaseFragment.this.viewModel = viewModelProxy.createViewModel();
-            return BaseFragment.this.viewModel;
-        }
-
-        @Override
-        protected boolean isSwipeBack() {
-            return false;
-        }
-
-        @Override
-        protected void initViewObservable() {
-            BaseFragment.this.initViewObservable();
-        }
-
-        @Override
-        protected boolean isRegisterEventBus() {
-            return BaseFragment.this.isRegisterEventBus();
-        }
-
-        @Override
-        protected void initView() {
-            if (menuVisibleTag && !isLoadData) {
-                isLoadData = true;
-                //页面数据初始化方法
-                BaseFragment.this.initData();
-                BaseFragment.this.loadData();
-            }
-        }
-
-        @Override
-        protected void requestCallPhone(boolean denied) {
-            BaseFragment.this.requestCallPhone(denied);
-        }
-
-        @Override
-        protected void getBinding(V binding) {
-
-        }
-
-        @Override
-        protected void dismissCustomDialog() {
-            BaseFragment.this.dismissCustomDialog();
-        }
-
-        @Override
-        protected boolean mvvmDialog() {
-            return BaseFragment.this.mvvmDialog();
-        }
-
-        @Override
-        protected void showCustomDialog() {
-            BaseFragment.this.showCustomDialog();
-        }
-
-        @Override
-        protected boolean customDialog() {
-            return BaseFragment.this.customDialog();
-        }
-
-        @Override
-        protected FragmentActivity getActivity() {
-            return BaseFragment.this.getActivity();
-        }
-
-        @Override
-        protected Context getContext() {
-            return BaseFragment.this.getContext();
-        }
-
-        @Override
-        protected LifecycleOwner getLifecycleOwner() {
-            return getViewLifecycleOwner();
-        }
-
-        @Override
-        protected Lifecycle getBaseLifecycle() {
-            return getLifecycle();
-        }
-
-        @Override
-        protected LifecycleProvider getLifecycleProvider() {
-            return BaseFragment.this;
-        }
-
-        @Override
-        protected int initContentView(Bundle savedInstanceState) {
-            return 0;
-        }
-    };
+    private final BaseView<V, VM> baseView = new BaseView<>(this);
 
     protected V binding;
     private VM viewModel;
     private ViewModelProxy<VM> viewModelProxy;
 
-    protected VM getViewModel(){
-        if (null == viewModel){
+    protected VM getViewModel() {
+        if (null == viewModel) {
             viewModel = viewModelProxy.createViewModel();
         }
         return viewModel;
@@ -165,6 +73,57 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         baseView.initialize(savedInstanceState);
     }
 
+    @Override
+    public VM ensureViewModelCreated() {
+        BaseFragment.this.viewModel = viewModelProxy.createViewModel();
+        return BaseFragment.this.viewModel;
+    }
+
+    @Override
+    public boolean isSwipeBack() {
+        return false;
+    }
+
+    @Override
+    public void initView() {
+        if (menuVisibleTag && !isLoadData) {
+            isLoadData = true;
+            //页面数据初始化方法
+            BaseFragment.this.initData();
+            BaseFragment.this.loadData();
+        }
+    }
+
+    @Override
+    public V getBinding(Bundle savedInstanceState) {
+        return binding;
+    }
+
+    @Override
+    public FragmentActivity FragmentActivity() {
+        return BaseFragment.this.getActivity();
+    }
+
+    @Override
+    public Context getContext() {
+        return BaseFragment.this.getContext();
+    }
+
+    @Override
+    public LifecycleOwner getLifecycleOwner() {
+        return getViewLifecycleOwner();
+    }
+
+    @Override
+    public Lifecycle getBaseLifecycle() {
+        return getLifecycle();
+    }
+
+    @Override
+    public LifecycleProvider<FragmentEvent> getLifecycleProvider() {
+        return BaseFragment.this;
+    }
+
     public abstract void loadData();
 
     /**
@@ -172,34 +131,41 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
      *
      * @return true绑定EventBus事件分发，默认不绑定，子类需要绑定的话复写此方法返回true.
      */
-    protected boolean isRegisterEventBus() {
+    @Override
+    public boolean isRegisterEventBus() {
         return false;
     }
 
-    public boolean customDialog(){
+    @Override
+    public boolean customDialog() {
         return false;
     }
 
-    public boolean mvvmDialog(){
+    @Override
+    public boolean mvvmDialog() {
         return false;
     }
 
-    public void showDialog(){
+    public void showDialog() {
         baseView.showDialog();
     }
 
-    public void showDialog(String title){
+    public void showDialog(String title) {
         baseView.showDialog(title);
     }
 
-    public void showCustomDialog(){}
-
-    protected void requestCallPhone(boolean denied){}
-
-    public void dismissCustomDialog(){
+    public void showCustomDialog() {
     }
 
-    public void requestPermission(IPermission iPermission,String... permissions){
+    @Override
+    public void requestCallPhone(boolean denied) {
+    }
+
+    @Override
+    public void dismissCustomDialog() {
+    }
+
+    public void requestPermission(IPermission iPermission, String... permissions) {
         baseView.requestPermission(iPermission, permissions);
     }
 
@@ -222,7 +188,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         baseView.startActivity(clz, bundle);
     }
 
-    public void startActivityForResult(Class<?> clz,int requestCode, Bundle bundle) {
+    public void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
         baseView.startActivityForResult(clz, requestCode, bundle);
     }
 

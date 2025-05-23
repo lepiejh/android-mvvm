@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
+import com.trello.rxlifecycle4.android.ActivityEvent;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.KLog;
@@ -12,108 +13,21 @@ import com.ved.framework.utils.KLog;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView{
-    private final BaseView<V, VM> baseView = new BaseView<V, VM>() {
-
-        @Override
-        protected int initContentView(Bundle savedInstanceState) {
-            return BaseActivity.this.initContentView(savedInstanceState);
-        }
-
-        @Override
-        protected VM ensureViewModelCreated() {
-            BaseActivity.this.viewModel = viewModelProxy.createViewModel();
-            return BaseActivity.this.viewModel;
-        }
-
-        @Override
-        protected boolean isSwipeBack() {
-            return BaseActivity.this.isSwipeBack();
-        }
-
-        @Override
-        protected void initViewObservable() {
-            BaseActivity.this.initViewObservable();
-        }
-
-        @Override
-        protected boolean isRegisterEventBus() {
-            return BaseActivity.this.isRegisterEventBus();
-        }
-
-        @Override
-        protected void initView() {
-            //页面数据初始化方法
-            BaseActivity.this.initData();
-        }
-
-        @Override
-        protected void requestCallPhone(boolean denied) {
-            BaseActivity.this.requestCallPhone(denied);
-        }
-
-        @Override
-        protected void getBinding(V binding) {
-            BaseActivity.this.binding = binding;
-        }
-
-        @Override
-        protected void dismissCustomDialog() {
-            BaseActivity.this.dismissCustomDialog();
-        }
-
-        @Override
-        protected boolean mvvmDialog() {
-            return BaseActivity.this.mvvmDialog();
-        }
-
-        @Override
-        protected void showCustomDialog() {
-            BaseActivity.this.showCustomDialog();
-        }
-
-        @Override
-        protected boolean customDialog() {
-            return BaseActivity.this.customDialog();
-        }
-
-        @Override
-        protected FragmentActivity getActivity() {
-            return BaseActivity.this;
-        }
-
-        @Override
-        protected Context getContext() {
-            return BaseActivity.this;
-        }
-
-        @Override
-        protected LifecycleOwner getLifecycleOwner() {
-            return BaseActivity.this;
-        }
-
-        @Override
-        protected Lifecycle getBaseLifecycle() {
-            return BaseActivity.this.getLifecycle();
-        }
-
-        @Override
-        protected LifecycleProvider getLifecycleProvider() {
-            return BaseActivity.this;
-        }
-    };
+public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView<V, VM> {
+    private final BaseView<V, VM> baseView = new BaseView<>(this);
 
     protected V binding;
     private VM viewModel;
     private ViewModelProxy<VM> viewModelProxy;
 
-    protected VM getViewModel(){
-        if (null == viewModel){
+    protected VM getViewModel() {
+        if (null == viewModel) {
             viewModel = viewModelProxy.createViewModel();
         }
         return viewModel;
@@ -126,15 +40,61 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         baseView.initialize(savedInstanceState);
     }
 
+    @Override
+    public VM ensureViewModelCreated() {
+        BaseActivity.this.viewModel = viewModelProxy.createViewModel();
+        return BaseActivity.this.viewModel;
+    }
+
+    @Override
+    public void initView() {
+        //页面数据初始化方法
+        BaseActivity.this.initData();
+    }
+
+    @Override
+    public V getBinding(Bundle savedInstanceState) {
+        BaseActivity.this.binding = DataBindingUtil.setContentView(this, initContentView(savedInstanceState));
+        return BaseActivity.this.binding;
+    }
+
+    @Override
+    public FragmentActivity FragmentActivity() {
+        return BaseActivity.this;
+    }
+
+    @Override
+    public Context getContext() {
+        return BaseActivity.this;
+    }
+
+    @Override
+    public LifecycleOwner getLifecycleOwner() {
+        return BaseActivity.this;
+    }
+
+    @Override
+    public Lifecycle getBaseLifecycle() {
+        return BaseActivity.this.getLifecycle();
+    }
+
+    @Override
+    public LifecycleProvider<ActivityEvent> getLifecycleProvider() {
+        return BaseActivity.this;
+    }
+
+    @Override
     public boolean isSwipeBack() {
         return false;
     }
 
-    public boolean customDialog(){
+    @Override
+    public boolean customDialog() {
         return false;
     }
 
-    public boolean mvvmDialog(){
+    @Override
+    public boolean mvvmDialog() {
         return false;
     }
 
@@ -143,47 +103,53 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      *
      * @return true绑定EventBus事件分发，默认不绑定，子类需要绑定的话复写此方法返回true.
      */
-    protected boolean isRegisterEventBus() {
+    @Override
+    public boolean isRegisterEventBus() {
         return false;
     }
 
     /**
      * 是否注册广播
      */
-    protected boolean isReceiver(){
+    protected boolean isReceiver() {
         return false;
     }
 
     /**
      * 接收广播
      */
-    public void onReceive(Intent intent){
+    public void onReceive(Intent intent) {
     }
 
     @Override
     protected void onDestroy() {
-        KLog.i(this.getLocalClassName()+" : onDestroy()");
+        KLog.i(this.getLocalClassName() + " : onDestroy()");
         super.onDestroy();
         baseView.onDestroy();
     }
 
-    protected void requestCallPhone(boolean denied){}
+    @Override
+    public void requestCallPhone(boolean denied) {
+    }
 
-    public void showDialog(){
+    public void showDialog() {
         baseView.showDialog();
     }
 
-    public void showDialog(String title){
+    public void showDialog(String title) {
         baseView.showDialog(title);
     }
 
-    public void showCustomDialog(){}
+    public void showCustomDialog() {
+    }
 
     public void dismissDialog() {
         baseView.dismissDialog();
     }
 
-    public void dismissCustomDialog(){}
+    @Override
+    public void dismissCustomDialog() {
+    }
 
     /**
      * 跳转页面
@@ -204,7 +170,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         baseView.startActivity(clz, bundle);
     }
 
-    public void startActivityForResult(Class<?> clz,int requestCode, Bundle bundle) {
+    public void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
         baseView.startActivityForResult(clz, requestCode, bundle);
     }
 
@@ -273,18 +239,18 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     protected void onResume() {
         super.onResume();
-        KLog.i(this.getLocalClassName()+" : onResume()");
+        KLog.i(this.getLocalClassName() + " : onResume()");
     }
 
     @Override
     protected void onPause() {
-        KLog.i(this.getLocalClassName()+" : onPause()");
+        KLog.i(this.getLocalClassName() + " : onPause()");
         super.onPause();
     }
 
     @Override
     protected void onStop() {
-        KLog.i(this.getLocalClassName()+" : onStop()");
+        KLog.i(this.getLocalClassName() + " : onStop()");
         super.onStop();
     }
 }
