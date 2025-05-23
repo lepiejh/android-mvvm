@@ -165,6 +165,16 @@ public class ViewAdapter {
         }
     }
 
+    @BindingAdapter("android:text")
+    public static void text(TextView view, Object obj) {
+        if (obj instanceof Integer) {
+            // 特别处理整数情况
+            view.setText(String.valueOf((int)obj));
+        } else {
+            view.setText(String.valueOf(obj));
+        }
+    }
+
     @BindingAdapter("android:layout_marginTop")
     public static void setTopMargin(View view, int topMargin) {
         ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
