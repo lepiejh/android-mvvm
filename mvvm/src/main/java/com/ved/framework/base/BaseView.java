@@ -2,14 +2,12 @@ package com.ved.framework.base;
 
 import android.Manifest;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
 import com.blankj.swipepanel.SwipePanel;
-import com.orhanobut.dialog.dialog.CustomDialogStrategy;
-import com.orhanobut.dialog.dialog.DefaultDialogStrategy;
+import com.orhanobut.dialog.dialog.DialogStrategyFactory;
 import com.orhanobut.dialog.dialog.IDialogStrategy;
-import com.orhanobut.dialog.dialog.MvvmDialogStrategy;
+import com.orhanobut.dialog.navigation.ActivityNavigator;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
@@ -22,21 +20,19 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
-import java.util.Map;
-
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.Observer;
+import androidx.lifecycle.LifecycleOwner;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected VM viewModel;
-    private final IBaseView<V,VM> iBaseView;
+    private final IBaseView<V,VM> viewDelegate;
     private IDialogStrategy dialogStrategy;
 
-    protected BaseView(IBaseView<V, VM> iBaseView) {
-        this.iBaseView = iBaseView;
+    protected BaseView(IBaseView<V, VM> viewDelegate) {
+        this.viewDelegate = viewDelegate;
     }
 
     protected final void initialize(Bundle savedInstanceState) {
@@ -46,13 +42,13 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     protected void initViewDataBinding(Bundle savedInstanceState) {
-        binding = iBaseView.getBinding(savedInstanceState);
-        viewModel = iBaseView.ensureViewModelCreated();
+        binding = viewDelegate.getBinding(savedInstanceState);
+        viewModel = viewDelegate.ensureViewModelCreated();
         if (binding != null && viewModel != null) {
             binding.setVariable(Constant.variableId, viewModel);
-            binding.setLifecycleOwner(iBaseView.getLifecycleOwner());
-            iBaseView.getViewLifecycle().addObserver(viewModel);
-            viewModel.injectLifecycleProvider(iBaseView.getLifecycleProvider());
+            binding.setLifecycleOwner(viewDelegate.getLifecycleOwner());
+            viewDelegate.getViewLifecycle().addObserver(viewModel);
+            viewModel.injectLifecycleProvider(viewDelegate.getLifecycleProvider());
         } else {
             KLog.e("Critical: Binding or ViewModel is null");
         }
@@ -60,70 +56,86 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private void registerUIChangeLiveDataCallBack() {
         if (null == viewModel){
-            viewModel = iBaseView.ensureViewModelCreated();
+            viewModel = viewDelegate.ensureViewModelCreated();
         }
         if (viewModel != null) {
-            viewModel.getUC().getShowDialogEvent().observe(iBaseView.getLifecycleOwner(), (Observer<String>) this::showDialog);
-            viewModel.getUC().getDismissDialogEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Void>) v -> dismissDialog());
-
-            viewModel.getUC().getRequestPermissionEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-                IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
-                String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
-                requestPermission(iPermission, permissions);
-            });
-
-            viewModel.getUC().getRequestCallPhoneEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-                String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-                callPhone(phoneNumber);
-            });
-
-            viewModel.getUC().getStartActivityEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-                Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-                startActivity(clz, bundle);
-            });
-
-            viewModel.getUC().getStartActivityForResultEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-                Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-                int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
-                startActivityForResult(clz, requestCode, bundle);
-            });
-
-            viewModel.getUC().getStartContainerActivityEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Map<String, Object>>) params -> {
-                String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
-                Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-                startContainerActivity(canonicalName, bundle);
-            });
-
-            viewModel.getUC().getFinishEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Void>) v -> {
-                SoftKeyboardUtil.hideSoftKeyboard(iBaseView.FragmentActivity());
-                iBaseView.FragmentActivity().finish();
-            });
-
-            viewModel.getUC().getOnBackPressedEvent().observe(iBaseView.getLifecycleOwner(), (Observer<Void>) v -> iBaseView.FragmentActivity().onBackPressed());
-
-            viewModel.getUC().getOnLoadEvent().observe(iBaseView.getLifecycleOwner(), o -> {
-                if (iBaseView.getLifecycleOwner() instanceof FragmentActivity){
-                    iBaseView.initView();
-                    initSwipeBack();
-                }
-                if (iBaseView.isRegisterEventBus()) {
-                    EventBusUtil.register(this);
-                }
-                //页面事件监听的方法，一般用于ViewModel层转到View层的事件注册
-                iBaseView.initViewObservable();
-                //注册RxBus
-                viewModel.registerRxBus();
-            });
-
-            viewModel.getUC().getReceiverEvent().observe(iBaseView.getLifecycleOwner(),o -> sendReceiver());
-
-            if (viewModel.getUC().getOnResumeEvent() != null && iBaseView.getLifecycleOwner() instanceof Fragment) {
-                viewModel.getUC().getOnResumeEvent().observe(iBaseView.getLifecycleOwner(),
-                        o -> iBaseView.initView());
-            }
+            setupViewModelObservers();
         }
+    }
+
+    private void setupViewModelObservers() {
+        LifecycleOwner owner = viewDelegate.getLifecycleOwner();
+
+        // 对话框相关
+        viewModel.getUC().getShowDialogEvent().observe(owner, this::showDialog);
+        viewModel.getUC().getDismissDialogEvent().observe(owner, v -> dismissDialog());
+
+        // 权限相关
+        viewModel.getUC().getRequestPermissionEvent().observe(owner, params -> {
+            IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
+            String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
+            requestPermission(iPermission, permissions);
+        });
+
+        // 电话相关
+        viewModel.getUC().getRequestCallPhoneEvent().observe(owner, params -> {
+            String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
+            callPhone(phoneNumber);
+        });
+
+        // 活动跳转相关
+        viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
+            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            startActivity(clz, bundle);
+        });
+
+        viewModel.getUC().getStartActivityForResultEvent().observe(owner, params -> {
+            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
+            startActivityForResult(clz, requestCode, bundle);
+        });
+
+        viewModel.getUC().getStartContainerActivityEvent().observe(owner, params -> {
+            String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
+            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
+            startContainerActivity(canonicalName, bundle);
+        });
+
+        // 生命周期相关
+        viewModel.getUC().getFinishEvent().observe(owner, v -> finishActivity());
+        viewModel.getUC().getOnBackPressedEvent().observe(owner, v -> viewDelegate.FragmentActivity().onBackPressed());
+
+        // 初始化相关
+        viewModel.getUC().getOnLoadEvent().observe(owner, o -> handleOnLoadEvent());
+
+        // 广播相关
+        viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
+
+        // Fragment Resume事件
+        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() instanceof Fragment) {
+            viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
+        }
+    }
+
+    private void handleOnLoadEvent() {
+        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
+            viewDelegate.initView();
+            initSwipeBack();
+        }
+
+        if (viewDelegate.isRegisterEventBus()) {
+            EventBusUtil.register(this);
+        }
+
+        viewDelegate.initViewObservable();
+        viewModel.registerRxBus();
+    }
+
+    private void finishActivity() {
+        SoftKeyboardUtil.hideSoftKeyboard(viewDelegate.FragmentActivity());
+        viewDelegate.FragmentActivity().finish();
     }
 
     protected void showDialog() {
@@ -131,13 +143,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void initDialogStrategy() {
-        if (iBaseView.customDialog()) {
-            dialogStrategy = new CustomDialogStrategy(iBaseView);
-        } else if (iBaseView.mvvmDialog()) {
-            dialogStrategy = new MvvmDialogStrategy(iBaseView);
-        } else {
-            dialogStrategy = new DefaultDialogStrategy(iBaseView);
-        }
+        dialogStrategy = DialogStrategyFactory.createStrategy(viewDelegate);
     }
 
     protected void showDialog(String title){
@@ -154,7 +160,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param clz 所跳转的目的Activity类
      */
     protected void startActivity(Class<?> clz) {
-        iBaseView.getViewContext().startActivity(new Intent(iBaseView.getViewContext(), clz));
+        startActivity(clz, null);
     }
 
     /**
@@ -164,22 +170,22 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle 跳转所携带的信息
      */
     protected void startActivity(Class<?> clz, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getViewContext(), clz);
-        if (bundle != null) {
-            intent.putExtras(bundle);
-        }
-        iBaseView.getViewContext().startActivity(intent);
+        ActivityNavigator.with(viewDelegate.getViewContext())
+                .target(clz)
+                .bundle(bundle)
+                .navigate();
     }
 
     protected void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getViewContext(), clz);
+        Intent intent = new Intent(viewDelegate.getViewContext(), clz);
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        if (iBaseView.getLifecycleOwner() instanceof FragmentActivity) {
-            ((FragmentActivity) iBaseView.getLifecycleOwner()).startActivityForResult(intent, requestCode);
-        } else if (iBaseView.getLifecycleOwner() instanceof Fragment) {
-            ((Fragment) iBaseView.getLifecycleOwner()).startActivityForResult(intent, requestCode);
+
+        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
+            ((FragmentActivity) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
+        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
+            ((Fragment) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
         }
     }
 
@@ -199,47 +205,32 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle        跳转所携带的信息
      */
     protected void startContainerActivity(String canonicalName, Bundle bundle) {
-        Intent intent = new Intent(iBaseView.getViewContext(), ContainerActivity.class);
-        intent.putExtra(ParameterField.FRAGMENT, canonicalName);
-        if (bundle != null) {
-            intent.putExtra(ParameterField.BUNDLE, bundle);
-        }
-        iBaseView.getViewContext().startActivity(intent);
+        ActivityNavigator.with(viewDelegate.getViewContext())
+                .target(ContainerActivity.class)
+                .putExtra(ParameterField.FRAGMENT, canonicalName)
+                .bundle(bundle)
+                .navigate();
     }
 
     public void callPhone(String phoneNumber) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
+        requestPermission(new IPermission() {
+            @Override
+            public void onGranted() {
+                PhoneUtils.callPhone(phoneNumber);
+            }
 
-                @Override
-                public void onDenied(boolean denied) {
-                    iBaseView.requestCallPhone(denied);
-                }
-            }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
-        } else {
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    PhoneUtils.callPhone(phoneNumber);
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    iBaseView.requestCallPhone(denied);
-                }
-            }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
-        }
+            @Override
+            public void onDenied(boolean denied) {
+                viewDelegate.requestCallPhone(denied);
+            }
+        }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
-        if (iBaseView.getLifecycleOwner() instanceof FragmentActivity) {
-            RxPermission.requestPermission((FragmentActivity) iBaseView.getLifecycleOwner(), iPermission, permissions);
-        } else if (iBaseView.getLifecycleOwner() instanceof Fragment) {
-            RxPermission.requestPermission((Fragment) iBaseView.getLifecycleOwner(), iPermission, permissions);
+        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
+            RxPermission.requestPermission((FragmentActivity) viewDelegate.getLifecycleOwner(), iPermission, permissions);
+        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
+            RxPermission.requestPermission((Fragment) viewDelegate.getLifecycleOwner(), iPermission, permissions);
         }
     }
 
@@ -251,7 +242,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         if (bundle != null){
             intent.putExtras(bundle);
         }
-        iBaseView.getViewContext().sendBroadcast(intent);
+        viewDelegate.getViewContext().sendBroadcast(intent);
     }
 
     public void sendReceiver(){
@@ -259,15 +250,15 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void initSwipeBack() {
-        if (iBaseView.isSwipeBack()) {
-            final SwipePanel swipeLayout = new SwipePanel(iBaseView.FragmentActivity());
+        if (viewDelegate.isSwipeBack()) {
+            final SwipePanel swipeLayout = new SwipePanel(viewDelegate.FragmentActivity());
             swipeLayout.setLeftDrawable(R.drawable.ca);
-            swipeLayout.setLeftEdgeSize(DpiUtils.dip2px(iBaseView.FragmentActivity(),16));
-            swipeLayout.setLeftSwipeColor(iBaseView.FragmentActivity().getResources().getColor(R.color.colorPrimary));
-            swipeLayout.wrapView(iBaseView.FragmentActivity().findViewById(android.R.id.content));
+            swipeLayout.setLeftEdgeSize(DpiUtils.dip2px(viewDelegate.FragmentActivity(),16));
+            swipeLayout.setLeftSwipeColor(viewDelegate.FragmentActivity().getResources().getColor(R.color.colorPrimary));
+            swipeLayout.wrapView(viewDelegate.FragmentActivity().findViewById(android.R.id.content));
             swipeLayout.setOnFullSwipeListener(direction -> {
                 swipeLayout.close(direction);
-                iBaseView.FragmentActivity().finish();
+                viewDelegate.FragmentActivity().finish();
             });
         }
     }
@@ -282,7 +273,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             if(binding != null){
                 binding.unbind();
             }
-            if (iBaseView.isRegisterEventBus()) {
+            if (viewDelegate.isRegisterEventBus()) {
                 EventBusUtil.unregister(this);
             }
         } catch (Exception e) {
