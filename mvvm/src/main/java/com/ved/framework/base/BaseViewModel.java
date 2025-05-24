@@ -5,7 +5,6 @@ import android.os.Bundle;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.bus.RxBus;
-import com.ved.framework.bus.RxSubscriptions;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
@@ -28,8 +27,8 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     private WeakReference<LifecycleProvider> lifecycle;
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
-    private Disposable mEventSubscription;
     private final UICommand command;
+    private IEventSubscriptionStrategy eventStrategy;
 
     public BaseViewModel(Application application) {
         this(application,null);
@@ -40,6 +39,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         this.model = model;
         mCompositeDisposable = new CompositeDisposable();
         this.command = new UICommand();
+        initEventStrategy();
     }
 
     protected void addSubscribe(Disposable disposable) {
@@ -171,6 +171,10 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         getUC().getOnLoadEvent().call();
     }
 
+    private void initEventStrategy() {
+        this.eventStrategy = onEventSticky() ? new StickyEventStrategy() : new DefaultEventStrategy();
+    }
+
     public void sendRxEvent(MessageEvent<?> messageEvent){
         if (onEventSticky()) {
             RxBus.getDefault().postSticky(messageEvent);
@@ -188,12 +192,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     }
 
     private void onStartEventSubscription(){
-        if (onEventSticky()) {
-            mEventSubscription = RxBus.getDefault().toObservableSticky(MessageEvent.class).subscribe(this::onEvent, this::onError);
-        } else {
-            mEventSubscription = RxBus.getDefault().toObservable(MessageEvent.class).subscribe(this::onEvent, this::onError);
-        }
-        RxSubscriptions.add(mEventSubscription);
+        eventStrategy.setupSubscription(this);
     }
 
     @Override
@@ -234,9 +233,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     @Override
     public void removeRxBus() {
         if (openEventSubscription()){
-            if (mEventSubscription != null){
-                RxSubscriptions.remove(mEventSubscription);
-            }
+            eventStrategy.remove();
         }
     }
 
