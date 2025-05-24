@@ -19,8 +19,9 @@ public class DefaultEventStrategy implements IEventSubscriptionStrategy {
 
     @Override
     public void remove() {
-        if (eventSubscription != null){
+        if (eventSubscription != null && !eventSubscription.isDisposed()) {
             RxSubscriptions.remove(eventSubscription);
+            eventSubscription = null;
         }
     }
 }
