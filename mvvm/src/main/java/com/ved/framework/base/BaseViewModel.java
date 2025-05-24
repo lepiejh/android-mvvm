@@ -6,22 +6,15 @@ import android.os.Bundle;
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.ved.framework.bus.RxBus;
 import com.ved.framework.bus.RxSubscriptions;
-import com.ved.framework.bus.event.SingleLiveEvent;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
-import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.utils.Constant;
 
 import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.Map;
 
-import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.Observer;
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
 import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
@@ -31,12 +24,12 @@ import io.reactivex.rxjava3.functions.Consumer;
  */
 public class BaseViewModel<M extends BaseModel> extends AndroidViewModel implements IBaseViewModel, Consumer<Disposable> {
     protected M model;
-    private UIChangeLiveData uc;
     //弱引用持有
     private WeakReference<LifecycleProvider> lifecycle;
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private CompositeDisposable mCompositeDisposable;
     private Disposable mEventSubscription;
+    private final UICommand command;
 
     public BaseViewModel(Application application) {
         this(application,null);
@@ -46,6 +39,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         super(application);
         this.model = model;
         mCompositeDisposable = new CompositeDisposable();
+        this.command = new UICommand();
     }
 
     protected void addSubscribe(Disposable disposable) {
@@ -77,22 +71,19 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     }
 
     public UIChangeLiveData getUC() {
-        if (uc == null) {
-            uc = new UIChangeLiveData();
-        }
-        return uc;
+        return command.getLiveData();
     }
 
     public void showDialog() {
-        showDialog("请稍后...");
+        command.showDialog();
     }
 
     public void showDialog(String title) {
-        uc.showDialogEvent.postValue(title);
+        command.showDialog(title);
     }
 
     public void dismissDialog() {
-        uc.dismissDialogEvent.call();
+        command.dismissDialog();
     }
 
     /**
@@ -101,7 +92,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
      * @param clz 所跳转的目的Activity类
      */
     public void startActivity(Class<?> clz) {
-        startActivity(clz, null);
+        command.startActivity(clz);
     }
 
     /**
@@ -111,34 +102,23 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
      * @param bundle 跳转所携带的信息
      */
     public void startActivity(Class<?> clz, Bundle bundle) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(ParameterField.CLASS, clz);
-        if (bundle != null) {
-            params.put(ParameterField.BUNDLE, bundle);
-        }
-        uc.startActivityEvent.postValue(params);
+        command.startActivity(clz, bundle);
     }
 
     public void sendReceiver(){
-        sendReceiver(null);
+        command.sendReceiver();
     }
 
     public void sendReceiver(Bundle bundle) {
-        uc.sendReceiverEvent.postValue(bundle);
+        command.sendReceiver(bundle);
     }
 
     public void startActivityForResult(Class<?> clz,int requestCode) {
-        startActivityForResult(clz, null,requestCode);
+        command.startActivityForResult(clz, requestCode);
     }
 
     public void startActivityForResult(Class<?> clz, Bundle bundle,int requestCode) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(ParameterField.CLASS, clz);
-        if (bundle != null) {
-            params.put(ParameterField.BUNDLE, bundle);
-        }
-        params.put(ParameterField.REQUEST_CODE,requestCode);
-        uc.getStartActivityForResultEvent().postValue(params);
+        command.startActivityForResult(clz, bundle, requestCode);
     }
 
     /**
@@ -147,7 +127,7 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
      * @param canonicalName 规范名 : Fragment.class.getCanonicalName()
      */
     public void startContainerActivity(String canonicalName) {
-        startContainerActivity(canonicalName, null);
+        command.startContainerActivity(canonicalName);
     }
 
     /**
@@ -157,39 +137,29 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
      * @param bundle        跳转所携带的信息
      */
     public void startContainerActivity(String canonicalName, Bundle bundle) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(ParameterField.CANONICAL_NAME, canonicalName);
-        if (bundle != null) {
-            params.put(ParameterField.BUNDLE, bundle);
-        }
-        uc.startContainerActivityEvent.postValue(params);
+        command.startContainerActivity(canonicalName, bundle);
     }
 
     public void requestPermissions(IPermission iPermission, String... permissions){
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constant.PERMISSION,iPermission);
-        params.put(Constant.PERMISSION_NAME,permissions);
-        uc.requestPermissionEvent.postValue(params);
+        command.requestPermissions(iPermission, permissions);
     }
 
     public void callPhone(String phoneNumber){
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constant.PHONE_NUMBER,phoneNumber);
-        uc.requestCallPhoneEvent.postValue(params);
+        command.callPhone(phoneNumber);
     }
 
     /**
      * 关闭界面
      */
     public void finish() {
-        uc.finishEvent.call();
+        command.finish();
     }
 
     /**
      * 返回上一层
      */
     public void onBackPressed() {
-        uc.onBackPressedEvent.call();
+        command.onBackPressed();
     }
 
     @Override
@@ -296,80 +266,5 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
     @Override
     public void accept(Disposable disposable) throws Exception {
         addSubscribe(disposable);
-    }
-
-    public static final class UIChangeLiveData extends SingleLiveEvent {
-        private SingleLiveEvent<String> showDialogEvent;
-        private SingleLiveEvent<Void> dismissDialogEvent;
-        private SingleLiveEvent<Map<String, Object>> startActivityEvent;
-        private SingleLiveEvent<Bundle> sendReceiverEvent;
-        private SingleLiveEvent<Map<String, Object>> startContainerActivityEvent;
-        private SingleLiveEvent<Map<String, Object>> startActivityForResultEvent;
-        private SingleLiveEvent<Void> finishEvent;
-        private SingleLiveEvent<Void> onBackPressedEvent;
-        private SingleLiveEvent<Void> onLoadEvent;
-        private SingleLiveEvent<Void> onResumeEvent;
-        private SingleLiveEvent<Map<String, Object>> requestPermissionEvent;
-        private SingleLiveEvent<Map<String, Object>> requestCallPhoneEvent;
-
-        public SingleLiveEvent<Map<String, Object>> getRequestCallPhoneEvent() {
-            return requestCallPhoneEvent = createLiveData(requestCallPhoneEvent);
-        }
-
-        public SingleLiveEvent<Map<String, Object>> getRequestPermissionEvent() {
-            return requestPermissionEvent = createLiveData(requestPermissionEvent);
-        }
-
-        public SingleLiveEvent<Map<String, Object>> getStartActivityForResultEvent() {
-            return startActivityForResultEvent = createLiveData(startActivityForResultEvent);
-        }
-
-        public SingleLiveEvent<String> getShowDialogEvent() {
-            return showDialogEvent = createLiveData(showDialogEvent);
-        }
-
-        public SingleLiveEvent<Void> getDismissDialogEvent() {
-            return dismissDialogEvent = createLiveData(dismissDialogEvent);
-        }
-
-        public SingleLiveEvent<Map<String, Object>> getStartActivityEvent() {
-            return startActivityEvent = createLiveData(startActivityEvent);
-        }
-
-        public SingleLiveEvent<Bundle> getReceiverEvent() {
-            return sendReceiverEvent = createLiveData(sendReceiverEvent);
-        }
-
-        public SingleLiveEvent<Map<String, Object>> getStartContainerActivityEvent() {
-            return startContainerActivityEvent = createLiveData(startContainerActivityEvent);
-        }
-
-        public SingleLiveEvent<Void> getFinishEvent() {
-            return finishEvent = createLiveData(finishEvent);
-        }
-
-        public SingleLiveEvent<Void> getOnBackPressedEvent() {
-            return onBackPressedEvent = createLiveData(onBackPressedEvent);
-        }
-
-        public SingleLiveEvent<Void> getOnLoadEvent() {
-            return onLoadEvent = createLiveData(onLoadEvent);
-        }
-
-        public SingleLiveEvent<Void> getOnResumeEvent() {
-            return onResumeEvent = createLiveData(onResumeEvent);
-        }
-
-        private <T> SingleLiveEvent<T> createLiveData(SingleLiveEvent<T> liveData) {
-            if (liveData == null) {
-                liveData = new SingleLiveEvent<>();
-            }
-            return liveData;
-        }
-
-        @Override
-        public void observe(@NonNull LifecycleOwner owner, @NonNull Observer observer) {
-            super.observe(owner, observer);
-        }
     }
 }
