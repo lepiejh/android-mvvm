@@ -41,6 +41,13 @@ import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 
 class RetrofitClient {
 
+    private RetrofitClient() {
+        // 防止反射破坏单例
+        if (RetrofitClient.getInstance() != null) {
+            throw new IllegalStateException("u can't instantiate me...");
+        }
+    }
+
     private static class SingletonHolder {
         private static final RetrofitClient INSTANCE = new RetrofitClient();
     }
