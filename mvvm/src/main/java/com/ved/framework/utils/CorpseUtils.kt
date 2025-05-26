@@ -58,8 +58,14 @@ object CorpseUtils {
      */
     fun toInt16t(bytes: List<Byte>,boType: Int = 1) : Short{
         return ByteBuffer.wrap(bytes.toByteArray())
-            .order(if (boType == 1) ByteOrder.BIG_ENDIAN else ByteOrder.LITTLE_ENDIAN)
+            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
             .short // 读取为有符号 short（int16_t）
+    }
+
+    fun toUInt32t(bytes: List<Byte>,boType: Int = 1) : UInt{
+        return ByteBuffer.wrap(bytes.toByteArray())
+            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
+            .int.toUInt()
     }
 
     /**
