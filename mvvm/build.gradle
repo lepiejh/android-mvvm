@@ -108,7 +108,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3:3.6'
     api 'com.github.lepiejh:android-dialog:v1.2.17'
     api 'com.github.lepiejh:android-tcp:v1.1.21'
-    api 'com.github.lepiejh:android-tablayout:v1.3.12'
+    api 'com.github.lepiejh:android-tablayout:v1.3.13'
     implementation 'com.github.lepiejh:android-play:v1.0.8'
     implementation 'com.github.lepiejh:android-update:v1.0.1'
     implementation 'com.github.lepiejh:html:v1.1.0'
