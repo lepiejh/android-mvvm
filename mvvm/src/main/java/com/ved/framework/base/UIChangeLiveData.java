@@ -23,9 +23,14 @@ public final class UIChangeLiveData extends SingleLiveEvent {
     private SingleLiveEvent<Void> onResumeEvent;
     private SingleLiveEvent<Map<String, Object>> requestPermissionEvent;
     private SingleLiveEvent<Map<String, Object>> requestCallPhoneEvent;
+    private SingleLiveEvent<Void> requestWifiRssiEvent;
 
     public SingleLiveEvent<Map<String, Object>> getRequestCallPhoneEvent() {
         return requestCallPhoneEvent = createLiveData(requestCallPhoneEvent);
+    }
+
+    public SingleLiveEvent<Void> getRequestWifiRssiEvent() {
+        return requestWifiRssiEvent = createLiveData(requestWifiRssiEvent);
     }
 
     public SingleLiveEvent<Map<String, Object>> getRequestPermissionEvent() {

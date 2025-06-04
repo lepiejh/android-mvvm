@@ -219,6 +219,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     }
 
+    @Override
+    public void getWifiRssi(boolean pass, int rssi) {
+
+    }
+
     public void requestPermission(IPermission iPermission, String... permissions) {
         baseView.requestPermission(iPermission, permissions);
     }

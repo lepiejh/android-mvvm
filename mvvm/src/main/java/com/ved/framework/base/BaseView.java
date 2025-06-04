@@ -2,12 +2,14 @@ package com.ved.framework.base;
 
 import android.Manifest;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 
 import com.blankj.swipepanel.SwipePanel;
 import com.orhanobut.dialog.dialog.DialogStrategyFactory;
 import com.orhanobut.dialog.dialog.IDialogStrategy;
 import com.orhanobut.dialog.navigation.ActivityNavigator;
+import com.orhanobut.dialog.utils.WifiSignalHelper;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
@@ -24,6 +26,8 @@ import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function1;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -82,6 +86,8 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
             callPhone(phoneNumber);
         });
+
+        viewModel.getUC().getRequestWifiRssiEvent().observe(owner,o -> getWifiRssi());
 
         // 活动跳转相关
         viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
@@ -210,6 +216,31 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 .putExtra(ParameterField.FRAGMENT, canonicalName)
                 .bundle(bundle)
                 .navigate();
+    }
+
+    private void getWifiRssi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            requestPermission(new IPermission() {
+                @Override
+                public void onGranted() {
+                    startListening();
+                }
+
+                @Override
+                public void onDenied(boolean denied) {
+                    viewDelegate.getWifiRssi(false,0);
+                }
+            }, Manifest.permission.ACCESS_FINE_LOCATION);
+        } else {
+            startListening();
+        }
+    }
+
+    private void startListening(){
+        WifiSignalHelper.Companion.getINSTANCE().startListening(i -> {
+            viewDelegate.getWifiRssi(i != -100,i);
+            return null;
+        });
     }
 
     public void callPhone(String phoneNumber) {

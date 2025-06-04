@@ -148,6 +148,10 @@ public class BaseViewModel<M extends BaseModel> extends AndroidViewModel impleme
         command.callPhone(phoneNumber);
     }
 
+    public void getWifiRssi(){
+        command.getWifiRssi();
+    }
+
     /**
      * 关闭界面
      */

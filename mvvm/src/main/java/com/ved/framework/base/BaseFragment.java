@@ -233,6 +233,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     }
 
+    @Override
+    public void getWifiRssi(boolean pass, int rssi) {
+
+    }
+
     public void dismissDialog() {
         baseView.dismissDialog();
     }

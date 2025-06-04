@@ -71,6 +71,10 @@ public class UICommand {
         liveData.getRequestCallPhoneEvent().postValue(params);
     }
 
+    public void getWifiRssi(){
+        liveData.getRequestWifiRssiEvent();
+    }
+
     public void sendReceiver() {
         sendReceiver(null);
     }
