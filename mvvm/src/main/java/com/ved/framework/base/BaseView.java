@@ -228,7 +228,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
                 @Override
                 public void onDenied(boolean denied) {
-                    viewDelegate.getWifiRssi(false,0);
+                    viewDelegate.getWifiRssi(-100);
                 }
             }, Manifest.permission.ACCESS_FINE_LOCATION);
         } else {
@@ -238,7 +238,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private void startListening(){
         WifiSignalHelper.Companion.getINSTANCE().startListening(i -> {
-            viewDelegate.getWifiRssi(i != -100,i);
+            viewDelegate.getWifiRssi(i);
             return null;
         });
     }

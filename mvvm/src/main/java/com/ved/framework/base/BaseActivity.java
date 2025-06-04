@@ -220,7 +220,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public void getWifiRssi(boolean pass, int rssi) {
+    public void getWifiRssi(int rssi) {
 
     }
 

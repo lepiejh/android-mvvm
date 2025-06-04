@@ -41,7 +41,7 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
 
     V getBinding(Bundle savedInstanceState);
 
-    void getWifiRssi(boolean pass,int rssi);
+    void getWifiRssi(int rssi);
 
     void dismissCustomDialog();
 
