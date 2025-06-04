@@ -72,7 +72,7 @@ public class UICommand {
     }
 
     public void getWifiRssi(){
-        liveData.getRequestWifiRssiEvent();
+        liveData.getRequestWifiRssiEvent().call();
     }
 
     public void sendReceiver() {
