@@ -307,6 +307,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             if (viewDelegate.isRegisterEventBus()) {
                 EventBusUtil.unregister(this);
             }
+            WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
