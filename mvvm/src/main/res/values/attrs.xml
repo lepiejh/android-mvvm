@@ -449,4 +449,5 @@
     <attr name="format_to_string" format="string" />
     <attr name="format_key" format="integer" />
     <attr name="format_value" format="string" />
+    <attr name="button_status" format="integer" />
 </resources>
