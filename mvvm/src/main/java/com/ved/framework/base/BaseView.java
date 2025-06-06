@@ -20,6 +20,9 @@ import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
+import com.ved.framework.utils.StringUtils;
+import com.ved.framework.utils.UIUtils;
+import com.ved.framework.utils.bland.code.NetworkUtils;
 import com.ved.framework.utils.phone.PhoneUtils;
 
 import androidx.databinding.ViewDataBinding;
@@ -87,7 +90,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             callPhone(phoneNumber);
         });
 
-        viewModel.getUC().getRequestWifiRssiEvent().observe(owner,o -> getWifiRssi());
+        viewModel.getUC().getRequestWifiRssiEvent().observe(owner,params -> {
+            String ssid = (String) params.get(Constant.WIFI_SSID);
+            getWifiRssi(ssid);
+        });
 
         // 活动跳转相关
         viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
@@ -218,12 +224,12 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 .navigate();
     }
 
-    private void getWifiRssi() {
+    private void getWifiRssi(String ssid) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestPermission(new IPermission() {
                 @Override
                 public void onGranted() {
-                    startListening();
+                    startListening(ssid);
                 }
 
                 @Override
@@ -232,15 +238,19 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 }
             }, Manifest.permission.ACCESS_FINE_LOCATION);
         } else {
-            startListening();
+            startListening(ssid);
         }
     }
 
-    private void startListening(){
-        WifiSignalHelper.Companion.getINSTANCE().startListening(i -> {
-            viewDelegate.getWifiRssi(i);
-            return null;
-        });
+    private void startListening(String ssid){
+        if (StringUtils.isSpace(ssid) || UIUtils.equals(NetworkUtils.getSSID(),ssid)) {
+            WifiSignalHelper.Companion.getINSTANCE().startListening(i -> {
+                viewDelegate.getWifiRssi(i);
+                return null;
+            });
+        } else {
+            viewDelegate.getWifiRssi(-100);
+        }
     }
 
     public void callPhone(String phoneNumber) {

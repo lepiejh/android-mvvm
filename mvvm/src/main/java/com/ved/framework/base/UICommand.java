@@ -71,8 +71,10 @@ public class UICommand {
         liveData.getRequestCallPhoneEvent().postValue(params);
     }
 
-    public void getWifiRssi(){
-        liveData.getRequestWifiRssiEvent().call();
+    public void getWifiRssi(String ssid){
+        Map<String, Object> params = new HashMap<>();
+        params.put(Constant.WIFI_SSID, ssid);
+        liveData.getRequestWifiRssiEvent().postValue(params);
     }
 
     public void sendReceiver() {

@@ -695,7 +695,6 @@ public final class NetworkUtils {
      *
      * @return the ssid.
      */
-    @RequiresPermission(ACCESS_WIFI_STATE)
     public static String getSSID() {
         WifiManager wm = (WifiManager) Utils.getApp().getApplicationContext().getSystemService(WIFI_SERVICE);
         if (wm == null) return "";
