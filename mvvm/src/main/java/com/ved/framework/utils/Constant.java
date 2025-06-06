@@ -6,7 +6,6 @@ public class Constant {
     public static final String PERMISSION = "PERMISSION";
     public static final String PERMISSION_NAME = "PERMISSION_NAME";
     public static final String PHONE_NUMBER = "phone_number";
-    public static final String WIFI_SSID = "wifi_ssid";
     public static final String RECEIVER_ACTION = "ved_action";
     public static final int REFRESH_STATUS = 1;
     public static final int LOAD_MORE_STATUS = 2;
