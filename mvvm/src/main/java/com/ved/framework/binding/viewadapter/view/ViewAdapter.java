@@ -294,40 +294,6 @@ public class ViewAdapter {
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
     }
 
-    @BindingAdapter({"android:layout_width", "android:layout_height"})
-    public static void setLayoutSize(View view, Object width, Object height) {
-        ViewGroup.LayoutParams lp = view.getLayoutParams();
-
-        // 创建基础LayoutParams（不依赖父容器）
-        if (lp == null) {
-            lp = new ViewGroup.LayoutParams(
-                    ViewGroup.LayoutParams.WRAP_CONTENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
-            );
-        }
-
-        // 处理宽度
-        if (width instanceof Integer) {
-            int widthValue = (Integer) width;
-            lp.width = (widthValue == ViewGroup.LayoutParams.MATCH_PARENT ||
-                    widthValue == ViewGroup.LayoutParams.WRAP_CONTENT)
-                    ? widthValue
-                    : DpiUtils.dip2px(view.getContext(), widthValue);
-        }
-
-        // 处理高度
-        if (height instanceof Integer) {
-            int heightValue = (Integer) height;
-            lp.height = (heightValue == ViewGroup.LayoutParams.MATCH_PARENT ||
-                    heightValue == ViewGroup.LayoutParams.WRAP_CONTENT)
-                    ? heightValue
-                    : DpiUtils.dip2px(view.getContext(), heightValue);
-        }
-
-        // 设置LayoutParams
-        view.setLayoutParams(lp);
-    }
-
     @BindingAdapter("android:drawableRight")
     public static void setDrawableRight(TextView textView, Drawable drawable){
         if (drawable != null) {

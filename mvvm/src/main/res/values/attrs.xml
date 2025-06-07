@@ -450,4 +450,6 @@
     <attr name="format_key" format="integer" />
     <attr name="format_value" format="string" />
     <attr name="button_status" format="integer" />
+    <attr name="view_width" format="integer" />
+    <attr name="view_height" format="integer" />
 </resources>
