@@ -601,11 +601,7 @@ public final class StringUtils {
         return parseLong(parseStr(a)) - parseLong(parseStr(b));
     }
 
-    public static String appendCRC(String str) {
-        return str + getCRC(str);
-    }
-
-    private static String getCRC(String str) {
+    private static String getCRC(String str,String n) {
         int[] byteArrayFromString = getByteArrayFromString(str);
         int i = SupportMenu.USER_MASK;
         int i2 = 0;
@@ -617,7 +613,7 @@ public final class StringUtils {
             i2++;
             i = i3;
         }
-        return String.format("%02x%02x", Integer.valueOf(i % 256), Integer.valueOf(i / 256));
+        return String.format("%0"+n+"%0"+n, Integer.valueOf(i % 256), Integer.valueOf(i / 256));
     }
 
     private static int[] getByteArrayFromString(String str) {
