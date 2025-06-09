@@ -601,7 +601,7 @@ public final class StringUtils {
         return parseLong(parseStr(a)) - parseLong(parseStr(b));
     }
 
-    private static String getCRC(String str,String n) {
+    public static String getCRC(String str,String n) {
         int[] byteArrayFromString = getByteArrayFromString(str);
         int i = SupportMenu.USER_MASK;
         int i2 = 0;
