@@ -112,6 +112,17 @@ public final class StringUtils {
         }
     }
 
+    public static boolean parseBoolean(String s){
+        if (isSpace(s)){
+            return false;
+        }
+        return UIUtils.equals(s,"true") || UIUtils.equals(s,"1");
+    }
+
+    public static boolean parseBoolean(Object o){
+        return parseBoolean(parseStr(o));
+    }
+
     public static String parseStr(Object o){
         return o == null ? "" : String.valueOf(o);
     }
