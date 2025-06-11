@@ -2,6 +2,8 @@ package com.ved.framework.net;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -164,19 +166,14 @@ public abstract class ARequest<T, K> {
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
-                CorpseUtils.INSTANCE.fetchWithCancel(viewModel, (coroutineScope, continuation) -> null, continuation -> {
-                    if (view!= null && seatError != null) {
-                        seatError.onErrorView();
-                    }
-                    if (isLoading && viewModel != null){
-                        viewModel.dismissDialog();
-                    }
-                    if (iResponse != null) {
-                        iResponse.onError("连接服务器失败或其他异常",false);
-                    }
-                    exceptionHandling(activity, "连接服务器失败或其他异常", -2);
-                    return null;
-                }, throwable -> null, throwable -> null);
+                if (viewModel != null) {
+                    viewModel.fetchWithCancel((coroutineScope, continuation) -> null, continuation -> {
+                        parseError(isLoading,viewModel,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity);
+                        return null;
+                    }, throwable -> null, throwable -> null);
+                }else {
+                    (new Handler(Looper.getMainLooper())).post(() -> parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity));
+                }
             }
         }
         return lifecycleDisposable;
@@ -236,6 +233,10 @@ public abstract class ARequest<T, K> {
                 if (seatError != null) {
                     seatError.onEmptyView(throwable.message);
                 }
+            }
+        }else {
+            if (StringUtils.isNotEmpty(error)) {
+                exceptionHandling(activity, error, -2);
             }
         }
     }

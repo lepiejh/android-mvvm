@@ -6,9 +6,9 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
-import androidx.lifecycle.viewModelScope
-import com.ved.framework.base.BaseViewModel
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import okhttp3.Request
 import org.json.JSONObject
 import java.lang.reflect.Proxy
@@ -66,38 +66,6 @@ object CorpseUtils {
         return ByteBuffer.wrap(bytes.toByteArray())
             .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
             .int.toUInt()
-    }
-
-    /**
-     * 线程切换
-     */
-    fun <T : BaseViewModel<*>> T?.fetchWithCancel(
-        ioAction: suspend CoroutineScope.() -> Unit = {},
-        uiAction: suspend () -> Unit = {},
-        onError: (Throwable) -> Unit = { KLog.e(it.message) },
-        onCancel: (Throwable) -> Unit = { KLog.e(it.message) }
-    ): Job? {
-        return this?.viewModelScope?.launch {
-            try {
-                val ioJob = launch(Dispatchers.IO) { ioAction() }
-                ioJob.join()
-                uiAction()
-            } catch (e: CancellationException) {
-                onCancel(e)
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { onError(e) }
-            }
-        }
-    }
-
-    /**
-     * 延时执行某个动作
-     */
-    fun BaseViewModel<*>?.delayedAction(delay: Long,block: () -> Unit) {
-        this?.viewModelScope?.launch {
-            delay(delay)
-            block()
-        }
     }
 
     /**
