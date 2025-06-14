@@ -10,9 +10,8 @@ import com.google.gson.Gson;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import androidx.annotation.Nullable;
@@ -145,11 +144,18 @@ public final class SPUtils {
             return editor.putInt(key, (Integer) value).commit();
         } else if (value instanceof Long) {
             return editor.putLong(key, (Long) value).commit();
+        }else if (value instanceof Collection){
+            Collection<?> collection = (Collection<?>) value;
+            if (!collection.isEmpty()) {
+                Class<?> elementType = collection.iterator().next().getClass();
+                return saveCollection(elementType, collection);
+            } else {
+                return saveEntity("");
+            }
         }else {
-            return editor.putString(key, encryptDES(StringUtils.parseStr(value))).commit();
+            return saveEntity(value);
         }
     }
-
 
     public Object getValue(@Nullable String key, @Nullable Object defaultValue) {
         if (null == sp) {
@@ -177,8 +183,16 @@ public final class SPUtils {
             return sp.getInt(key, (Integer) defaultValue);
         } else if (defaultValue instanceof Long) {
             return sp.getLong(key, (Long) defaultValue);
+        }else if (defaultValue instanceof Collection){
+            Collection<?> collection = (Collection<?>) defaultValue;
+            Class<?> elementType = collection.iterator().next().getClass();
+            return getCollection(elementType);
         }else {
-            return decryptDES(sp.getString(key, StringUtils.parseStr(defaultValue)));
+            if (defaultValue != null) {
+                return getEntity(defaultValue.getClass(), defaultValue);
+            }else {
+                return "";
+            }
         }
     }
 
@@ -210,7 +224,8 @@ public final class SPUtils {
         }
         return sp.getAll();
     }
-    public boolean saveEntity(@Nullable final Object obj) {
+
+    private boolean saveEntity(@Nullable final Object obj) {
         if (null != obj) {
             final String innerKey = getKey(obj.getClass());
             if (StringUtils.isNotEmpty(innerKey)) {
@@ -224,13 +239,14 @@ public final class SPUtils {
         return false;
     }
 
-    public <T> boolean saveList(@Nullable final Class<? extends T> clazz, @Nullable List<? extends T> datalist) {
-        if (null == datalist || datalist.size() <= 0) {
+    //保存集合
+    private <T> boolean saveCollection(@Nullable final Class<? extends T> clazz, @Nullable Collection<? extends T> dataList) {
+        if (null == dataList || dataList.size() <= 0) {
             return false;
         }
         final String innerKey = getKey(clazz);
         if (StringUtils.isNotEmpty(innerKey)) {
-            String value = JsonPraise.objToJson(datalist);
+            String value = JsonPraise.objToJson(dataList);
             if (TextUtils.isEmpty(value)) {
                 return false;
             }
@@ -281,7 +297,7 @@ public final class SPUtils {
         }
     }
 
-    public <T> T getEntity(@Nullable final Class<? extends T> clazz, @Nullable final T defaultValue) {
+    private <T> T getEntity(@Nullable final Class<? extends T> clazz, @Nullable final T defaultValue) {
         final String innerKey = getKey(clazz);
         if (!TextUtils.isEmpty(innerKey)) {
             T ret = JsonPraise.jsonToObj(decryptDES((String) getValue(innerKey, "")), clazz);
@@ -292,20 +308,15 @@ public final class SPUtils {
         return defaultValue;
     }
 
-    public <T> List<T> getList(@Nullable final Class<? extends T> clazz) {
-        List<T> datalist = new ArrayList<>();
+    //获取集合
+    private <T> Collection<T> getCollection(@Nullable final Class<? extends T> clazz) {
         final String innerKey = getKey(clazz);
         if (!TextUtils.isEmpty(innerKey)) {
             Gson gson = new Gson();
             String json = decryptDES((String) getValue(innerKey, ""));
-            datalist = gson.fromJson(json, new ParameterizedTypeImpl(clazz));
-            if (null != datalist) {
-                return datalist;
-            }
+            return gson.fromJson(json, new ParameterizedTypeImpl(clazz));
         }
-
-        return datalist;
-
+        return null;
     }
 
     private class ParameterizedTypeImpl implements ParameterizedType {
@@ -322,7 +333,7 @@ public final class SPUtils {
 
         @Override
         public Type getRawType() {
-            return List.class;
+            return Collection.class;
         }
 
         @Override
