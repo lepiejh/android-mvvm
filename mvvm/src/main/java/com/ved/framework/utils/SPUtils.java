@@ -129,7 +129,7 @@ public final class SPUtils {
         return getString(key,"");
     }
 
-    public boolean saveValue(@Nullable String key, @Nullable Object value) {
+    private boolean saveValue(@Nullable String key, @Nullable Object value) {
         if (null == sp) {
             return false;
         }
@@ -157,7 +157,7 @@ public final class SPUtils {
         }
     }
 
-    public Object getValue(@Nullable String key, @Nullable Object defaultValue) {
+    private Object getValue(@Nullable String key, @Nullable Object defaultValue) {
         if (null == sp) {
             if (defaultValue instanceof String) {
                 return decryptDES("");
