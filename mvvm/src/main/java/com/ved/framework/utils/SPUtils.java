@@ -2,11 +2,16 @@ package com.ved.framework.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
 
 import com.google.gson.Gson;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -15,6 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import androidx.annotation.Nullable;
+
+import static android.provider.ContactsContract.Contacts.CONTENT_URI;
 
 public final class SPUtils {
 
@@ -50,11 +57,64 @@ public final class SPUtils {
     }
 
     public void put(@Nullable String key, @Nullable Object object) {
-        saveValue(key, object);
+        if (isMainProcess()) {
+            saveValue(key, object);
+        } else {
+            Bundle extras = new Bundle();
+            extras.putString("key", key);
+            extras.putSerializable("value", (Serializable) object);
+            try {
+                Utils.getContext().getContentResolver().call(
+                        CONTENT_URI,
+                        "put",
+                        null,
+                        extras
+                );
+            } catch (Exception e) {
+                KLog.e("SPUtils put error", e);
+            }
+        }
     }
 
     public Object get(@Nullable String key, @Nullable Object defaultObject) {
-        return getValue(key, defaultObject);
+        if (isMainProcess()) {
+            return getValue(key, defaultObject);
+        } else {
+            Bundle extras = new Bundle();
+            extras.putSerializable("defaultValue", (Serializable) defaultObject);
+            try {
+                Bundle result = Utils.getContext().getContentResolver().call(
+                        CONTENT_URI,
+                        "get",
+                        key,
+                        extras
+                );
+                if (result.containsKey("exception")) {
+                    throw (Exception) result.getSerializable("exception");
+                }
+                return result.getSerializable("value");
+            } catch (Exception e) {
+                KLog.e("SPUtils get error", e);
+                return defaultObject;
+            }
+        }
+    }
+
+    private boolean isMainProcess() {
+        String processName = getProcessName();
+        return processName != null && UIUtils.equals(Utils.getContext().getPackageName(),processName);
+    }
+
+    private static String getProcessName() {
+        try {
+            File cmdline = new File("/proc/" + android.os.Process.myPid() + "/cmdline");
+            BufferedReader reader = new BufferedReader(new FileReader(cmdline));
+            String processName = reader.readLine().trim();
+            reader.close();
+            return processName;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public void putInt(String key, int value){
