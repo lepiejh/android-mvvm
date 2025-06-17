@@ -1,7 +1,5 @@
 package com.ved.framework.utils;
 
-import android.content.Context;
-import androidx.annotation.Nullable;
 import com.tencent.mmkv.MMKV;
 
 import java.util.Collections;
@@ -9,14 +7,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.Nullable;
+
 public final class MMKVUtils {
     private static final Map<String, MMKVUtils> sSPMap = new HashMap<>();
     private final MMKV mmkv;
-
-    // 初始化MMKV
-    public static void initialize(Context context) {
-        String rootDir = MMKV.initialize(context);
-    }
 
     public static MMKVUtils getInstance() {
         return getInstance("");
@@ -45,8 +40,6 @@ public final class MMKVUtils {
         }
         return true;
     }
-
-    // ==================== 基本类型操作 ====================
 
     public void put(@Nullable String key, @Nullable Object value) {
         if (key == null) return;
