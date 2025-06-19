@@ -69,6 +69,31 @@ object CorpseUtils {
     }
 
     /**
+     * 将 "XX XX XX XX" 格式的字符串转换为 "XXXX"（取前两个字节）
+     * @param input 输入字符串（如 "0A 00 00 00"）
+     * @return 合并后的前两字节字符串（如 "0A00"），若输入无效则返回空字符串 ""
+     */
+    fun String.formatHexString(): String {
+        return try {
+            // 1. 去除空格并分割成列表
+            val bytes = split(" ")
+                .filter { it.isNotBlank() }
+                .take(2) // 只取前两个字节
+
+            // 2. 校验格式（必须至少有两个字节，且每个字节是2字符的16进制）
+            if (bytes.size < 2 || bytes.any { it.length != 2 || !it.matches(Regex("[0-9A-Fa-f]{2}")) }) {
+                return ""
+            }
+
+            // 3. 合并前两个字节（如 "0A" + "00" -> "0A00"）
+            bytes.joinToString("")
+        } catch (e: Exception) {
+            "" // 异常时返回空
+        }
+    }
+
+
+    /**
      * 当B不为空时，将B值赋给A
      */
     inline fun <T> T.assignIfNotNull(source: T?, action: (T) -> Unit) {
