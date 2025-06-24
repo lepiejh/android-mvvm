@@ -27,9 +27,12 @@ public class NotificationUtils {
         Notification notification = null;
         String contentText;
         // 构建 PendingIntent
-        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intent, flags);
         //版本兼容
-
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             notification = new NotificationCompat.Builder(mContext)
                     .setAutoCancel(true)
@@ -90,7 +93,11 @@ public class NotificationUtils {
         Notification notification = null;
         String contentText;
         // 构建 PendingIntent
-        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intentParam, PendingIntent.FLAG_UPDATE_CURRENT);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intentParam, flags);
         //版本兼容
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             notification = new NotificationCompat.Builder(mContext)
@@ -157,8 +164,11 @@ public class NotificationUtils {
         Notification notification = null;
         String contentText;
         // 构建 PendingIntent
-
-        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flags |= PendingIntent.FLAG_IMMUTABLE;
+        }
+        PendingIntent pi = PendingIntent.getActivity(mContext, 1, intent, flags);
         //版本兼容
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O && Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
             notification = new NotificationCompat.Builder(mContext)
