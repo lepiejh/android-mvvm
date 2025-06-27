@@ -167,7 +167,7 @@ public abstract class ARequest<T, K> {
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 if (viewModel != null) {
-                    viewModel.fetchWithCancel("net_error",(coroutineScope, continuation) -> null, continuation -> {
+                    viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12),(coroutineScope, continuation) -> null, continuation -> {
                         parseError(isLoading,viewModel,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity);
                         return null;
                     }, throwable -> null, throwable -> null);

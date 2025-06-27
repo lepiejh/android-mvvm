@@ -14,6 +14,7 @@ import org.json.JSONObject
 import java.lang.reflect.Proxy
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.security.SecureRandom
 import java.util.*
 
 object CorpseUtils {
@@ -224,5 +225,13 @@ object CorpseUtils {
         json.length() == 3 && json.has("code") && json.has("msg") && json.has("data")
     } catch (e: Exception) {
         false
+    }
+
+    fun generateSecureRandomString(length: Int): String {
+        val charPool = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+        val secureRandom = SecureRandom()
+        return (1..length)
+            .map { charPool[secureRandom.nextInt(charPool.length)] }
+            .joinToString("")
     }
 }
