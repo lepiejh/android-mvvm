@@ -11,8 +11,6 @@ import com.ved.framework.bus.RxBus
 import com.ved.framework.bus.event.eventbus.EventBusUtil
 import com.ved.framework.bus.event.eventbus.MessageEvent
 import com.ved.framework.permission.IPermission
-import com.ved.framework.utils.Constant.DELAY_KEY
-import com.ved.framework.utils.Constant.FETCH_KEY
 import com.ved.framework.utils.KLog
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
@@ -199,12 +197,12 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
      * 线程切换 - 带键值管理
      */
     fun fetchWithCancel(
+        key: String,
         ioAction: suspend CoroutineScope.() -> Unit = {},
         uiAction: suspend () -> Unit = {},
         onError: (Throwable) -> Unit = { KLog.e(it.message) },
         onCancel: (Throwable) -> Unit = { KLog.e(it.message) }
     ) {
-        val key = FETCH_KEY
         cancelJob(key) // 取消同key的旧任务
 
         backgroundJobs[key] = viewModelScope.launch {
@@ -228,10 +226,10 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
      * 延时执行某个动作 - 带键值管理
      */
     fun delayedAction(
+        key: String,
         delay: Long,
         block: () -> Unit
     ) {
-        val key = DELAY_KEY
         cancelJob(key) // 取消同key的旧任务
 
         backgroundJobs[key] = viewModelScope.launch {

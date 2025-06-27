@@ -7,8 +7,6 @@ public class Constant {
     public static final String PERMISSION_NAME = "PERMISSION_NAME";
     public static final String PHONE_NUMBER = "phone_number";
     public static final String RECEIVER_ACTION = "ved_action";
-    public static final String FETCH_KEY = "fetch_key";
-    public static final String DELAY_KEY = "delay_key";
     public static final int REFRESH_STATUS = 1;
     public static final int LOAD_MORE_STATUS = 2;
     public static final int DEFAULT_TIMEOUT = 30;

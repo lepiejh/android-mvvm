@@ -84,7 +84,7 @@ class RetrofitClient {
                                 response = chain.proceed(chain.request());
                             } catch (IOException e) {
                                 if (viewModel != null) {
-                                    viewModel.fetchWithCancel((coroutineScope, continuation) -> null, continuation -> {
+                                    viewModel.fetchWithCancel("net_error",(coroutineScope, continuation) -> null, continuation -> {
                                         viewModel.dismissDialog();
                                         if (iResponse != null) iResponse.onError(e.getMessage(),e instanceof SocketException);
                                         return null;
