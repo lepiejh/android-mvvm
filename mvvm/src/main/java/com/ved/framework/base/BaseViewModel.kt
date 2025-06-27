@@ -211,7 +211,9 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
             try {
                 val ioJob = launch(Dispatchers.IO) { ioAction() }
                 ioJob.join()
-                uiAction()
+                withContext(Dispatchers.Main) { // 确保UI更新在主线程
+                    uiAction()
+                }
             } catch (e: CancellationException) {
                 onCancel(e)
             } catch (e: Exception) {
