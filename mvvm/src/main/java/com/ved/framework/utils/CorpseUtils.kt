@@ -234,4 +234,14 @@ object CorpseUtils {
             .map { charPool[secureRandom.nextInt(charPool.length)] }
             .joinToString("")
     }
+
+    fun intToByte(i:Int) : String{
+        val value = ((i + 30f) / 60f * 65535f).toInt()
+        val byte0 = (value shr 8) and 0xFF
+        val byte1 = value and 0xFF
+        return StringUtils.bytesToHex(ByteArray(2).apply {
+            set(0, byte0.toByte())
+            set(1, byte1.toByte())
+        }).replace(" ","")
+    }
 }
