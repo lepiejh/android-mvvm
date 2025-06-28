@@ -235,7 +235,7 @@ object CorpseUtils {
             .joinToString("")
     }
 
-    fun intToByte(i:Int) : String{
+    fun fToByte(i:Float) : String{
         val value = ((i + 30f) / 60f * 65535f).toInt()
         val byte0 = (value shr 8) and 0xFF
         val byte1 = value and 0xFF
