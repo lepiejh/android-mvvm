@@ -52,11 +52,6 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
-        try {
-            setLog(app.getPackageName());
-        } catch (Exception e) {
-            KLog.e(e.getMessage());
-        }
         MMKV.initialize(app);
         Toaster.init(app);
         if (RxJavaPlugins.getErrorHandler() != null || RxJavaPlugins.isLockdown()) {
@@ -65,17 +60,6 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         RxJavaPlugins.setErrorHandler(e -> KLog.e(e.getMessage()));
         AutoSizeConfig.getInstance().setCustomFragment(true);
         UpdateAppUtils.init(app);
-//        Album.initialize(AlbumConfig.newBuilder(app).setAlbumLoader(new GlideAlbumLoader()).build());
-    }
-
-    private void setLog(String packageName) throws ClassNotFoundException, IllegalAccessException {
-        Field logField = ReflectUtil.getAccessibleField(packageName +".BuildConfig","DEBUG");
-        if (logField != null) {
-            Object logObject = logField.get(0);
-            if (logObject != null) {
-                KLog.init((boolean) logObject);
-            }
-        }
     }
 
     private void setBaseurl(String packageName) throws ClassNotFoundException, IllegalAccessException {
