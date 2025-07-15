@@ -19,8 +19,6 @@ import java.util.*
 
 object CorpseUtils {
 
-    fun bytesToHex(s: String?): String? = StringUtils.bytesToHex(s?.toByteArray(Charsets.UTF_8))
-
     /**
      * value is Float : 浮点数转 IEEE 754 字节数组
      * value is Int : int32转换为4字节数组
@@ -242,6 +240,6 @@ object CorpseUtils {
         return StringUtils.bytesToHex(ByteArray(2).apply {
             set(0, byte0.toByte())
             set(1, byte1.toByte())
-        }).replace(" ","")
+        },"2X")
     }
 }
