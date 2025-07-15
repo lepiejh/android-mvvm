@@ -31,10 +31,10 @@ public final class StringUtils {
     }
 
     // 将字节数组转换为十六进制字符串
-    public static String bytesToHex(byte[] bytes) {
+    public static String bytesToHex(byte[] bytes,String n) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
-            sb.append(String.format("%02X ", b));
+            sb.append(String.format("%0"+n, b));
         }
         return sb.toString();
     }
