@@ -613,7 +613,7 @@ public final class StringUtils {
     }
 
     public static String getCRC(String str,String n) {
-        int[] byteArrayFromString = getByteArrayFromString(trim(str).replace(" ",""));
+        int[] byteArrayFromString = getByteArrayFromString(str);
         int i = SupportMenu.USER_MASK;
         int i2 = 0;
         while (i2 < byteArrayFromString.length) {
