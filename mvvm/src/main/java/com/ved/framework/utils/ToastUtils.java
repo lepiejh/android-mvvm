@@ -19,6 +19,7 @@ import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.LayoutRes;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 
 /**
@@ -42,13 +43,15 @@ public final class ToastUtils {
     }
 
     /**
-     * 设置吐司位置
-     *
-     * @param gravity 位置
-     * @param xOffset x偏移
-     * @param yOffset y偏移
+     * 设置 Toast 的重力属性（仅适用于 API 30 及以下版本）
+     * @deprecated 从 Android 12 开始，文本 Toast 不再支持重力设置
      */
+    @RequiresApi(Build.VERSION_CODES.R)
     public static void setGravity(int gravity, int xOffset, int yOffset) {
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {
+            KLog.w("ToastUtils", "setGravity() is ignored on API " + Build.VERSION.SDK_INT);
+            return;
+        }
         ToastUtils.gravity = gravity;
         ToastUtils.xOffset = xOffset;
         ToastUtils.yOffset = yOffset;
@@ -521,7 +524,9 @@ public final class ToastUtils {
             } else if (backgroundColor != DEFAULT_COLOR) {
                 view.setBackgroundColor(backgroundColor);
             }
-            sToast.setGravity(gravity, xOffset, yOffset);
+            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+                sToast.setGravity(gravity, xOffset, yOffset);
+            }
             sToast.show();
         } catch (Exception e) {
             e.printStackTrace();
