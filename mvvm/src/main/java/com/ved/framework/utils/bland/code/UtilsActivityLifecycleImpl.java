@@ -26,7 +26,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.Lifecycle;
+import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.autosize.AutoSizeConfig;
 import update.UpdateAppUtils;
 
@@ -54,12 +56,14 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         }
         MMKV.initialize(app);
         Toaster.init(app);
+        AutoSizeConfig.getInstance().setCustomFragment(true);
+        UpdateAppUtils.init(app);
         if (RxJavaPlugins.getErrorHandler() != null || RxJavaPlugins.isLockdown()) {
             return;
         }
-        RxJavaPlugins.setErrorHandler(e -> KLog.e(e.getMessage()));
-        AutoSizeConfig.getInstance().setCustomFragment(true);
-        UpdateAppUtils.init(app);
+        RxJavaPlugins.setErrorHandler(e -> Completable.fromAction(() -> KLog.e(e.getMessage()))
+                .subscribeOn(Schedulers.io())
+                .subscribe());
     }
 
     private void setBaseurl(String packageName) throws ClassNotFoundException, IllegalAccessException {
