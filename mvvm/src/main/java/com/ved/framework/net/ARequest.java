@@ -2,8 +2,6 @@ package com.ved.framework.net;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -25,12 +23,6 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
-import kotlin.Unit;
-import kotlin.coroutines.Continuation;
-import kotlin.jvm.functions.Function0;
-import kotlin.jvm.functions.Function1;
-import kotlin.jvm.functions.Function2;
-import kotlinx.coroutines.CoroutineScope;
 
 /**
  * 网络请求
@@ -172,7 +164,10 @@ public abstract class ARequest<T, K> {
                         return null;
                     }, throwable -> null, throwable -> null);
                 }else {
-                    (new Handler(Looper.getMainLooper())).post(() -> parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity));
+                    CorpseUtils.INSTANCE.handlerThread(() -> {
+                        parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity);
+                        return null;
+                    });
                 }
             }
         }

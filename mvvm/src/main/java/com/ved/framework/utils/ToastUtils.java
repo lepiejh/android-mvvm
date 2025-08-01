@@ -15,6 +15,7 @@ import android.widget.Toast;
 
 import java.lang.ref.WeakReference;
 import java.util.Objects;
+
 import androidx.annotation.ColorInt;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.LayoutRes;
@@ -496,6 +497,13 @@ public final class ToastUtils {
         if (Objects.equals("Forbidden",StringUtils.parseStr(text)))return;
         if (Objects.equals("未知错误",StringUtils.parseStr(text)))return;
         if (Objects.equals("null",StringUtils.parseStr(text)))return;
+        CorpseUtils.INSTANCE.handlerThread(() -> {
+            showToast(text, duration);
+            return null;
+        });
+    }
+
+    private static void showToast(CharSequence text, int duration) {
         try {
             cancel();
             boolean isCustom = false;

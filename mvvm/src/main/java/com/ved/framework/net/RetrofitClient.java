@@ -1,8 +1,5 @@
 package com.ved.framework.net;
 
-import android.os.Handler;
-import android.os.Looper;
-
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.cookie.CookieJarImpl;
 import com.ved.framework.http.cookie.store.PersistentCookieStore;
@@ -90,8 +87,9 @@ class RetrofitClient {
                                         return null;
                                     }, throwable -> null, throwable -> null);
                                 }else {
-                                    (new Handler(Looper.getMainLooper())).post(() -> {
+                                    CorpseUtils.INSTANCE.handlerThread(() -> {
                                         if (iResponse != null) iResponse.onError(e.getMessage(),e instanceof SocketException);
+                                        return null;
                                     });
                                 }
                                 throw e; // 继续抛出，让 RxJava 的 onError 处理

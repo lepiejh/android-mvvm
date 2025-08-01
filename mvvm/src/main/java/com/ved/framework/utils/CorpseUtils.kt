@@ -2,6 +2,7 @@ package com.ved.framework.utils
 
 import android.graphics.Rect
 import android.location.Geocoder
+import android.os.Handler
 import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
@@ -144,10 +145,16 @@ object CorpseUtils {
     }
 
     /**
-     * 判断当前线程是否为主线程
+     * 处理主线程问题
      */
-    fun isMainThread(): Boolean {
-        return Looper.getMainLooper().thread == Thread.currentThread()
+    fun handlerThread(handler: () ->Unit){
+        if (Looper.getMainLooper().thread == Thread.currentThread()){
+            //主线程
+            handler.invoke()
+        }else{
+            //子线程
+            Handler(Looper.getMainLooper()).post { handler.invoke() }
+        }
     }
 
     /**
