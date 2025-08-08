@@ -49,11 +49,11 @@
             android:name="com.ved.framework.crash.DefaultErrorActivity"
             android:process=":error_activity" />
 
-        <provider
+      <!--  <provider
             android:name="com.ved.framework.crash.CaocInitProvider"
             android:authorities="${applicationId}.customactivityoncrashinitprovider"
             android:exported="false"
-            android:initOrder="101" />
+            android:initOrder="101" />-->
 
         <activity
             android:name="com.ved.framework.utils.bland.code.UtilsTransActivity4MainProcess"
