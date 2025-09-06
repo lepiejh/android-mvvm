@@ -17,7 +17,6 @@ class TimerTaskHeartBeat{
             if (timerTask == null) {
                 timerTask = object : TimerTask() {
                     override fun run() {
-                        KLog.i("Task executed!")
                         try {
                             callBack.invoke()
                         } catch (e: Exception) {
@@ -28,7 +27,6 @@ class TimerTaskHeartBeat{
             }
             heartbeatTimer?.scheduleAtFixedRate(timerTask, 0, period, TimeUnit.SECONDS)
         } catch (e: Exception) {
-            KLog.i("Task stop : ${e.message}")
             stopTimer()
         }
     }
@@ -46,7 +44,6 @@ class TimerTaskHeartBeat{
                     heartbeatTimer?.shutdownNow() // 强制终止
                 }
             } catch (e: InterruptedException) {
-                KLog.e( "Heartbeat shutdown interrupted :  ${e.message}")
                 heartbeatTimer?.shutdownNow()
             }
             heartbeatTimer = null
