@@ -6,7 +6,7 @@ class TimerTaskHeartBeat{
     private var timerTask: TimerTask? = null
     private var timer: Timer? = null
 
-    fun startTimer(period: Float,callBack: () -> Unit) {
+    fun startTimer(period: Long,callBack: () -> Unit) {
         try {
             if (timer == null){
                 timer = Timer()
@@ -22,7 +22,7 @@ class TimerTaskHeartBeat{
                     }
                 }
             }
-            timer?.schedule(timerTask, 0, (period * 1000).toLong())
+            timer?.schedule(timerTask, 0, period)
         } catch (e: Exception) {
             stopTimer()
         }

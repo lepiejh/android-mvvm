@@ -30,6 +30,10 @@ public final class StringUtils {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
+    public static String bytesToHex(byte[] bytes) {
+        return bytesToHex(bytes,"2X ");
+    }
+
     // 将字节数组转换为十六进制字符串
     public static String bytesToHex(byte[] bytes,String n) {
         StringBuilder sb = new StringBuilder();
