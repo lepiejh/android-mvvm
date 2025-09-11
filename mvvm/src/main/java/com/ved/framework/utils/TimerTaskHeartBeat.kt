@@ -35,6 +35,7 @@ class TimerTaskHeartBeat{
         }
         if (timer != null) {
             timer?.cancel()
+            timer = null
         }
     }
 }
