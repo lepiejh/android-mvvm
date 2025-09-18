@@ -257,8 +257,15 @@ object CorpseUtils {
      * @return 16进制字符串，不含"0x"前缀
      */
     fun convert(decimal: Int, minLength: Int = 8): String {
+        // 处理负数 - 使用补码表示
+        val unsignedValue = if (decimal < 0) {
+            (0xFFFFFFFFL + decimal + 1).toInt()
+        } else {
+            decimal
+        }
+
         // 转换为16进制
-        var hexString = decimal.toString(16).uppercase()
+        var hexString = unsignedValue.toString(16).uppercase()
 
         // 添加前导零以达到最小长度
         while (hexString.length < minLength) {
@@ -289,5 +296,27 @@ object CorpseUtils {
     fun convertFormatted(decimal: Int, minLength: Int = 8, prefix: Boolean = false): String {
         val hex = convert(decimal, minLength)
         return if (prefix) "0x$hex" else hex
+    }
+
+    /**
+     * 将16进制字符串转换回10进制数字
+     * @param hexString 16进制字符串
+     * @return 10进制数字
+     */
+    fun hexToDecimal(hexString: String): Int {
+        // 移除可能的0x前缀和前导零
+        val cleanHex = hexString.replaceFirst("^0[xX]".toRegex(), "").replaceFirst("^0+".toRegex(), "")
+
+        if (cleanHex.isEmpty()) return 0
+
+        // 解析为长整型以避免溢出
+        val longValue = cleanHex.toLong(16)
+
+        // 如果长度超过8个字符（32位），需要特殊处理
+        return if (cleanHex.length > 8) {
+            longValue.toInt() // 直接截断
+        } else {
+            longValue.toInt()
+        }
     }
 }
