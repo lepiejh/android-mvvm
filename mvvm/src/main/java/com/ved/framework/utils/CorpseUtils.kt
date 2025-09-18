@@ -249,4 +249,45 @@ object CorpseUtils {
             set(1, byte1.toByte())
         },"2X")
     }
+
+    /**
+     * 将10进制数字转换为16进制字符串
+     * @param decimal 10进制数字
+     * @param minLength 最小输出长度，不足时用前导零填充
+     * @return 16进制字符串，不含"0x"前缀
+     */
+    fun convert(decimal: Int, minLength: Int = 8): String {
+        // 转换为16进制
+        var hexString = decimal.toString(16).uppercase()
+
+        // 添加前导零以达到最小长度
+        while (hexString.length < minLength) {
+            hexString = "0$hexString"
+        }
+
+        return hexString
+    }
+
+    /**
+     * 将10进制字符串转换为16进制字符串
+     * @param decimalStr 10进制数字字符串
+     * @param minLength 最小输出长度，不足时用前导零填充
+     * @return 16进制字符串，不含"0x"前缀
+     * @throws NumberFormatException 当输入不是有效的数字时
+     */
+    fun convert(decimalStr: String, minLength: Int = 8): String {
+        return convert(decimalStr.toInt(), minLength)
+    }
+
+    /**
+     * 将10进制数字转换为带格式的16进制字符串
+     * @param decimal 10进制数字
+     * @param minLength 最小输出长度，不足时用前导零填充
+     * @param prefix 是否添加"0x"前缀
+     * @return 格式化后的16进制字符串
+     */
+    fun convertFormatted(decimal: Int, minLength: Int = 8, prefix: Boolean = false): String {
+        val hex = convert(decimal, minLength)
+        return if (prefix) "0x$hex" else hex
+    }
 }
