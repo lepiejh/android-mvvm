@@ -169,7 +169,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
      * @param removeOnly 是否只从Map中移除而不实际取消任务(默认false)
      * @return Boolean 是否成功找到并取消了任务(当key为null时总是返回true)
      */
-    private fun cancelJob(key: String? = null, removeOnly: Boolean = false): Boolean {
+    fun cancelJob(key: String? = null, removeOnly: Boolean = false): Boolean {
         return when (key) {
             // 取消所有任务
             null -> {
