@@ -62,10 +62,15 @@ object CorpseUtils {
             .short // 读取为有符号 short（int16_t）
     }
 
-    fun toUInt32t(bytes: List<Byte>,boType: Int = 1) : UInt{
+    /**
+     * 字节数值转有符号32位整数 (4字节有符号整数)
+     * boType == 1 : 小端序 (ByteOrder.LITTLE_ENDIAN)
+     * boType == 2 : 大端序 (ByteOrder.BIG_ENDIAN)
+     */
+    fun toInt32t(bytes: List<Byte>, boType: Int = 1): Int {
         return ByteBuffer.wrap(bytes.toByteArray())
             .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-            .int.toUInt()
+            .int // 读取为有符号 int（int32_t）
     }
 
     /**
