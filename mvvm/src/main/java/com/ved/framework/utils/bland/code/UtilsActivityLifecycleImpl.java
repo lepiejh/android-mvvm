@@ -54,6 +54,11 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
+        try {
+            setLog(app.getPackageName());
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
         MMKV.initialize(app);
         Toaster.init(app);
         AutoSizeConfig.getInstance().setCustomFragment(true);
@@ -80,6 +85,16 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                 }else {
                     Configure.setUrl(0,(String) urlObject);
                 }
+            }
+        }
+    }
+
+    private void setLog(String packageName) throws ClassNotFoundException, IllegalAccessException {
+        Field logField = ReflectUtil.getAccessibleField(packageName +".BuildConfig","DEBUG");
+        if (logField != null) {
+            Object logObject = logField.get(0);
+            if (logObject != null) {
+                KLog.init((boolean) logObject);
             }
         }
     }
