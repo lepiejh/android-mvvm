@@ -106,7 +106,7 @@ dependencies {
     implementation 'com.tencent:mmkv-static:1.2.16'
     api 'com.github.getActivity:Toaster:13.6'
     implementation 'org.apache.commons:commons-lang3:3.6'
-    api 'com.github.lepiejh:android-dialog:v1.2.21'
+    api 'com.github.lepiejh:android-dialog:v1.2.22'
 //    api 'com.github.lepiejh:android-tcp:v1.3.34'
     api 'com.github.lepiejh:android-tablayout:v1.3.33'
     implementation 'com.github.lepiejh:android-play:v1.0.8'
