@@ -104,7 +104,7 @@ dependencies {
 //    api 'com.blankj:utilcodex:1.31.0'
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'com.tencent:mmkv-static:1.2.16'
-    api 'com.github.getActivity:Toaster:13.6'
+//    api 'com.github.getActivity:Toaster:13.6'
     implementation 'org.apache.commons:commons-lang3:3.6'
     api 'com.github.lepiejh:android-dialog:v1.2.23'
 //    api 'com.github.lepiejh:android-tcp:v1.3.34'
