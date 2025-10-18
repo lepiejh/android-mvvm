@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.hjq.toast.Toaster;
+//import com.hjq.toast.Toaster;
 import com.tencent.mmkv.MMKV;
 import com.ved.framework.base.AppManager;
 import com.ved.framework.utils.Configure;
@@ -60,7 +60,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             KLog.e(e.getMessage());
         }
         MMKV.initialize(app);
-        Toaster.init(app);
+//        Toaster.init(app);
         AutoSizeConfig.getInstance().setCustomFragment(true);
         UpdateAppUtils.init(app);
         if (RxJavaPlugins.getErrorHandler() != null || RxJavaPlugins.isLockdown()) {
