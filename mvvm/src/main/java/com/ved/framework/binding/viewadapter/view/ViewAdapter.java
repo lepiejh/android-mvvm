@@ -18,11 +18,14 @@ import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.TimeUtils;
+import com.ved.framework.widget.TouchableView;
 
 import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 import androidx.databinding.BindingAdapter;
+import kotlin.Unit;
+import kotlin.jvm.functions.Function0;
 
 public class ViewAdapter {
 
@@ -60,12 +63,22 @@ public class ViewAdapter {
      * view的onLongClick事件绑定
      */
     @SuppressLint("CheckResult")
-    @BindingAdapter(value = {"onLongClickCommand"}, requireAll = false)
-    public static void onLongClickCommand(View view, final BindingCommand<Void> clickCommand) {
-        RxView.longClicks(view)
-                .subscribe(unit -> {
-                    if (clickCommand != null) clickCommand.execute();
-                });
+    @BindingAdapter(value = {"onLongClickCommand","onReleaseAfterLongClickCommand"}, requireAll = false)
+    public static void onLongClickCommand(View view, final BindingCommand<Void> clickCommand, final BindingCommand<Void> afterClickCommand) {
+        if (view instanceof TouchableView){
+            ((TouchableView) view).setTouchListeners(() -> {
+                if (clickCommand != null) clickCommand.execute();
+                return null;
+            }, () -> {
+                if (afterClickCommand != null) afterClickCommand.execute();
+                return null;
+            });
+        }else {
+            RxView.longClicks(view)
+                    .subscribe(unit -> {
+                        if (clickCommand != null) clickCommand.execute();
+                    });
+        }
     }
 
     /**

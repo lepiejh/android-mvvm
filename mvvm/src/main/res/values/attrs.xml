@@ -32,6 +32,7 @@
     <attr format="reference" name="onClickCommand"/>
     <attr format="reference" name="onFocusChangeCommand"/>
     <attr format="reference" name="onLongClickCommand"/>
+    <attr format="reference" name="onReleaseAfterLongClickCommand"/>
     <attr format="reference" name="onScrollChangeCommand"/>
     <attr format="reference" name="onScrollStateChangedCommand"/>
     <attr format="reference" name="onTouchCommand"/>
