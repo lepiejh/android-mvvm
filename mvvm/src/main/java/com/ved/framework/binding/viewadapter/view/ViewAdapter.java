@@ -110,17 +110,9 @@ public class ViewAdapter {
     @BindingAdapter(value = {"isVisible"}, requireAll = false)
     public static void isVisible(View view, final Boolean visibility) {
         try {
-            if (visibility == null) {
-                view.setVisibility(View.GONE);
-                return;
-            }
-            int newVisibility = visibility ? View.VISIBLE : View.GONE;
-            if (view.getVisibility() != newVisibility) {
-                view.setVisibility(newVisibility);
-            }
+            RxView.visibility(view).accept(visibility);
         } catch (Throwable e) {
             e.printStackTrace();
-            view.setVisibility(View.GONE);
         }
     }
 
