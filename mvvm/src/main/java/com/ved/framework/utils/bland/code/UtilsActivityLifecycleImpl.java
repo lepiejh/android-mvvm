@@ -9,7 +9,7 @@ import android.os.Bundle;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.hjq.toast.Toaster;
+//import com.hjq.toast.Toaster;
 import com.tencent.mmkv.MMKV;
 import com.ved.framework.base.AppManager;
 import com.ved.framework.utils.Configure;
@@ -54,8 +54,13 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
+        try {
+            setLog(app.getPackageName());
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
         MMKV.initialize(app);
-        Toaster.init(app);
+//        Toaster.init(app);
         AutoSizeConfig.getInstance().setCustomFragment(true);
         UpdateAppUtils.init(app);
         if (RxJavaPlugins.getErrorHandler() != null || RxJavaPlugins.isLockdown()) {
@@ -80,6 +85,16 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                 }else {
                     Configure.setUrl(0,(String) urlObject);
                 }
+            }
+        }
+    }
+
+    private void setLog(String packageName) throws ClassNotFoundException, IllegalAccessException {
+        Field logField = ReflectUtil.getAccessibleField(packageName +".BuildConfig","DEBUG");
+        if (logField != null) {
+            Object logObject = logField.get(0);
+            if (logObject != null) {
+                KLog.init((boolean) logObject);
             }
         }
     }
