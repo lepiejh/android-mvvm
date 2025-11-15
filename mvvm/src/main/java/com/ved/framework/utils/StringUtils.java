@@ -620,7 +620,7 @@ public final class StringUtils {
         return s + getCRC(s,"2X");
     }
 
-    public static String getCRC(String str,String n) {
+    private static String getCRC(String str,String n) {
         int[] byteArrayFromString = getByteArrayFromString(str);
         int i = SupportMenu.USER_MASK;
         int i2 = 0;

@@ -73,6 +73,12 @@ object CorpseUtils {
             .int // 读取为有符号 int（int32_t）
     }
 
+    fun toUInt32t(bytes: List<Byte>,boType: Int = 1) : UInt{
+        return ByteBuffer.wrap(bytes.toByteArray())
+            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
+            .int.toUInt()
+    }
+
     /**
      * 将 "XX XX XX XX" 格式的字符串转换为 "XXXX"（取前两个字节）
      * @param input 输入字符串（如 "0A 00 00 00"）
