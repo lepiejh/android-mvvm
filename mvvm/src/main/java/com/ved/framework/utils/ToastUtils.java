@@ -497,10 +497,7 @@ public final class ToastUtils {
         if (Objects.equals("Forbidden",StringUtils.parseStr(text)))return;
         if (Objects.equals("未知错误",StringUtils.parseStr(text)))return;
         if (Objects.equals("null",StringUtils.parseStr(text)))return;
-        CorpseUtils.INSTANCE.handlerThread(() -> {
-            showToast(text, duration);
-            return null;
-        });
+        showToast(text, duration);
     }
 
     private static void showToast(CharSequence text, int duration) {
