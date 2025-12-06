@@ -260,4 +260,15 @@ object CorpseUtils {
             set(1, byte1.toByte())
         },"2X")
     }
+
+    fun normalizeFilePathStrict(path: String?): String {
+        if (path.isNullOrBlank()) {
+            return path.orEmpty()
+        }
+        return path
+            // 1. 替换所有反斜杠为正斜杠
+            .replace("\\", "/")
+            // 2. 将多个连续斜杠替换为单个斜杠
+            .replace("//+".toRegex(), "/")
+    }
 }
