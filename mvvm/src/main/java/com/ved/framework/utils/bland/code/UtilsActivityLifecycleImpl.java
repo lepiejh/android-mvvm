@@ -54,11 +54,11 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
-        try {
+       /* try {
             setLog(app.getPackageName());
         } catch (Exception e) {
             KLog.e(e.getMessage());
-        }
+        }*/
         MMKV.initialize(app);
 //        Toaster.init(app);
         AutoSizeConfig.getInstance().setCustomFragment(true);
