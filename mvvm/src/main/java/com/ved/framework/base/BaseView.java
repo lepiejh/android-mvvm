@@ -130,7 +130,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
 
         if (viewDelegate.isRegisterEventBus()) {
-            EventBusUtil.register(this);
+            EventBusUtil.register(viewDelegate.FragmentActivity());
         }
 
         viewDelegate.initViewObservable();
@@ -303,7 +303,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 binding.unbind();
             }
             if (viewDelegate.isRegisterEventBus()) {
-                EventBusUtil.unregister(this);
+                EventBusUtil.unregister(viewDelegate.FragmentActivity());
             }
             WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {
