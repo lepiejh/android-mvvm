@@ -32,6 +32,8 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected VM viewModel;
     private final IBaseView<V,VM> viewDelegate;
     private IDialogStrategy dialogStrategy;
+    // 添加 EventBus 注册状态跟踪
+    private boolean isEventBusRegistered = false;
 
     protected BaseView(IBaseView<V, VM> viewDelegate) {
         this.viewDelegate = viewDelegate;
@@ -129,8 +131,17 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             initSwipeBack();
         }
 
-        if (viewDelegate.isRegisterEventBus()) {
-            EventBusUtil.register(viewDelegate.FragmentActivity());
+        // 修改 EventBus 注册逻辑，防止重复注册
+        if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
+            try {
+                EventBusUtil.register(viewDelegate.FragmentActivity());
+                isEventBusRegistered = true;
+            } catch (Exception e) {
+                // 如果已经注册，EventBusUtil.register 可能会抛出异常
+                // 这里捕获异常并标记为已注册
+                KLog.e("EventBus register failed: " + e.getMessage());
+                isEventBusRegistered = true;
+            }
         }
 
         viewDelegate.initViewObservable();
@@ -302,8 +313,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             if(binding != null){
                 binding.unbind();
             }
-            if (viewDelegate.isRegisterEventBus()) {
+            // 只在已注册的情况下取消注册
+            if (isEventBusRegistered) {
                 EventBusUtil.unregister(viewDelegate.FragmentActivity());
+                isEventBusRegistered = false;
             }
             WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {
