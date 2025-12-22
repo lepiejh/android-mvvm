@@ -5,6 +5,11 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
+import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.blankj.swipepanel.SwipePanel;
 import com.orhanobut.dialog.dialog.DialogStrategyFactory;
 import com.orhanobut.dialog.dialog.IDialogStrategy;
@@ -21,11 +26,6 @@ import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
-
-import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.LifecycleOwner;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
@@ -120,7 +120,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
 
         // Fragment Resume事件
-        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() != null && !(viewDelegate.getLifecycleOwner() instanceof FragmentActivity)) {
+        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() != null) {
             if (viewDelegate.getLifecycleOwner() instanceof Fragment){
                 viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
             }else {
