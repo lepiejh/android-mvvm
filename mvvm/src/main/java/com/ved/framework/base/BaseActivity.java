@@ -53,6 +53,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
+    public void refreshView(){
+
+    }
+
+    @Override
     public V getBinding(Bundle savedInstanceState) {
         BaseActivity.this.binding = DataBindingUtil.setContentView(this, initContentView(savedInstanceState));
         return BaseActivity.this.binding;

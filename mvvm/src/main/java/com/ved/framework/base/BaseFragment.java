@@ -11,6 +11,7 @@ import com.trello.rxlifecycle4.android.FragmentEvent;
 import com.trello.rxlifecycle4.components.support.RxFragment;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
+import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -85,12 +86,18 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     public void initView() {
+        KLog.i("BaseFragment menuVisibleTag ："+menuVisibleTag+"isLoadData : "+isLoadData);
         if (menuVisibleTag && !isLoadData) {
             isLoadData = true;
-            //页面数据初始化方法
-            BaseFragment.this.initData();
-            BaseFragment.this.loadData();
+            refreshView();
         }
+    }
+
+    @Override
+    public void refreshView(){
+        //页面数据初始化方法
+        BaseFragment.this.initData();
+        BaseFragment.this.loadData();
     }
 
     @Override

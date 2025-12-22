@@ -120,13 +120,17 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
 
         // Fragment Resume事件
-        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() instanceof Fragment) {
-            viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
+        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() != null && !(viewDelegate.getLifecycleOwner() instanceof FragmentActivity)) {
+            if (viewDelegate.getLifecycleOwner() instanceof Fragment){
+                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
+            }else {
+                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.refreshView());
+            }
         }
     }
 
     private void handleOnLoadEvent() {
-        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
+        if (viewDelegate.getLifecycleOwner() != null && viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
             viewDelegate.initView();
             initSwipeBack();
         }

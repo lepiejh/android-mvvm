@@ -37,6 +37,8 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
 
     void initView();
 
+    void refreshView();
+
     void requestCallPhone(boolean denied);
 
     V getBinding(Bundle savedInstanceState);
