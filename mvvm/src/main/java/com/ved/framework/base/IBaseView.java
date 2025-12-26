@@ -6,6 +6,7 @@ import android.os.Bundle;
 import com.trello.rxlifecycle4.LifecycleProvider;
 
 import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -62,4 +63,19 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
     Lifecycle getViewLifecycle();
 
     LifecycleProvider<?> getLifecycleProvider();
+
+    /**
+     * 判断是否是 Fragment
+     */
+    boolean isFragment();
+
+    /**
+     * 获取 Fragment 实例（如果是 Fragment）
+     */
+    Fragment getFragment();
+
+    /**
+     * 获取 Activity 实例
+     */
+    FragmentActivity getCurrentActivity();
 }

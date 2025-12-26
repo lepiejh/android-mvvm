@@ -17,7 +17,6 @@ import com.orhanobut.dialog.navigation.ActivityNavigator;
 import com.orhanobut.dialog.utils.WifiSignalHelper;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
-import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
@@ -138,27 +137,19 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
         if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
             try {
-                Object target = viewDelegate.getLifecycleOwner();
-
-                if (target instanceof FragmentActivity) {
-                    // 如果是 Activity，注册 Activity
-                    if (!EventBus.getDefault().isRegistered(target)) {
-                        EventBus.getDefault().register(target);
-                    }
-                } else if (target instanceof Fragment) {
-                    // 如果是 Fragment，注册 Fragment
-                    if (!EventBus.getDefault().isRegistered(target)) {
-                        EventBus.getDefault().register(target);
-                    }
-                } else {
-                    // 其他情况，注册 FragmentActivity
-                    if (!EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
-                        EventBus.getDefault().register(viewDelegate.FragmentActivity());
-                    }
+                Object target = null;
+                if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+                    target = viewDelegate.getFragment();
+                } else if (viewDelegate.FragmentActivity() != null) {
+                    target = viewDelegate.FragmentActivity();
+                } else if (viewDelegate.getLifecycleOwner() != null) {
+                    target = viewDelegate.getLifecycleOwner();
                 }
-                isEventBusRegistered = true;
+                if (target != null && !EventBus.getDefault().isRegistered(target)) {
+                    EventBus.getDefault().register(target);
+                    isEventBusRegistered = true;
+                }
             } catch (Exception e) {
-                // 检查是否已经注册
                 Object target = viewDelegate.getLifecycleOwner();
                 isEventBusRegistered = (target instanceof FragmentActivity && EventBus.getDefault().isRegistered(target)) ||
                         (target instanceof Fragment && EventBus.getDefault().isRegistered(target));
@@ -333,20 +324,18 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             if(binding != null){
                 binding.unbind();
             }
-            Object target = viewDelegate.getLifecycleOwner();
-            if (target instanceof FragmentActivity) {
-                if (EventBus.getDefault().isRegistered(target)) {
-                    EventBus.getDefault().unregister(target);
-                }
-            } else if (target instanceof Fragment) {
-                if (EventBus.getDefault().isRegistered(target)) {
-                    EventBus.getDefault().unregister(target);
-                }
-            } else {
-                if (EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
-                    EventBus.getDefault().unregister(viewDelegate.FragmentActivity());
-                }
+
+            Object target = null;
+            if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+                target = viewDelegate.getFragment();
+            } else if (viewDelegate.getCurrentActivity() != null) {
+                target = viewDelegate.getCurrentActivity();
             }
+
+            if (target != null && EventBus.getDefault().isRegistered(target)) {
+                EventBus.getDefault().unregister(target);
+            }
+
             isEventBusRegistered = false;
             WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {

@@ -15,6 +15,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -81,6 +82,21 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public Lifecycle getViewLifecycle() {
         return BaseActivity.this.getLifecycle();
+    }
+
+    @Override
+    public boolean isFragment() {
+        return false;
+    }
+
+    @Override
+    public Fragment getFragment() {
+        return null;
+    }
+
+    @Override
+    public FragmentActivity getCurrentActivity() {
+        return this;
     }
 
     @Override
