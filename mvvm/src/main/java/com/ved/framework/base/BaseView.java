@@ -27,6 +27,8 @@ import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
 import com.ved.framework.utils.phone.PhoneUtils;
 
+import org.greenrobot.eventbus.EventBus;
+
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected VM viewModel;
@@ -134,20 +136,24 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             viewDelegate.initView();
             initSwipeBack();
         }
-
-        // 修改 EventBus 注册逻辑，防止重复注册
         if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
             try {
-                EventBusUtil.register(viewDelegate.FragmentActivity());
-                isEventBusRegistered = true;
+                // 先检查是否已经注册
+                if (!EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
+                    EventBusUtil.register(viewDelegate.FragmentActivity());
+                    isEventBusRegistered = true;
+                    KLog.i("EventBus registered successfully");
+                } else {
+                    // 如果已经注册，直接标记为已注册
+                    isEventBusRegistered = true;
+                    KLog.i("EventBus already registered");
+                }
             } catch (Exception e) {
-                // 如果已经注册，EventBusUtil.register 可能会抛出异常
-                // 这里捕获异常并标记为已注册
                 KLog.e("EventBus register failed: " + e.getMessage());
-                isEventBusRegistered = true;
+                // 在异常情况下，尝试获取当前注册状态
+                isEventBusRegistered = EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity());
             }
         }
-
         viewDelegate.initViewObservable();
         viewModel.registerRxBus();
     }
