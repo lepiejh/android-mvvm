@@ -138,20 +138,30 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         }
         if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
             try {
-                // 先检查是否已经注册
-                if (!EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
-                    EventBusUtil.register(viewDelegate.FragmentActivity());
-                    isEventBusRegistered = true;
-                    KLog.i("EventBus registered successfully");
+                Object target = viewDelegate.getLifecycleOwner();
+
+                if (target instanceof FragmentActivity) {
+                    // 如果是 Activity，注册 Activity
+                    if (!EventBus.getDefault().isRegistered(target)) {
+                        EventBus.getDefault().register(target);
+                    }
+                } else if (target instanceof Fragment) {
+                    // 如果是 Fragment，注册 Fragment
+                    if (!EventBus.getDefault().isRegistered(target)) {
+                        EventBus.getDefault().register(target);
+                    }
                 } else {
-                    // 如果已经注册，直接标记为已注册
-                    isEventBusRegistered = true;
-                    KLog.i("EventBus already registered");
+                    // 其他情况，注册 FragmentActivity
+                    if (!EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
+                        EventBus.getDefault().register(viewDelegate.FragmentActivity());
+                    }
                 }
+                isEventBusRegistered = true;
             } catch (Exception e) {
-                KLog.e("EventBus register failed: " + e.getMessage());
-                // 在异常情况下，尝试获取当前注册状态
-                isEventBusRegistered = EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity());
+                // 检查是否已经注册
+                Object target = viewDelegate.getLifecycleOwner();
+                isEventBusRegistered = (target instanceof FragmentActivity && EventBus.getDefault().isRegistered(target)) ||
+                        (target instanceof Fragment && EventBus.getDefault().isRegistered(target));
             }
         }
         viewDelegate.initViewObservable();
@@ -323,11 +333,21 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             if(binding != null){
                 binding.unbind();
             }
-            // 只在已注册的情况下取消注册
-            if (isEventBusRegistered) {
-                EventBusUtil.unregister(viewDelegate.FragmentActivity());
-                isEventBusRegistered = false;
+            Object target = viewDelegate.getLifecycleOwner();
+            if (target instanceof FragmentActivity) {
+                if (EventBus.getDefault().isRegistered(target)) {
+                    EventBus.getDefault().unregister(target);
+                }
+            } else if (target instanceof Fragment) {
+                if (EventBus.getDefault().isRegistered(target)) {
+                    EventBus.getDefault().unregister(target);
+                }
+            } else {
+                if (EventBus.getDefault().isRegistered(viewDelegate.FragmentActivity())) {
+                    EventBus.getDefault().unregister(viewDelegate.FragmentActivity());
+                }
             }
+            isEventBusRegistered = false;
             WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {
             KLog.e(e.getMessage());
