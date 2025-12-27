@@ -153,6 +153,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     public void requestCallPhone(boolean denied) {
     }
 
+    @Override
+    public boolean needReload() {
+        return false;
+    }
+
     public void showDialog() {
         baseView.showDialog();
     }

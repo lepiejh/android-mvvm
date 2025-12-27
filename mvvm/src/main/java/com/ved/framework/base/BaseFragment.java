@@ -86,10 +86,19 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
+    public boolean needReload() {
+        return true;
+    }
+
+    @Override
     public void initView() {
-        KLog.i("BaseFragment menuVisibleTag ："+menuVisibleTag+"isLoadData : "+isLoadData);
-        if (menuVisibleTag && !isLoadData) {
-            isLoadData = true;
+        KLog.i("BaseFragment menuVisibleTag ："+menuVisibleTag+", isLoadData : "+isLoadData);
+        if (needReload()){
+            if (menuVisibleTag && !isLoadData) {
+                isLoadData = true;
+                refreshView();
+            }
+        }else {
             refreshView();
         }
     }

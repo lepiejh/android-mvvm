@@ -78,4 +78,6 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
      * 获取 Activity 实例
      */
     FragmentActivity getCurrentActivity();
+
+    boolean needReload();
 }
