@@ -80,4 +80,6 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
     FragmentActivity getCurrentActivity();
 
     boolean needReload();
+
+    void loadView();
 }

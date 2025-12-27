@@ -158,6 +158,11 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         return false;
     }
 
+    @Override
+    public void loadView() {
+
+    }
+
     public void showDialog() {
         baseView.showDialog();
     }

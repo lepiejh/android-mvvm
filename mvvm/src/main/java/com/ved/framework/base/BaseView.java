@@ -131,9 +131,13 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void handleOnLoadEvent() {
-        if (viewDelegate.getLifecycleOwner() != null && viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-            viewDelegate.initView();
-            initSwipeBack();
+        if (viewDelegate.getLifecycleOwner() != null) {
+            if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
+                viewDelegate.initView();
+                initSwipeBack();
+            } else{
+                viewDelegate.loadView();
+            }
         }
         if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
             try {

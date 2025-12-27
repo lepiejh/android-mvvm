@@ -141,6 +141,11 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
+    public void loadView() {
+
+    }
+
+    @Override
     public Fragment getFragment() {
         return this;
     }
