@@ -160,7 +160,9 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         return BaseFragment.this;
     }
 
-    public abstract void loadData();
+    public void loadData(){
+
+    }
 
     /**
      * 是否注册事件分发
