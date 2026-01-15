@@ -5,6 +5,10 @@ buildscript {
     repositories {
         maven {
             url 'http://maven.aliyun.com/nexus/content/groups/public/'
+            allowInsecureProtocol = true
+            mavenContent {
+                releasesOnly()
+            }
         }
         mavenCentral()
         jcenter()
@@ -14,9 +18,17 @@ buildscript {
         }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
+            allowInsecureProtocol = true
+            mavenContent {
+                releasesOnly()
+            }
         }
         maven {
             url "https://raw.githubusercontent.com/qqlixiong/mvvm-framework-maven/master"
+            allowInsecureProtocol = true
+            mavenContent {
+                releasesOnly()
+            }
         }
     }
     dependencies {
@@ -32,6 +44,10 @@ allprojects {
     repositories {
         maven {
             url 'http://maven.aliyun.com/nexus/content/groups/public/'
+            allowInsecureProtocol = true
+            mavenContent {
+                releasesOnly()
+            }
         }
         mavenCentral()
         jcenter()
@@ -41,6 +57,10 @@ allprojects {
         }
         maven {
             url 'http://nexus.yun-chang.cn/nexus/content/groups/public'
+            allowInsecureProtocol = true
+            mavenContent {
+                releasesOnly()
+            }
         }
     }
 }
