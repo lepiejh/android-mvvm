@@ -6,16 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.trello.rxlifecycle4.LifecycleProvider;
-import com.trello.rxlifecycle4.android.FragmentEvent;
-import com.trello.rxlifecycle4.components.support.RxFragment;
-import com.ved.framework.bus.event.eventbus.MessageEvent;
-import com.ved.framework.permission.IPermission;
-import com.ved.framework.utils.KLog;
-
-import org.greenrobot.eventbus.Subscribe;
-import org.greenrobot.eventbus.ThreadMode;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.DataBindingUtil;
@@ -25,7 +15,17 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
-public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView<V, VM> {
+import com.trello.rxlifecycle4.LifecycleProvider;
+import com.trello.rxlifecycle4.android.FragmentEvent;
+import com.trello.rxlifecycle4.components.support.RxDialogFragment;
+import com.ved.framework.bus.event.eventbus.MessageEvent;
+import com.ved.framework.permission.IPermission;
+import com.ved.framework.utils.KLog;
+
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
+public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxDialogFragment implements IBaseView<V, VM> {
 
     protected boolean menuVisibleTag = false;
     protected boolean isLoadData = false;
@@ -76,8 +76,8 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     public VM ensureViewModelCreated() {
-        BaseFragment.this.viewModel = viewModelProxy.createViewModel();
-        return BaseFragment.this.viewModel;
+        BaseDialogFragment.this.viewModel = viewModelProxy.createViewModel();
+        return BaseDialogFragment.this.viewModel;
     }
 
     @Override
@@ -106,8 +106,8 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public void refreshView(){
         //页面数据初始化方法
-        BaseFragment.this.initData();
-        BaseFragment.this.loadData();
+        BaseDialogFragment.this.initData();
+        BaseDialogFragment.this.loadData();
     }
 
     @Override
@@ -117,12 +117,12 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     public FragmentActivity FragmentActivity() {
-        return BaseFragment.this.getActivity();
+        return BaseDialogFragment.this.getActivity();
     }
 
     @Override
     public Context getViewContext() {
-        return BaseFragment.this.getContext();
+        return BaseDialogFragment.this.getContext();
     }
 
     @Override
@@ -157,7 +157,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     public LifecycleProvider<FragmentEvent> getLifecycleProvider() {
-        return BaseFragment.this;
+        return BaseDialogFragment.this;
     }
 
     public void loadData(){

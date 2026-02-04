@@ -36,6 +36,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        BaseActivity.this.initParam();
         super.onCreate(savedInstanceState);
         viewModelProxy = new ViewModelProxyImpl<>(this);
         baseView.initialize(savedInstanceState);
