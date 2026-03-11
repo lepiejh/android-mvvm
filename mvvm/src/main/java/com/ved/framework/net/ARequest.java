@@ -1,7 +1,6 @@
 package com.ved.framework.net;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -38,7 +37,6 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
  *
  */
 public abstract class ARequest<T, K> {
-    private Activity activity;
     private BaseViewModel viewModel;
     private Class<? extends T> service;
     private IMethod<T, K> method;
@@ -49,11 +47,6 @@ public abstract class ARequest<T, K> {
     private ISeatError seatError;
     private IResponse<K> response;
     private Map<String, String> headers;
-
-    public ARequest<T, K> withActivity(Activity activity) {
-        this.activity = activity;
-        return this;
-    }
 
     public ARequest<T, K> withViewModel(BaseViewModel viewModel) {
         this.viewModel = viewModel;
@@ -106,11 +99,11 @@ public abstract class ARequest<T, K> {
     }
 
     public PublishSubject<Object> build(){
-        return request(activity,viewModel,method,service,viewState,seatSuccess,seatError,headers,index,isLoading,response);
+        return request(viewModel,method,service,viewState,seatSuccess,seatError,headers,index,isLoading,response);
     }
 
     @SuppressLint("CheckResult")
-    private PublishSubject<Object> request(@Nullable Activity activity, @Nullable BaseViewModel viewModel,
+    private PublishSubject<Object> request(@Nullable BaseViewModel viewModel,
                                           @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,
                                           View view,ISeatSuccess seatSuccess,ISeatError seatError,Map<String, String> headers,
                                           int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
@@ -123,7 +116,7 @@ public abstract class ARequest<T, K> {
                 //手机无网络
                 seatSuccess.onNoNetworkView();
             }
-            exceptionHandling(activity, "网络异常", -1);
+            exceptionHandling(viewModel, "网络异常", -1);
         } else {
             if (view!= null && seatSuccess != null) {
                 seatSuccess.onStateView();
@@ -147,25 +140,25 @@ public abstract class ARequest<T, K> {
                             .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         KLog.e(throwable.getMessage());
-                                        parseError(isLoading,viewModel,msg[0],view,seatError,iResponse,null,activity);
+                                        parseError(isLoading,viewModel,msg[0],view,seatError,iResponse,null);
                                         return Observable.error(throwable);
                                     }))
                             .takeUntil(lifecycleDisposable)
                             .subscribe((Consumer<K>) response ->
                                             parseSuccess(viewModel,view, isLoading, iResponse, response),
                                     (Consumer<ResponseThrowable>) throwable ->
-                                            parseError(isLoading,viewModel, null,view,seatError,iResponse, throwable, activity));
+                                            parseError(isLoading,viewModel, null,view,seatError,iResponse, throwable));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 if (viewModel != null) {
                     viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12),(coroutineScope, continuation) -> null, continuation -> {
-                        parseError(isLoading,viewModel,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity);
+                        parseError(isLoading,viewModel,"连接服务器失败或其他异常",view,seatError,iResponse,null);
                         return null;
                     }, throwable -> null, throwable -> null);
                 }else {
                     CorpseUtils.INSTANCE.handlerThread(() -> {
-                        parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null,activity);
+                        parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null);
                         return null;
                     });
                 }
@@ -187,7 +180,7 @@ public abstract class ARequest<T, K> {
     }
 
     private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,String error,View viewState,
-                            ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable, Activity activity) {
+                            ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable) {
         if (isLoading && viewModel!=null)
         {
             viewModel.dismissDialog();
@@ -203,7 +196,7 @@ public abstract class ARequest<T, K> {
             if (throwable.getCause() instanceof ResultException)
             {
                 ResultException resultException = (ResultException) throwable.getCause();
-                exceptionHandling(activity, resultException.getErrMsg(), resultException.getErrCode());
+                exceptionHandling(viewModel, resultException.getErrMsg(), resultException.getErrCode());
                 if (viewState!= null && seatError != null) {
                     seatError.onErrorView();
                     seatError.onErrorHandler(resultException.getErrCode());
@@ -231,10 +224,10 @@ public abstract class ARequest<T, K> {
             }
         }else {
             if (StringUtils.isNotEmpty(error)) {
-                exceptionHandling(activity, error, -2);
+                exceptionHandling(viewModel, error, -2);
             }
         }
     }
 
-    public abstract void exceptionHandling(@Nullable Activity activity, @Nullable String error, int code);
+    public abstract void exceptionHandling(@Nullable BaseViewModel viewModel, @Nullable String error, int code);
 }
