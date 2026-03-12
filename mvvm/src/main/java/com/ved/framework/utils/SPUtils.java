@@ -18,7 +18,7 @@ import java.util.Map;
 
 /**
  * 不能跨进程保存、获取数据
- * 如需跨进程使用 MMKV
+ * 如需跨进程 使用 MMKV
  *
  * 进程 A 写入
  * MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
