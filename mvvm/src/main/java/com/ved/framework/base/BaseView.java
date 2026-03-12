@@ -330,18 +330,19 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 binding.unbind();
             }
 
-            Object target = null;
-            if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
-                target = viewDelegate.getFragment();
-            } else if (viewDelegate.getCurrentActivity() != null) {
-                target = viewDelegate.getCurrentActivity();
-            }
+            if (viewDelegate.isRegisterEventBus()) {
+                Object target = null;
+                if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+                    target = viewDelegate.getFragment();
+                } else if (viewDelegate.getCurrentActivity() != null) {
+                    target = viewDelegate.getCurrentActivity();
+                }
 
-            if (target != null && EventBus.getDefault().isRegistered(target)) {
-                EventBusUtil.unregister(target);
+                if (target != null && EventBus.getDefault().isRegistered(target)) {
+                    EventBusUtil.unregister(target);
+                }
+                isEventBusRegistered = false;
             }
-
-            isEventBusRegistered = false;
             WifiSignalHelper.Companion.getINSTANCE().stopListening();
         } catch (Exception e) {
             KLog.e(e.getMessage());
