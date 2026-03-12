@@ -17,6 +17,7 @@ import com.orhanobut.dialog.navigation.ActivityNavigator;
 import com.orhanobut.dialog.utils.WifiSignalHelper;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
+import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
@@ -150,7 +151,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                     target = viewDelegate.getLifecycleOwner();
                 }
                 if (target != null && !EventBus.getDefault().isRegistered(target)) {
-                    EventBus.getDefault().register(target);
+                    EventBusUtil.register(target);
                     isEventBusRegistered = true;
                 }
             } catch (Exception e) {
@@ -337,7 +338,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             }
 
             if (target != null && EventBus.getDefault().isRegistered(target)) {
-                EventBus.getDefault().unregister(target);
+                EventBusUtil.unregister(target);
             }
 
             isEventBusRegistered = false;
