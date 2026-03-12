@@ -161,7 +161,9 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             }
         }
         viewDelegate.initViewObservable();
-        viewModel.registerRxBus();
+        if (!viewDelegate.isRegisterEventBus()) {
+            viewModel.registerRxBus();
+        }
     }
 
     private void finishActivity() {
