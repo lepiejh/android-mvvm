@@ -272,7 +272,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     }
 
     override fun onEvent(event: MessageEvent<*>?) {}
-    fun onError(throwable: Throwable?) { throwable?.message?.let { KLog.e(it) } }
+    override fun onError(throwable: Throwable?) { throwable?.message?.let { KLog.e(it) } }
     override fun onDestroy() {}
     override fun onStart() {}
     override fun onStop() {}

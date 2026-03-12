@@ -64,6 +64,12 @@ public interface IBaseViewModel extends LifecycleObserver {
     void onEvent(MessageEvent<?> event);
 
     /**
+     * 执行RxBus事件 发生异常
+     * @param throwable  异常原因
+     */
+    void onError(Throwable throwable);
+
+    /**
      * 是否开启粘性的RxBus事件
      * @return   true:开启  false:关闭
      */
