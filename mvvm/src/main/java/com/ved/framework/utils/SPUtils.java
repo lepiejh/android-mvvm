@@ -2,16 +2,13 @@ package com.ved.framework.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import androidx.annotation.Nullable;
+
 import com.google.gson.Gson;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
@@ -19,10 +16,18 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import androidx.annotation.Nullable;
-
-import static android.provider.ContactsContract.Contacts.CONTENT_URI;
-
+/**
+ * 不能跨进程保存、获取数据
+ * 如需跨进程使用 MMKV
+ *
+ * 进程 A 写入
+ * MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
+ * kv.encode(XX,XX)
+ *
+ * 进程 B 读取
+ *  MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
+ *  String xx = kv.decodeString(XX)
+ */
 public final class SPUtils {
 
     private static final Map<String, SPUtils> sSPMap = new HashMap<>();
@@ -57,64 +62,11 @@ public final class SPUtils {
     }
 
     public void put(@Nullable String key, @Nullable Object object) {
-        if (isMainProcess()) {
-            saveValue(key, object);
-        } else {
-            Bundle extras = new Bundle();
-            extras.putString("key", key);
-            extras.putSerializable("value", (Serializable) object);
-            try {
-                Utils.getContext().getContentResolver().call(
-                        CONTENT_URI,
-                        "put",
-                        null,
-                        extras
-                );
-            } catch (Exception e) {
-                KLog.e("SPUtils put error", e);
-            }
-        }
+        saveValue(key, object);
     }
 
     public Object get(@Nullable String key, @Nullable Object defaultObject) {
-        if (isMainProcess()) {
-            return getValue(key, defaultObject);
-        } else {
-            Bundle extras = new Bundle();
-            extras.putSerializable("defaultValue", (Serializable) defaultObject);
-            try {
-                Bundle result = Utils.getContext().getContentResolver().call(
-                        CONTENT_URI,
-                        "get",
-                        key,
-                        extras
-                );
-                if (result.containsKey("exception")) {
-                    throw (Exception) result.getSerializable("exception");
-                }
-                return result.getSerializable("value");
-            } catch (Exception e) {
-                KLog.e("SPUtils get error", e);
-                return defaultObject;
-            }
-        }
-    }
-
-    private boolean isMainProcess() {
-        String processName = getProcessName();
-        return processName != null && UIUtils.equals(Utils.getContext().getPackageName(),processName);
-    }
-
-    private static String getProcessName() {
-        try {
-            File cmdline = new File("/proc/" + android.os.Process.myPid() + "/cmdline");
-            BufferedReader reader = new BufferedReader(new FileReader(cmdline));
-            String processName = reader.readLine().trim();
-            reader.close();
-            return processName;
-        } catch (Exception e) {
-            return null;
-        }
+        return getValue(key, defaultObject);
     }
 
     public void putInt(String key, int value){
@@ -301,7 +253,7 @@ public final class SPUtils {
 
     //保存集合
     private <T> boolean saveCollection(@Nullable final Class<? extends T> clazz, @Nullable Collection<? extends T> dataList) {
-        if (null == dataList || dataList.size() <= 0) {
+        if (null == dataList || dataList.isEmpty()) {
             return false;
         }
         final String innerKey = getKey(clazz);
