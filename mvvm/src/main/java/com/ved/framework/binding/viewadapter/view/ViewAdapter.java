@@ -290,7 +290,7 @@ public class ViewAdapter {
     }
 
     @BindingAdapter("android:textSize")
-    public static void setTextSize(TextView textView,float textSize){
+    public static void setTextSize(TextView textView,int textSize){
         textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, textSize);
     }
 
