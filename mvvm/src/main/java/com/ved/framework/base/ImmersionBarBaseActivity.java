@@ -6,9 +6,10 @@ import android.content.pm.ActivityInfo;
 import android.content.res.TypedArray;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.WindowManager;
+
+import androidx.annotation.Nullable;
 
 import com.gyf.immersionbar.BarHide;
 import com.gyf.immersionbar.ImmersionBar;
@@ -20,8 +21,6 @@ import com.ved.framework.utils.UIUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-
-import androidx.annotation.Nullable;
 
 public class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeObserver.OnGlobalLayoutListener{
     private ImmersionBar mImmersionBar;
@@ -106,56 +105,11 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
         return R.color.colorPrimary;
     }
 
-    //是否支持手势拦截  状态栏和导航栏
-    public boolean isStickyImmersiveEnabled(){
-        return true;
-    }
-
-    private void enableGestureInterception(){
-        if (getStatusBarHide() == 2 && isStickyImmersiveEnabled()) {
-            applyStickyImmersiveMode();
-        }
-    }
-
     public void initStatusBar() {
         //初始化沉浸式状态栏
         if (isStatusBarEnabled()) {
             statusBarConfig().init();
-
-            enableGestureInterception();
         }
-    }
-
-    // 防止被其他页面恢复后手势失效
-    @Override
-    protected void onResume() {
-        super.onResume();
-        enableGestureInterception();
-    }
-
-    private void applyStickyImmersiveMode() {
-        final View decorView = getWindow().getDecorView();
-
-        decorView.post(() -> decorView.setSystemUiVisibility(
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-        ));
-
-        decorView.setOnSystemUiVisibilityChangeListener(visibility -> {
-            if ((visibility & View.SYSTEM_UI_FLAG_HIDE_NAVIGATION) == 0) {
-                decorView.post(() -> {
-                    decorView.setSystemUiVisibility(
-                            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    );
-                });
-            }
-        });
     }
 
     /**
