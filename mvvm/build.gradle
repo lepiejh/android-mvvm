@@ -115,6 +115,7 @@ dependencies {
     api 'com.github.lepiejh:android-chat:v1.0.2'
     implementation 'com.github.lepiejh:android-recycleview:v1.0.1'
     implementation 'com.github.lepiejh:calendarview:v1.0.0'
+    implementation 'com.github.lepiejh:rxpermissions:v1.0.2'
 //    api 'com.amplitude:android-sdk:2.23.2'
     api 'me.jessyan:retrofit-url-manager:1.4.0'
     api 'com.github.lepiejh:arc:v1.2.34'
