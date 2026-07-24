@@ -310,7 +310,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onStickyEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
-            viewModel.receiveEvent(event);
+            viewModel.receiveStickyEvent(event);
         }
     }
 }

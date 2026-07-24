@@ -310,6 +310,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
      * 处理接收EventBus 回调
      */
     override fun receiveEvent(event: MessageEvent<*>?) {}
+    override fun receiveStickyEvent(event: MessageEvent<*>?) {}
     override fun onCleared() {
         super.onCleared()
         try {

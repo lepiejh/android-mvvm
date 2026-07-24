@@ -51,6 +51,13 @@ public interface IBaseViewModel extends LifecycleObserver {
     void receiveEvent(MessageEvent<?> event);
 
     /**
+     * 接受到分发的粘性事件
+     *
+     * @param event 粘性事件
+     */
+    void receiveStickyEvent(MessageEvent<?> event);
+
+    /**
      * 执行RxBus事件
      * @param event  事件
      */
