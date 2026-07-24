@@ -175,6 +175,21 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     }
 
     @Override
+    public boolean isRegisterRxBus() {
+        return false;
+    }
+
+    @Override
+    public boolean isRegisterMessenger() {
+        return false;
+    }
+
+    @Override
+    public boolean hasWifi() {
+        return false;
+    }
+
+    @Override
     public boolean customDialog() {
         return false;
     }
@@ -286,16 +301,16 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventBusCome(MessageEvent event) {
+    public void onEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
             viewModel.receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void onStickyEventBusCome(MessageEvent event) {
+    public void onStickyEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
-            viewModel.receiveStickyEvent(event);
+            viewModel.receiveEvent(event);
         }
     }
 }

@@ -1,11 +1,11 @@
 package com.ved.framework.base;
 
-import com.ved.framework.bus.event.eventbus.MessageEvent;
-
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleObserver;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.OnLifecycleEvent;
+
+import com.ved.framework.bus.event.eventbus.MessageEvent;
 
 /**
  * Created by ved on 2017/6/15.
@@ -44,18 +44,11 @@ public interface IBaseViewModel extends LifecycleObserver {
     void removeRxBus();
 
     /**
-     * 接收到分发到事件
+     * 接收到分发事件
      *
      * @param event 事件
      */
     void receiveEvent(MessageEvent<?> event);
-
-    /**
-     * 接受到分发的粘性事件
-     *
-     * @param event 粘性事件
-     */
-    void receiveStickyEvent(MessageEvent<?> event);
 
     /**
      * 执行RxBus事件

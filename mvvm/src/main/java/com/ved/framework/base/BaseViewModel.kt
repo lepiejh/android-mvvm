@@ -15,9 +15,15 @@ import com.ved.framework.utils.KLog
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Consumer
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.lang.ref.WeakReference
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -271,7 +277,14 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         eventStrategy?.setupSubscription(this)
     }
 
+    /**
+     * 处理RxBus 成功回调
+     */
     override fun onEvent(event: MessageEvent<*>?) {}
+
+    /**
+     * 处理RxBus 失败回调
+     */
     override fun onError(throwable: Throwable?) { throwable?.message?.let { KLog.e(it) } }
     override fun onDestroy() {}
     override fun onStart() {}
@@ -293,8 +306,10 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         }
     }
 
+    /**
+     * 处理接收EventBus 回调
+     */
     override fun receiveEvent(event: MessageEvent<*>?) {}
-    override fun receiveStickyEvent(event: MessageEvent<*>?) {}
     override fun onCleared() {
         super.onCleared()
         try {

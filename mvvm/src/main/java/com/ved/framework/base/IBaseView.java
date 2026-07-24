@@ -3,13 +3,13 @@ package com.ved.framework.base;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.trello.rxlifecycle4.LifecycleProvider;
-
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
+
+import com.trello.rxlifecycle4.LifecycleProvider;
 
 /**
  * Created by ved on 2017/6/15.
@@ -35,6 +35,12 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
     boolean isSwipeBack();
 
     boolean isRegisterEventBus();
+
+    boolean isRegisterRxBus();
+
+    boolean isRegisterMessenger();
+
+    boolean hasWifi();
 
     void initView();
 

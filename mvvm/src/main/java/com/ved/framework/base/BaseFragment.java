@@ -6,6 +6,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.trello.rxlifecycle4.android.FragmentEvent;
 import com.trello.rxlifecycle4.components.support.RxFragment;
@@ -15,15 +24,6 @@ import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.databinding.DataBindingUtil;
-import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
 
 public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView<V, VM> {
 
@@ -175,6 +175,21 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
+    public boolean isRegisterRxBus() {
+        return false;
+    }
+
+    @Override
+    public boolean isRegisterMessenger() {
+        return false;
+    }
+
+    @Override
+    public boolean hasWifi() {
+        return false;
+    }
+
+    @Override
     public boolean customDialog() {
         return false;
     }
@@ -286,16 +301,16 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventBusCome(MessageEvent event) {
+    public void onEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
             viewModel.receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void onStickyEventBusCome(MessageEvent event) {
+    public void onStickyEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
-            viewModel.receiveStickyEvent(event);
+            viewModel.receiveEvent(event);
         }
     }
 }

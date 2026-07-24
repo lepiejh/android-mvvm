@@ -34,7 +34,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected VM viewModel;
     private final IBaseView<V,VM> viewDelegate;
     private IDialogStrategy dialogStrategy;
-    // 添加 EventBus 注册状态跟踪
+    // EventBus 注册状态跟踪
     private boolean isEventBusRegistered = false;
 
     protected BaseView(IBaseView<V, VM> viewDelegate) {
@@ -161,7 +161,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             }
         }
         viewDelegate.initViewObservable();
-        if (!viewDelegate.isRegisterEventBus()) {
+        if (viewDelegate.isRegisterRxBus()) {
             viewModel.registerRxBus();
         }
     }
@@ -246,6 +246,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void getWifiRssi() {
+        if (!viewDelegate.hasWifi())return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             requestPermission(new IPermission() {
                 @Override
@@ -324,8 +325,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected void onDestroy() {
         try {
             //解除Messenger注册
-            Messenger.getDefault().unregister(viewModel);
-            if (viewModel != null) {
+            if (viewDelegate.isRegisterMessenger()) {
+                Messenger.getDefault().unregister(viewModel);
+            }
+            if (viewDelegate.isRegisterRxBus() && viewModel != null) {
                 viewModel.removeRxBus();
             }
             if(binding != null){
@@ -345,7 +348,9 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 }
                 isEventBusRegistered = false;
             }
-            WifiSignalHelper.Companion.getINSTANCE().stopListening();
+            if (viewDelegate.hasWifi()) {
+                WifiSignalHelper.Companion.getINSTANCE().stopListening();
+            }
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }

@@ -4,6 +4,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.trello.rxlifecycle4.LifecycleProvider;
 import com.trello.rxlifecycle4.android.ActivityEvent;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
@@ -12,13 +19,6 @@ import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-import androidx.databinding.DataBindingUtil;
-import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.lifecycle.Lifecycle;
-import androidx.lifecycle.LifecycleOwner;
 
 public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView<V, VM> {
     private final BaseView<V, VM> baseView = new BaseView<>(this);
@@ -127,6 +127,21 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      */
     @Override
     public boolean isRegisterEventBus() {
+        return false;
+    }
+
+    @Override
+    public boolean isRegisterRxBus() {
+        return false;
+    }
+
+    @Override
+    public boolean isRegisterMessenger() {
+        return false;
+    }
+
+    @Override
+    public boolean hasWifi() {
         return false;
     }
 
@@ -261,16 +276,16 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onEventBusCome(MessageEvent event) {
+    public void onEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
             viewModel.receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
-    public void onStickyEventBusCome(MessageEvent event) {
+    public void onStickyEventBusCome(MessageEvent<?> event) {
         if (event != null && viewModel != null) {
-            viewModel.receiveStickyEvent(event);
+            viewModel.receiveEvent(event);
         }
     }
 

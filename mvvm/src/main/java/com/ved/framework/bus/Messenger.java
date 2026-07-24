@@ -13,6 +13,45 @@ import java.util.List;
 
 /**
  * About : kelin的Messenger
+ * 使用方法：
+ * 1.定义一个静态String类型的字符串token
+ * public static final String TOKEN_LOGINVIEWMODEL_REFRESH = "token_loginviewmodel_refresh";
+ * 2.在ViewModel中注册消息监听
+ * //注册一个空消息监听
+ * //参数1：接受人（上下文）
+ * //参数2：定义的token
+ * //参数3：执行的回调监听
+ * Messenger.getDefault().register(this, LoginViewModel.TOKEN_LOGINVIEWMODEL_REFRESH, new BindingAction() {
+ *     @Override
+ *     public void call() {
+ *
+ *     }
+ * });
+ *
+ * //注册一个带数据回调的消息监听
+ * //参数1：接受人（上下文）
+ * //参数2：定义的token
+ * //参数3：实体的泛型约束
+ * //参数4：执行的回调监听
+ * Messenger.getDefault().register(this, LoginViewModel.TOKEN_LOGINVIEWMODEL_REFRESH, String.class, new BindingConsumer<String>() {
+ *     @Override
+ *     public void call(String s) {
+ *
+ *     }
+ * });
+ * 3.在需要回调的地方使用token发送消息
+ * //发送一个空消息
+ * //参数1：定义的token
+ * Messenger.getDefault().sendNoMsg(LoginViewModel.TOKEN_LOGINVIEWMODEL_REFRESH);
+ *
+ * //发送一个带数据回调消息
+ * //参数1：回调的实体
+ * //参数2：定义的token
+ * Messenger.getDefault().send("refresh",LoginViewModel.TOKEN_LOGINVIEWMODEL_REFRESH);
+ *
+ * token最好不要重名，不然可能就会出现逻辑上的bug，为了更好的维护和清晰逻辑，建议以aa_bb_cc的格式来定义token。aa：TOKEN，bb：ViewModel的类名，cc：动作名（功能名）。
+ *
+ * 为了避免大量使用Messenger，建议只在ViewModel与ViewModel之间使用，View与ViewModel之间采用ObservableField去监听UI上的逻辑，可在继承了Base的Activity或Fragment中重写initViewObservable()方法来初始化UI的监听
  */
 public class Messenger {
 
