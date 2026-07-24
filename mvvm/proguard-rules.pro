@@ -174,13 +174,6 @@
  -keep class **.R$* {
   *;
  }
- -keep @com.ved.framework.proguard.NotProguard class * {*;}
- -keep class * {
- @com.ved.framework.proguard.NotProguard <fields>;
- }
- -keepclassmembers class * {
- @com.ved.framework.proguard.NotProguard <methods>;
- }
  -keepclassmembers class * {
      void *(**On*Event);
  }
