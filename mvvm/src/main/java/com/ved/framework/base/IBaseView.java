@@ -36,10 +36,6 @@ public interface IBaseView<V extends ViewDataBinding, VM extends BaseViewModel> 
 
     boolean isRegisterEventBus();
 
-    boolean isRegisterRxBus();
-
-    boolean isRegisterMessenger();
-
     boolean hasWifi();
 
     void initView();

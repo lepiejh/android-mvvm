@@ -161,9 +161,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             }
         }
         viewDelegate.initViewObservable();
-        if (viewDelegate.isRegisterRxBus()) {
-            viewModel.registerRxBus();
-        }
+        viewModel.registerRxBus();
     }
 
     private void finishActivity() {
@@ -325,10 +323,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected void onDestroy() {
         try {
             //解除Messenger注册
-            if (viewDelegate.isRegisterMessenger()) {
+            if (viewModel != null) {
                 Messenger.getDefault().unregister(viewModel);
             }
-            if (viewDelegate.isRegisterRxBus() && viewModel != null) {
+            if (viewModel != null) {
                 viewModel.removeRxBus();
             }
             if(binding != null){

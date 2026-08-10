@@ -175,16 +175,6 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     }
 
     @Override
-    public boolean isRegisterRxBus() {
-        return false;
-    }
-
-    @Override
-    public boolean isRegisterMessenger() {
-        return false;
-    }
-
-    @Override
     public boolean hasWifi() {
         return false;
     }
