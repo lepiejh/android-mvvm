@@ -1,27 +1,18 @@
 package com.ved.framework.base;
 
 import com.ved.framework.bus.RxBus;
-import com.ved.framework.bus.RxSubscriptions;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 
-import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.core.Observable;
 
-public class StickyEventStrategy implements IEventSubscriptionStrategy {
-    private Disposable eventSubscription;
-
-    @Override
-    public void setupSubscription(BaseViewModel<?> viewModel) {
-        eventSubscription = RxBus.getDefault()
-                .toObservableSticky(MessageEvent.class)
-                .subscribe(viewModel::onEvent, viewModel::onError);
-        RxSubscriptions.add(eventSubscription);
-    }
+/**
+ * 粘性事件订阅策略
+ */
+public class StickyEventStrategy extends BaseEventStrategy {
 
     @Override
-    public void remove() {
-        if (eventSubscription != null && !eventSubscription.isDisposed()) {
-            RxSubscriptions.remove(eventSubscription);
-            eventSubscription = null;
-        }
+    protected Observable<MessageEvent> createObservable() {
+        return RxBus.getDefault()
+                .toObservableSticky(MessageEvent.class);
     }
 }

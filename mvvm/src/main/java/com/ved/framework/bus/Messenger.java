@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 /**
  * About : kelin的Messenger
@@ -362,13 +363,16 @@ public class Messenger {
         cleanupList(lists);
     }
 
-    private static <T> void unregisterFromLists(
+    /**
+     * 模板方法：按 messageType 定位订阅列表，统一匹配 recipient/token/action 并标记待删除。
+     * action 支持 {@link BindingAction} 与 {@link BindingConsumer} 两种回调，null 表示不限定回调。
+     */
+    private static void unregisterFromLists(
             Object recipient,
-            BindingConsumer<T> action,
+            Object token,
+            Object action,
             HashMap<Type, List<WeakActionAndToken>> lists,
-            Class<T> tClass) {
-        Type messageType = tClass;
-
+            Type messageType) {
         if (recipient == null
                 || lists == null
                 || lists.size() == 0
@@ -378,72 +382,16 @@ public class Messenger {
 
         synchronized (lists) {
             for (WeakActionAndToken item : lists.get(messageType)) {
-                WeakAction<T> weakActionCasted = (WeakAction<T>) item.getAction();
+                WeakAction weakAction = item.getAction();
 
-                if (weakActionCasted != null
-                        && recipient == weakActionCasted.getTarget()
+                if (weakAction != null
+                        && recipient == weakAction.getTarget()
                         && (action == null
-                        || action == weakActionCasted.getBindingConsumer())) {
-                    item.getAction().markForDeletion();
-                }
-            }
-        }
-    }
-
-    private static void unregisterFromLists(
-            Object recipient,
-            BindingAction action,
-            HashMap<Type, List<WeakActionAndToken>> lists
-    ) {
-        Type messageType = NotMsgType.class;
-
-        if (recipient == null
-                || lists == null
-                || lists.size() == 0
-                || !lists.containsKey(messageType)) {
-            return;
-        }
-
-        synchronized (lists) {
-            for (WeakActionAndToken item : lists.get(messageType)) {
-                WeakAction weakActionCasted = (WeakAction) item.getAction();
-
-                if (weakActionCasted != null
-                        && recipient == weakActionCasted.getTarget()
-                        && (action == null
-                        || action == weakActionCasted.getBindingAction())) {
-                    item.getAction().markForDeletion();
-                }
-            }
-        }
-    }
-
-
-    private static <T> void unregisterFromLists(
-            Object recipient,
-            Object token,
-            BindingConsumer<T> action,
-            HashMap<Type, List<WeakActionAndToken>> lists, Class<T> tClass) {
-        Type messageType = tClass;
-
-        if (recipient == null
-                || lists == null
-                || lists.size() == 0
-                || !lists.containsKey(messageType)) {
-            return;
-        }
-
-        synchronized (lists) {
-            for (WeakActionAndToken item : lists.get(messageType)) {
-                WeakAction<T> weakActionCasted = (WeakAction<T>) item.getAction();
-
-                if (weakActionCasted != null
-                        && recipient == weakActionCasted.getTarget()
-                        && (action == null
-                        || action == weakActionCasted.getBindingConsumer())
+                        || action == weakAction.getBindingConsumer()
+                        || action == weakAction.getBindingAction())
                         && (token == null
                         || token.equals(item.getToken()))) {
-                    item.getAction().markForDeletion();
+                    weakAction.markForDeletion();
                 }
             }
         }
@@ -452,31 +400,9 @@ public class Messenger {
     private static void unregisterFromLists(
             Object recipient,
             Object token,
-            BindingAction action,
+            Object action,
             HashMap<Type, List<WeakActionAndToken>> lists) {
-        Type messageType = NotMsgType.class;
-
-        if (recipient == null
-                || lists == null
-                || lists.size() == 0
-                || !lists.containsKey(messageType)) {
-            return;
-        }
-
-        synchronized (lists) {
-            for (WeakActionAndToken item : lists.get(messageType)) {
-                WeakAction weakActionCasted = (WeakAction) item.getAction();
-
-                if (weakActionCasted != null
-                        && recipient == weakActionCasted.getTarget()
-                        && (action == null
-                        || action == weakActionCasted.getBindingAction())
-                        && (token == null
-                        || token.equals(item.getToken()))) {
-                    item.getAction().markForDeletion();
-                }
-            }
-        }
+        unregisterFromLists(recipient, token, action, lists, NotMsgType.class);
     }
 
     private static boolean classImplements(Type instanceType, Type interfaceType) {
@@ -498,18 +424,22 @@ public class Messenger {
         if (lists == null) {
             return;
         }
-        for (Iterator it = lists.entrySet().iterator(); it.hasNext(); ) {
-            Object key = it.next();
-            List<WeakActionAndToken> itemList = lists.get(key);
+        Iterator<Map.Entry<Type, List<WeakActionAndToken>>> iterator = lists.entrySet().iterator();
+        while (iterator.hasNext()) {
+            Map.Entry<Type, List<WeakActionAndToken>> entry = iterator.next();
+            List<WeakActionAndToken> itemList = entry.getValue();
             if (itemList != null) {
-                for (WeakActionAndToken item : itemList) {
+                // 使用迭代器安全删除失效的订阅，避免 ConcurrentModificationException
+                Iterator<WeakActionAndToken> itemIterator = itemList.iterator();
+                while (itemIterator.hasNext()) {
+                    WeakActionAndToken item = itemIterator.next();
                     if (item.getAction() == null
                             || !item.getAction().isLive()) {
-                        itemList.remove(item);
+                        itemIterator.remove();
                     }
                 }
                 if (itemList.size() == 0) {
-                    lists.remove(key);
+                    iterator.remove();
                 }
             }
         }

@@ -151,17 +151,7 @@ public abstract class ARequest<T, K> {
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
-                if (viewModel != null) {
-                    viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12),(coroutineScope, continuation) -> null, continuation -> {
-                        parseError(isLoading,viewModel,"连接服务器失败或其他异常",view,seatError,iResponse,null);
-                        return null;
-                    }, throwable -> null, throwable -> null);
-                }else {
-                    CorpseUtils.INSTANCE.handlerThread(() -> {
-                        parseError(isLoading, null,"连接服务器失败或其他异常",view,seatError,iResponse,null);
-                        return null;
-                    });
-                }
+                dispatchError(isLoading, viewModel, "连接服务器失败或其他异常", view, seatError, iResponse);
             }
         }
         return lifecycleDisposable;
@@ -179,53 +169,68 @@ public abstract class ARequest<T, K> {
         }
     }
 
-    private void parseError(boolean isLoading,@Nullable BaseViewModel viewModel,String error,View viewState,
-                            ISeatError seatError,IResponse<K> iResponse, ResponseThrowable throwable) {
-        if (isLoading && viewModel!=null)
-        {
+    /**
+     * 统一错误分发模板方法：优先借助 ViewModel 的协程任务在 UI 线程回调，
+     * 无 ViewModel 时回退到主线程 Handler，保证错误回调一定发生在 UI 线程。
+     */
+    private void dispatchError(boolean isLoading, @Nullable BaseViewModel viewModel, String error,
+                               View view, ISeatError seatError, IResponse<K> iResponse) {
+        if (viewModel != null) {
+            viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12), (coroutineScope, continuation) -> null, continuation -> {
+                parseError(isLoading, viewModel, error, view, seatError, iResponse, null);
+                return null;
+            }, throwable -> null, throwable -> null);
+        } else {
+            CorpseUtils.INSTANCE.handlerThread(() -> {
+                parseError(isLoading, null, error, view, seatError, iResponse, null);
+                return null;
+            });
+        }
+    }
+
+    private void parseError(boolean isLoading, @Nullable BaseViewModel viewModel, String error, View viewState,
+                            ISeatError seatError, IResponse<K> iResponse, ResponseThrowable throwable) {
+        if (isLoading && viewModel != null) {
             viewModel.dismissDialog();
         }
-        if (viewState!= null && seatError != null) {
+        if (viewState != null && seatError != null) {
             seatError.onErrorView();
         }
         if (iResponse != null && StringUtils.isNotEmpty(error)) {
-            iResponse.onError(error,false);
+            iResponse.onError(error, false);
         }
         if (throwable != null) {
             KLog.e(throwable.message);
-            if (throwable.getCause() instanceof ResultException)
-            {
-                ResultException resultException = (ResultException) throwable.getCause();
-                exceptionHandling(viewModel, resultException.getErrMsg(), resultException.getErrCode());
-                if (viewState!= null && seatError != null) {
-                    seatError.onErrorView();
-                    seatError.onErrorHandler(resultException.getErrCode());
-                }
-
-                if (TextUtils.isEmpty(resultException.getErrMsg())) {
-                    if (iResponse != null) {
-                        iResponse.onError(throwable.message,false);
-                    }
-                } else {
-                    if (iResponse != null) {
-                        iResponse.onError(resultException.getErrMsg(),false);
-                    }
-                }
-                if (viewState!= null && seatError != null) {
-                    seatError.onEmptyView();
-                }
+            if (throwable.getCause() instanceof ResultException) {
+                handleResultException(viewModel, viewState, seatError, iResponse, throwable);
             } else {
                 if (iResponse != null) {
-                    iResponse.onError(throwable.message,false);
+                    iResponse.onError(throwable.message, false);
                 }
                 if (seatError != null) {
                     seatError.onEmptyView(throwable.message);
                 }
             }
-        }else {
-            if (StringUtils.isNotEmpty(error)) {
-                exceptionHandling(viewModel, error, -2);
-            }
+        } else if (StringUtils.isNotEmpty(error)) {
+            exceptionHandling(viewModel, error, -2);
+        }
+    }
+
+    /**
+     * 处理 ResultException 业务异常：透出错误码与错误信息到响应回调与占位视图
+     */
+    private void handleResultException(@Nullable BaseViewModel viewModel, View viewState,
+                                       ISeatError seatError, IResponse<K> iResponse, ResponseThrowable throwable) {
+        ResultException resultException = (ResultException) throwable.getCause();
+        exceptionHandling(viewModel, resultException.getErrMsg(), resultException.getErrCode());
+        if (viewState != null && seatError != null) {
+            seatError.onErrorHandler(resultException.getErrCode());
+        }
+        if (iResponse != null) {
+            iResponse.onError(TextUtils.isEmpty(resultException.getErrMsg()) ? throwable.message : resultException.getErrMsg(), false);
+        }
+        if (viewState != null && seatError != null) {
+            seatError.onEmptyView();
         }
     }
 

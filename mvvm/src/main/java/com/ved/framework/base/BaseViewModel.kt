@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.trello.rxlifecycle4.LifecycleProvider
+import com.ved.framework.bus.ISubscription
 import com.ved.framework.bus.RxBus
 import com.ved.framework.bus.event.eventbus.EventBusUtil
 import com.ved.framework.bus.event.eventbus.MessageEvent
@@ -32,7 +33,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     private var model: M? = null
 ) : AndroidViewModel(
     application
-), IBaseViewModel, Consumer<Disposable> {
+), IBaseViewModel, Consumer<Disposable>, ISubscription {
     //弱引用持有
     private var lifecycle: WeakReference<LifecycleProvider<*>>? = null
 
@@ -55,6 +56,28 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         }
         mCompositeDisposable?.add(disposable)
     }
+
+    // region ISubscription 实现：ViewModel 级订阅容器，onCleared 时随 mCompositeDisposable 一并清理
+
+    override fun add(s: Disposable) {
+        addSubscribe(s)
+    }
+
+    override fun remove(s: Disposable) {
+        mCompositeDisposable?.remove(s)
+    }
+
+    override fun isDisposed(): Boolean = mCompositeDisposable?.isDisposed ?: true
+
+    override fun clear() {
+        mCompositeDisposable?.clear()
+    }
+
+    override fun dispose() {
+        mCompositeDisposable?.dispose()
+    }
+
+    // endregion
 
     override fun openEventSubscription(): Boolean {
         return false
