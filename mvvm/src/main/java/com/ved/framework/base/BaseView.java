@@ -140,28 +140,43 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 viewDelegate.loadView();
             }
         }
-        if (viewDelegate.isRegisterEventBus() && !isEventBusRegistered) {
-            try {
-                Object target = null;
-                if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
-                    target = viewDelegate.getFragment();
-                } else if (viewDelegate.FragmentActivity() != null) {
-                    target = viewDelegate.FragmentActivity();
-                } else if (viewDelegate.getLifecycleOwner() != null) {
-                    target = viewDelegate.getLifecycleOwner();
-                }
-                if (target != null && !EventBus.getDefault().isRegistered(target)) {
-                    EventBusUtil.register(target);
-                    isEventBusRegistered = true;
-                }
-            } catch (Exception e) {
-                Object target = viewDelegate.getLifecycleOwner();
-                isEventBusRegistered = (target instanceof FragmentActivity && EventBus.getDefault().isRegistered(target)) ||
-                        (target instanceof Fragment && EventBus.getDefault().isRegistered(target));
-            }
-        }
+        registerEventBusIfNeeded();
         viewDelegate.initViewObservable();
         viewModel.registerRxBus();
+    }
+
+    /**
+     * 按需注册 EventBus（模板方法抽取：初始化与销毁共用的注册目标解析逻辑）
+     */
+    private void registerEventBusIfNeeded() {
+        if (!viewDelegate.isRegisterEventBus() || isEventBusRegistered) {
+            return;
+        }
+        try {
+            Object target = resolveEventBusTarget();
+            if (target != null && !EventBus.getDefault().isRegistered(target)) {
+                EventBusUtil.register(target);
+                isEventBusRegistered = true;
+            }
+        } catch (Exception e) {
+            Object target = viewDelegate.getLifecycleOwner();
+            isEventBusRegistered = (target instanceof FragmentActivity && EventBus.getDefault().isRegistered(target)) ||
+                    (target instanceof Fragment && EventBus.getDefault().isRegistered(target));
+        }
+    }
+
+    /**
+     * 解析 EventBus 的注册目标（Activity / Fragment / LifecycleOwner）
+     */
+    private Object resolveEventBusTarget() {
+        if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+            return viewDelegate.getFragment();
+        } else if (viewDelegate.FragmentActivity() != null) {
+            return viewDelegate.FragmentActivity();
+        } else if (viewDelegate.getLifecycleOwner() != null) {
+            return viewDelegate.getLifecycleOwner();
+        }
+        return null;
     }
 
     private void finishActivity() {
@@ -325,8 +340,6 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             //解除Messenger注册
             if (viewModel != null) {
                 Messenger.getDefault().unregister(viewModel);
-            }
-            if (viewModel != null) {
                 viewModel.removeRxBus();
             }
             if(binding != null){
@@ -334,13 +347,9 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             }
 
             if (viewDelegate.isRegisterEventBus()) {
-                Object target = null;
-                if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
-                    target = viewDelegate.getFragment();
-                } else if (viewDelegate.getCurrentActivity() != null) {
-                    target = viewDelegate.getCurrentActivity();
-                }
-
+                Object target = viewDelegate.getCurrentActivity() != null
+                        ? viewDelegate.getCurrentActivity()
+                        : resolveEventBusTarget();
                 if (target != null && EventBus.getDefault().isRegistered(target)) {
                     EventBusUtil.unregister(target);
                 }

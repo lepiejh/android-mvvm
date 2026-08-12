@@ -55,7 +55,10 @@ import java.util.List;
  */
 public class Messenger {
 
-    private static Messenger defaultInstance;
+    /**
+     * 线程安全的单例（双重检查锁），保证 {@link #getDefault()} 返回唯一实例
+     */
+    private static volatile Messenger defaultInstance;
 
     private HashMap<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction;
 
@@ -63,7 +66,11 @@ public class Messenger {
 
     public static Messenger getDefault() {
         if (defaultInstance == null) {
-            defaultInstance = new Messenger();
+            synchronized (Messenger.class) {
+                if (defaultInstance == null) {
+                    defaultInstance = new Messenger();
+                }
+            }
         }
         return defaultInstance;
     }
@@ -122,39 +129,7 @@ public class Messenger {
      * @param action                    do something on message received
      */
     public void register(Object recipient, Object token, boolean receiveDerivedMessagesToo, BindingAction action) {
-
-        Type messageType = NotMsgType.class;
-
-        HashMap<Type, List<WeakActionAndToken>> recipients;
-
-        if (receiveDerivedMessagesToo) {
-            if (recipientsOfSubclassesAction == null) {
-                recipientsOfSubclassesAction = new HashMap<Type, List<WeakActionAndToken>>();
-            }
-
-            recipients = recipientsOfSubclassesAction;
-        } else {
-            if (recipientsStrictAction == null) {
-                recipientsStrictAction = new HashMap<Type, List<WeakActionAndToken>>();
-            }
-
-            recipients = recipientsStrictAction;
-        }
-
-        List<WeakActionAndToken> list;
-
-        if (!recipients.containsKey(messageType)) {
-            list = new ArrayList<WeakActionAndToken>();
-            recipients.put(messageType, list);
-        } else {
-            list = recipients.get(messageType);
-        }
-
-        WeakAction weakAction = new WeakAction(recipient, action);
-
-        WeakActionAndToken item = new WeakActionAndToken(weakAction, token);
-        list.add(item);
-        cleanup();
+        doRegister(NotMsgType.class, receiveDerivedMessagesToo, new WeakAction(recipient, action), token);
     }
 
     /**
@@ -208,41 +183,40 @@ public class Messenger {
      * @param <T>                       message data type
      */
     public <T> void register(Object recipient, Object token, boolean receiveDerivedMessagesToo, BindingConsumer<T> action, Class<T> tClass) {
+        doRegister(tClass, receiveDerivedMessagesToo, new WeakAction<T>(recipient, action), token);
+    }
 
-        Type messageType = tClass;
+    /**
+     * 模板方法：抽取 register 系列方法的公共注册流程。
+     * 根据 receiveDerivedMessagesToo 选择对应的接收者容器，再写入消息订阅。
+     */
+    private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction weakAction, Object token) {
+        HashMap<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
 
+        List<WeakActionAndToken> list = recipients.computeIfAbsent(messageType, k -> new ArrayList<WeakActionAndToken>());
+
+        list.add(new WeakActionAndToken(weakAction, token));
+        cleanup();
+    }
+
+    /**
+     * 根据是否接收派生类消息，返回对应的接收者容器（懒加载）
+     */
+    private HashMap<Type, List<WeakActionAndToken>> getRecipients(boolean receiveDerivedMessagesToo) {
         HashMap<Type, List<WeakActionAndToken>> recipients;
-
         if (receiveDerivedMessagesToo) {
             if (recipientsOfSubclassesAction == null) {
                 recipientsOfSubclassesAction = new HashMap<Type, List<WeakActionAndToken>>();
             }
-
             recipients = recipientsOfSubclassesAction;
         } else {
             if (recipientsStrictAction == null) {
                 recipientsStrictAction = new HashMap<Type, List<WeakActionAndToken>>();
             }
-
             recipients = recipientsStrictAction;
         }
-
-        List<WeakActionAndToken> list;
-
-        if (!recipients.containsKey(messageType)) {
-            list = new ArrayList<WeakActionAndToken>();
-            recipients.put(messageType, list);
-        } else {
-            list = recipients.get(messageType);
-        }
-
-        WeakAction weakAction = new WeakAction<T>(recipient, action);
-
-        WeakActionAndToken item = new WeakActionAndToken(weakAction, token);
-        list.add(item);
-        cleanup();
+        return recipients;
     }
-
 
     private void cleanup() {
         cleanupList(recipientsOfSubclassesAction);
