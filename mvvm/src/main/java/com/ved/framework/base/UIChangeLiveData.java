@@ -4,6 +4,7 @@ import android.os.Bundle;
 
 import com.ved.framework.bus.event.SingleLiveEvent;
 
+import java.util.EnumMap;
 import java.util.Map;
 
 import androidx.annotation.NonNull;
@@ -11,77 +12,83 @@ import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 
 public final class UIChangeLiveData extends SingleLiveEvent {
-    private SingleLiveEvent<String> showDialogEvent;
-    private SingleLiveEvent<Void> dismissDialogEvent;
-    private SingleLiveEvent<Map<String, Object>> startActivityEvent;
-    private SingleLiveEvent<Bundle> sendReceiverEvent;
-    private SingleLiveEvent<Map<String, Object>> startContainerActivityEvent;
-    private SingleLiveEvent<Map<String, Object>> startActivityForResultEvent;
-    private SingleLiveEvent<Void> finishEvent;
-    private SingleLiveEvent<Void> onBackPressedEvent;
-    private SingleLiveEvent<Void> onLoadEvent;
-    private SingleLiveEvent<Void> onResumeEvent;
-    private SingleLiveEvent<Map<String, Object>> requestPermissionEvent;
-    private SingleLiveEvent<Map<String, Object>> requestCallPhoneEvent;
-    private SingleLiveEvent<Map<String, Object>> requestWifiRssiEvent;
+
+    /**
+     * 事件类型注册表（注册表模式）：将 13 个重复字段收敛为统一的注册表，
+     * 由泛型方法 {@link #get(EventKey)} 统一懒加载，消除重复样板代码。
+     */
+    private enum EventKey {
+        SHOW_DIALOG, DISMISS_DIALOG,
+        START_ACTIVITY, START_ACTIVITY_FOR_RESULT, START_CONTAINER_ACTIVITY,
+        REQUEST_PERMISSION, REQUEST_CALL_PHONE, REQUEST_WIFI_RSSI,
+        SEND_RECEIVER, FINISH, ON_BACK_PRESSED, ON_LOAD, ON_RESUME
+    }
+
+    private final Map<EventKey, SingleLiveEvent<?>> events = new EnumMap<>(EventKey.class);
 
     public SingleLiveEvent<Map<String, Object>> getRequestCallPhoneEvent() {
-        return requestCallPhoneEvent = createLiveData(requestCallPhoneEvent);
+        return get(EventKey.REQUEST_CALL_PHONE);
     }
 
     public SingleLiveEvent<Map<String, Object>> getRequestWifiRssiEvent() {
-        return requestWifiRssiEvent = createLiveData(requestWifiRssiEvent);
+        return get(EventKey.REQUEST_WIFI_RSSI);
     }
 
     public SingleLiveEvent<Map<String, Object>> getRequestPermissionEvent() {
-        return requestPermissionEvent = createLiveData(requestPermissionEvent);
+        return get(EventKey.REQUEST_PERMISSION);
     }
 
     public SingleLiveEvent<Map<String, Object>> getStartActivityForResultEvent() {
-        return startActivityForResultEvent = createLiveData(startActivityForResultEvent);
+        return get(EventKey.START_ACTIVITY_FOR_RESULT);
     }
 
     public SingleLiveEvent<String> getShowDialogEvent() {
-        return showDialogEvent = createLiveData(showDialogEvent);
+        return get(EventKey.SHOW_DIALOG);
     }
 
     public SingleLiveEvent<Void> getDismissDialogEvent() {
-        return dismissDialogEvent = createLiveData(dismissDialogEvent);
+        return get(EventKey.DISMISS_DIALOG);
     }
 
     public SingleLiveEvent<Map<String, Object>> getStartActivityEvent() {
-        return startActivityEvent = createLiveData(startActivityEvent);
+        return get(EventKey.START_ACTIVITY);
     }
 
     public SingleLiveEvent<Bundle> getReceiverEvent() {
-        return sendReceiverEvent = createLiveData(sendReceiverEvent);
+        return get(EventKey.SEND_RECEIVER);
     }
 
     public SingleLiveEvent<Map<String, Object>> getStartContainerActivityEvent() {
-        return startContainerActivityEvent = createLiveData(startContainerActivityEvent);
+        return get(EventKey.START_CONTAINER_ACTIVITY);
     }
 
     public SingleLiveEvent<Void> getFinishEvent() {
-        return finishEvent = createLiveData(finishEvent);
+        return get(EventKey.FINISH);
     }
 
     public SingleLiveEvent<Void> getOnBackPressedEvent() {
-        return onBackPressedEvent = createLiveData(onBackPressedEvent);
+        return get(EventKey.ON_BACK_PRESSED);
     }
 
     public SingleLiveEvent<Void> getOnLoadEvent() {
-        return onLoadEvent = createLiveData(onLoadEvent);
+        return get(EventKey.ON_LOAD);
     }
 
     public SingleLiveEvent<Void> getOnResumeEvent() {
-        return onResumeEvent = createLiveData(onResumeEvent);
+        return get(EventKey.ON_RESUME);
     }
 
-    private <T> SingleLiveEvent<T> createLiveData(SingleLiveEvent<T> liveData) {
-        if (liveData == null) {
-            liveData = new SingleLiveEvent<>();
+    /**
+     * 泛型注册表取值：按事件类型懒加载对应的 {@link SingleLiveEvent}。
+     */
+    @SuppressWarnings("unchecked")
+    private <T> SingleLiveEvent<T> get(EventKey key) {
+        SingleLiveEvent<?> event = events.get(key);
+        if (event == null) {
+            event = new SingleLiveEvent<>();
+            events.put(key, event);
         }
-        return liveData;
+        return (SingleLiveEvent<T>) event;
     }
 
     @Override

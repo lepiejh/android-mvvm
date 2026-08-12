@@ -1,8 +1,6 @@
 package com.ved.framework.base;
 
-import android.Manifest;
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 
 import androidx.databinding.ViewDataBinding;
@@ -11,40 +9,44 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.blankj.swipepanel.SwipePanel;
-import com.orhanobut.dialog.dialog.DialogStrategyFactory;
-import com.orhanobut.dialog.dialog.IDialogStrategy;
-import com.orhanobut.dialog.navigation.ActivityNavigator;
-import com.orhanobut.dialog.utils.WifiSignalHelper;
 import com.ved.framework.R;
+import com.ved.framework.base.helper.DialogHelper;
+import com.ved.framework.base.helper.NavigatorHelper;
+import com.ved.framework.base.helper.PermissionHelper;
 import com.ved.framework.bus.Messenger;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
-import com.ved.framework.utils.phone.PhoneUtils;
 
 import org.greenrobot.eventbus.EventBus;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     protected V binding;
     protected VM viewModel;
-    private final IBaseView<V,VM> viewDelegate;
-    private IDialogStrategy dialogStrategy;
+    private final IBaseView<V, VM> viewDelegate;
+
+    // 职责助手（单一职责 + 委托模式）：对话框 / 导航 / 权限系统能力
+    private final DialogHelper<V, VM> dialogHelper;
+    private final NavigatorHelper<V, VM> navigatorHelper;
+    private final PermissionHelper<V, VM> permissionHelper;
+
     // EventBus 注册状态跟踪
     private boolean isEventBusRegistered = false;
 
     protected BaseView(IBaseView<V, VM> viewDelegate) {
         this.viewDelegate = viewDelegate;
+        this.dialogHelper = new DialogHelper<>(viewDelegate);
+        this.navigatorHelper = new NavigatorHelper<>(viewDelegate);
+        this.permissionHelper = new PermissionHelper<>(viewDelegate);
     }
 
     protected final void initialize(Bundle savedInstanceState) {
         initViewDataBinding(savedInstanceState);
         registerUIChangeLiveDataCallBack();
-        initDialogStrategy();
     }
 
     protected void initViewDataBinding(Bundle savedInstanceState) {
@@ -86,10 +88,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         // 电话相关
         viewModel.getUC().getRequestCallPhoneEvent().observe(owner, params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            callPhone(phoneNumber);
+            permissionHelper.callPhone(phoneNumber);
         });
 
-        viewModel.getUC().getRequestWifiRssiEvent().observe(owner,o -> getWifiRssi());
+        viewModel.getUC().getRequestWifiRssiEvent().observe(owner, o -> permissionHelper.getWifiRssi());
 
         // 活动跳转相关
         viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
@@ -185,19 +187,15 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     protected void showDialog() {
-        showDialog("加载中...");
+        dialogHelper.show();
     }
 
-    private void initDialogStrategy() {
-        dialogStrategy = DialogStrategyFactory.createStrategy(viewDelegate);
-    }
-
-    protected void showDialog(String title){
-        dialogStrategy.show(title);
+    protected void showDialog(String title) {
+        dialogHelper.show(title);
     }
 
     protected void dismissDialog() {
-        dialogStrategy.dismiss();
+        dialogHelper.dismiss();
     }
 
     /**
@@ -206,7 +204,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param clz 所跳转的目的Activity类
      */
     protected void startActivity(Class<?> clz) {
-        startActivity(clz, null);
+        navigatorHelper.startActivity(clz);
     }
 
     /**
@@ -216,23 +214,11 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle 跳转所携带的信息
      */
     protected void startActivity(Class<?> clz, Bundle bundle) {
-        ActivityNavigator.with(viewDelegate.getViewContext())
-                .target(clz)
-                .bundle(bundle)
-                .navigate();
+        navigatorHelper.startActivity(clz, bundle);
     }
 
     protected void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
-        Intent intent = new Intent(viewDelegate.getViewContext(), clz);
-        if (bundle != null) {
-            intent.putExtras(bundle);
-        }
-
-        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-            ((FragmentActivity) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
-        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
-            ((Fragment) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
-        }
+        navigatorHelper.startActivityForResult(clz, requestCode, bundle);
     }
 
     /**
@@ -241,7 +227,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param canonicalName 规范名 : Fragment.class.getCanonicalName()
      */
     protected void startContainerActivity(String canonicalName) {
-        startContainerActivity(canonicalName, null);
+        navigatorHelper.startContainerActivity(canonicalName);
     }
 
     /**
@@ -251,59 +237,11 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
      * @param bundle        跳转所携带的信息
      */
     protected void startContainerActivity(String canonicalName, Bundle bundle) {
-        ActivityNavigator.with(viewDelegate.getViewContext())
-                .target(ContainerActivity.class)
-                .putExtra(ParameterField.FRAGMENT, canonicalName)
-                .bundle(bundle)
-                .navigate();
-    }
-
-    private void getWifiRssi() {
-        if (!viewDelegate.hasWifi())return;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            requestPermission(new IPermission() {
-                @Override
-                public void onGranted() {
-                    startListening();
-                }
-
-                @Override
-                public void onDenied(boolean denied) {
-                    viewDelegate.getWifiRssi(-100);
-                }
-            }, Manifest.permission.ACCESS_FINE_LOCATION);
-        } else {
-            startListening();
-        }
-    }
-
-    private void startListening(){
-        WifiSignalHelper.Companion.getINSTANCE().startListening(i -> {
-            viewDelegate.getWifiRssi(i);
-            return null;
-        });
-    }
-
-    public void callPhone(String phoneNumber) {
-        requestPermission(new IPermission() {
-            @Override
-            public void onGranted() {
-                PhoneUtils.callPhone(phoneNumber);
-            }
-
-            @Override
-            public void onDenied(boolean denied) {
-                viewDelegate.requestCallPhone(denied);
-            }
-        }, Manifest.permission.READ_PHONE_STATE, Manifest.permission.CALL_PHONE);
+        navigatorHelper.startContainerActivity(canonicalName, bundle);
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
-        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-            RxPermission.requestPermission((FragmentActivity) viewDelegate.getLifecycleOwner(), iPermission, permissions);
-        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
-            RxPermission.requestPermission((Fragment) viewDelegate.getLifecycleOwner(), iPermission, permissions);
-        }
+        permissionHelper.requestPermission(iPermission, permissions);
     }
 
     /**
@@ -356,7 +294,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 isEventBusRegistered = false;
             }
             if (viewDelegate.hasWifi()) {
-                WifiSignalHelper.Companion.getINSTANCE().stopListening();
+                permissionHelper.stopWifiListening();
             }
         } catch (Exception e) {
             KLog.e(e.getMessage());

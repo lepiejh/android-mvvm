@@ -32,21 +32,16 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     private final BaseView<V, VM> baseView = new BaseView<>(this);
 
     protected V binding;
-    private VM viewModel;
-    private ViewModelProxy<VM> viewModelProxy;
+    private final ViewModelDelegate<VM> viewModelDelegate = new ViewModelDelegate<>(this);
 
     protected VM getViewModel() {
-        if (null == viewModel) {
-            viewModel = viewModelProxy.createViewModel();
-        }
-        return viewModel;
+        return viewModelDelegate.getViewModel();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         initParam();
         super.onCreate(savedInstanceState);
-        viewModelProxy = new ViewModelProxyImpl<>(this);
     }
 
     @Override
@@ -76,13 +71,7 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
 
     @Override
     public VM ensureViewModelCreated() {
-        BaseDialogFragment.this.viewModel = viewModelProxy.createViewModel();
-        return BaseDialogFragment.this.viewModel;
-    }
-
-    @Override
-    public boolean isSwipeBack() {
-        return false;
+        return viewModelDelegate.ensureViewModelCreated();
     }
 
     @Override
@@ -93,7 +82,7 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     @Override
     public void initView() {
         if (needReload()){
-            KLog.i("BaseFragment menuVisibleTag ："+menuVisibleTag+", isLoadData : "+isLoadData);
+            KLog.i("BaseDialogFragment menuVisibleTag ："+menuVisibleTag+", isLoadData : "+isLoadData);
             if (menuVisibleTag && !isLoadData) {
                 isLoadData = true;
                 refreshView();
@@ -141,11 +130,6 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
     }
 
     @Override
-    public void loadView() {
-
-    }
-
-    @Override
     public Fragment getFragment() {
         return this;
     }
@@ -164,49 +148,12 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
 
     }
 
-    /**
-     * 是否注册事件分发
-     *
-     * @return true绑定EventBus事件分发，默认不绑定，子类需要绑定的话复写此方法返回true.
-     */
-    @Override
-    public boolean isRegisterEventBus() {
-        return false;
-    }
-
-    @Override
-    public boolean hasWifi() {
-        return false;
-    }
-
-    @Override
-    public boolean customDialog() {
-        return false;
-    }
-
-    @Override
-    public boolean mvvmDialog() {
-        return false;
-    }
-
     public void showDialog() {
         baseView.showDialog();
     }
 
     public void showDialog(String title) {
         baseView.showDialog(title);
-    }
-
-    @Override
-    public void showCustomDialog() {
-    }
-
-    @Override
-    public void requestCallPhone(boolean denied) {
-    }
-
-    @Override
-    public void dismissCustomDialog() {
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
@@ -255,32 +202,12 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
         baseView.startContainerActivity(canonicalName, bundle);
     }
 
-    @Override
-    public void initParam() {
-
-    }
-
     /**
      * 初始化根布局
      *
      * @return 布局layout的id
      */
     public abstract int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
-
-    @Override
-    public void initData() {
-
-    }
-
-    @Override
-    public void initViewObservable() {
-
-    }
-
-    @Override
-    public void getWifiRssi(int rssi) {
-
-    }
 
     public void dismissDialog() {
         baseView.dismissDialog();
@@ -292,15 +219,15 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModel != null) {
-            viewModel.receiveEvent(event);
+        if (event != null && viewModelDelegate.hasViewModel()) {
+            viewModelDelegate.getCreatedViewModel().receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onStickyEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModel != null) {
-            viewModel.receiveStickyEvent(event);
+        if (event != null && viewModelDelegate.hasViewModel()) {
+            viewModelDelegate.getCreatedViewModel().receiveStickyEvent(event);
         }
     }
 }

@@ -13,25 +13,30 @@ import com.ved.framework.bus.event.eventbus.MessageEvent;
 public interface IBaseViewModel extends LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
-    void onAny(LifecycleOwner owner, Lifecycle.Event event);
+    default void onAny(LifecycleOwner owner, Lifecycle.Event event) {
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_CREATE)
     void onCreate();
 
     @OnLifecycleEvent(Lifecycle.Event.ON_DESTROY)
-    void onDestroy();
+    default void onDestroy() {
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)
-    void onStart();
+    default void onStart() {
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
-    void onStop();
+    default void onStop() {
+    }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
     void onResume();
 
     @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    void onPause();
+    default void onPause() {
+    }
 
     /**
      * 注册RxBus
@@ -48,20 +53,23 @@ public interface IBaseViewModel extends LifecycleObserver {
      *
      * @param event 事件
      */
-    void receiveEvent(MessageEvent<?> event);
+    default void receiveEvent(MessageEvent<?> event) {
+    }
 
     /**
      * 接受到分发的粘性事件
      *
      * @param event 粘性事件
      */
-    void receiveStickyEvent(MessageEvent<?> event);
+    default void receiveStickyEvent(MessageEvent<?> event) {
+    }
 
     /**
      * 执行RxBus事件
      * @param event  事件
      */
-    void onEvent(MessageEvent<?> event);
+    default void onEvent(MessageEvent<?> event) {
+    }
 
     /**
      * 执行RxBus事件 发生异常

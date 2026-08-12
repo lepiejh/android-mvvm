@@ -3,8 +3,6 @@ package com.ved.framework.base
 import android.app.Application
 import android.os.Bundle
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewModelScope
 import com.trello.rxlifecycle4.LifecycleProvider
 import com.ved.framework.bus.RxBus
@@ -40,7 +38,8 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
 
     //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
     private var mCompositeDisposable: CompositeDisposable?
-    private val command: UICommand
+    // UI 命令门面（门面模式）：面向 ICommand 接口编程，解耦命令发起与执行
+    private val command: ICommand
     private var eventStrategy: IEventSubscriptionStrategy? = null
     private val backgroundJobs = ConcurrentHashMap<String, Job>()
 
@@ -200,6 +199,38 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     }
 
     /**
+     * 后台任务管理模板方法（模板方法模式）：
+     * 统一处理任务注册、取消同 key 旧任务、异常兜底与任务清理，
+     * 具体任务只关心自身业务逻辑。
+     *
+     * @param key     任务唯一标识
+     * @param onError 业务异常回调（默认主线程记录日志）
+     * @param onCancel 任务取消回调
+     * @param task    具体任务体
+     */
+    private fun launchManagedTask(
+        key: String,
+        onError: (Throwable) -> Unit = { KLog.e(it.message) },
+        onCancel: (Throwable) -> Unit = { KLog.e(it.message) },
+        task: suspend CoroutineScope.() -> Unit
+    ): Job {
+        cancelJob(key) // 取消同key的旧任务
+        val job = viewModelScope.launch {
+            try {
+                task()
+            } catch (e: CancellationException) {
+                onCancel(e)
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) { onError(e) }
+            } finally {
+                backgroundJobs.remove(key)
+            }
+        }
+        backgroundJobs[key] = job
+        return job
+    }
+
+    /**
      * 线程切换 - 带键值管理
      */
     fun fetchWithCancel(
@@ -209,21 +240,11 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         onError: (Throwable) -> Unit = { KLog.e(it.message) },
         onCancel: (Throwable) -> Unit = { KLog.e(it.message) }
     ) {
-        cancelJob(key) // 取消同key的旧任务
-
-        backgroundJobs[key] = viewModelScope.launch {
-            try {
-                val ioJob = launch(Dispatchers.IO) { ioAction() }
-                ioJob.join()
-                withContext(Dispatchers.Main) { // 确保UI更新在主线程
-                    uiAction()
-                }
-            } catch (e: CancellationException) {
-                onCancel(e)
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) { onError(e) }
-            } finally {
-                backgroundJobs.remove(key)
+        launchManagedTask(key, onError, onCancel) {
+            val ioJob = launch(Dispatchers.IO) { ioAction() }
+            ioJob.join()
+            withContext(Dispatchers.Main) { // 确保UI更新在主线程
+                uiAction()
             }
         }
     }
@@ -236,19 +257,12 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         delay: Long,
         block: () -> Unit
     ) {
-        cancelJob(key) // 取消同key的旧任务
-
-        backgroundJobs[key] = viewModelScope.launch {
-            try {
-                delay(delay)
-                block()
-            } finally {
-                backgroundJobs.remove(key)
-            }
+        launchManagedTask(key) {
+            delay(delay)
+            block()
         }
     }
 
-    override fun onAny(owner: LifecycleOwner, event: Lifecycle.Event) {}
     override fun onCreate() {
         getUC().onLoadEvent.call()
     }
@@ -278,22 +292,13 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     }
 
     /**
-     * 处理RxBus 成功回调
-     */
-    override fun onEvent(event: MessageEvent<*>?) {}
-
-    /**
      * 处理RxBus 失败回调
      */
     override fun onError(throwable: Throwable?) { throwable?.message?.let { KLog.e(it) } }
-    override fun onDestroy() {}
-    override fun onStart() {}
-    override fun onStop() {}
     override fun onResume() {
         getUC().onResumeEvent.call()
     }
 
-    override fun onPause() {}
     override fun registerRxBus() {
         if (openEventSubscription()) {
             onStartEventSubscription()
@@ -306,11 +311,6 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         }
     }
 
-    /**
-     * 处理接收EventBus 回调
-     */
-    override fun receiveEvent(event: MessageEvent<*>?) {}
-    override fun receiveStickyEvent(event: MessageEvent<*>?) {}
     override fun onCleared() {
         super.onCleared()
         try {

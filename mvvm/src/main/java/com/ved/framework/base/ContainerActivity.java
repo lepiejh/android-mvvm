@@ -22,6 +22,9 @@ import androidx.fragment.app.FragmentTransaction;
 public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
     protected WeakReference<Fragment> mFragment;
 
+    // 页面工厂（工厂模式）：Fragment 创建的统一入口，可按需替换实现
+    private final FragmentFactory fragmentFactory = new ReflectFragmentFactory();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -62,26 +65,12 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
             throw new RuntimeException(
                     "you must provide a page info to display");
         }
-        try {
-            String fragmentName = data.getStringExtra(ParameterField.FRAGMENT);
-            if (fragmentName == null || "".equals(fragmentName)) {
-                throw new IllegalArgumentException("can not find page fragmentName");
-            }
-            Class<?> fragmentClass = Class.forName(fragmentName);
-            Fragment fragment = (Fragment) fragmentClass.newInstance();
-            Bundle args = data.getBundleExtra(ParameterField.BUNDLE);
-            if (args != null) {
-                fragment.setArguments(args);
-            }
-            return fragment;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
+        String fragmentName = data.getStringExtra(ParameterField.FRAGMENT);
+        if (fragmentName == null || "".equals(fragmentName)) {
+            throw new IllegalArgumentException("can not find page fragmentName");
         }
-        throw new RuntimeException("fragment initialization failed!");
+        Bundle args = data.getBundleExtra(ParameterField.BUNDLE);
+        return fragmentFactory.create(fragmentName, args);
     }
 
     @Override

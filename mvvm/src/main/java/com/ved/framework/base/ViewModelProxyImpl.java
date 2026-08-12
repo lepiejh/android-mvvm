@@ -6,7 +6,7 @@ import java.lang.reflect.Type;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModel;
-import androidx.lifecycle.ViewModelProviders;
+import androidx.lifecycle.ViewModelProvider;
 
 public class ViewModelProxyImpl<VM extends BaseViewModel> implements ViewModelProxy<VM> {
     private final Object obj;
@@ -18,9 +18,9 @@ public class ViewModelProxyImpl<VM extends BaseViewModel> implements ViewModelPr
 
     public <T extends ViewModel> T createViewModel(Object obj, Class<T> cls) {
         if (obj instanceof FragmentActivity){
-            return ViewModelProviders.of((FragmentActivity) obj).get(cls);
+            return new ViewModelProvider((FragmentActivity) obj).get(cls);
         }else if (obj instanceof Fragment){
-            return ViewModelProviders.of((Fragment) obj).get(cls);
+            return new ViewModelProvider((Fragment) obj).get(cls);
         }
         return null;
     }

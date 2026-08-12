@@ -6,7 +6,6 @@ import android.os.Bundle;
 
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
@@ -24,39 +23,22 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     private final BaseView<V, VM> baseView = new BaseView<>(this);
 
     protected V binding;
-    private VM viewModel;
-    private ViewModelProxy<VM> viewModelProxy;
+    private final ViewModelDelegate<VM> viewModelDelegate = new ViewModelDelegate<>(this);
 
     protected VM getViewModel() {
-        if (null == viewModel) {
-            viewModel = viewModelProxy.createViewModel();
-        }
-        return viewModel;
+        return viewModelDelegate.getViewModel();
     }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         BaseActivity.this.initParam();
         super.onCreate(savedInstanceState);
-        viewModelProxy = new ViewModelProxyImpl<>(this);
         baseView.initialize(savedInstanceState);
     }
 
     @Override
     public VM ensureViewModelCreated() {
-        BaseActivity.this.viewModel = viewModelProxy.createViewModel();
-        return BaseActivity.this.viewModel;
-    }
-
-    @Override
-    public void initView() {
-        //页面数据初始化方法
-        BaseActivity.this.initData();
-    }
-
-    @Override
-    public void refreshView(){
-
+        return viewModelDelegate.ensureViewModelCreated();
     }
 
     @Override
@@ -86,16 +68,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     }
 
     @Override
-    public boolean isFragment() {
-        return false;
-    }
-
-    @Override
-    public Fragment getFragment() {
-        return null;
-    }
-
-    @Override
     public FragmentActivity getCurrentActivity() {
         return this;
     }
@@ -103,36 +75,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     @Override
     public LifecycleProvider<ActivityEvent> getLifecycleProvider() {
         return BaseActivity.this;
-    }
-
-    @Override
-    public boolean isSwipeBack() {
-        return false;
-    }
-
-    @Override
-    public boolean customDialog() {
-        return false;
-    }
-
-    @Override
-    public boolean mvvmDialog() {
-        return false;
-    }
-
-    /**
-     * 是否注册事件分发
-     *
-     * @return true绑定EventBus事件分发，默认不绑定，子类需要绑定的话复写此方法返回true.
-     */
-    @Override
-    public boolean isRegisterEventBus() {
-        return false;
-    }
-
-    @Override
-    public boolean hasWifi() {
-        return false;
     }
 
     /**
@@ -155,20 +97,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         baseView.onDestroy();
     }
 
-    @Override
-    public void requestCallPhone(boolean denied) {
-    }
-
-    @Override
-    public boolean needReload() {
-        return false;
-    }
-
-    @Override
-    public void loadView() {
-
-    }
-
     public void showDialog() {
         baseView.showDialog();
     }
@@ -177,16 +105,8 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         baseView.showDialog(title);
     }
 
-    @Override
-    public void showCustomDialog() {
-    }
-
     public void dismissDialog() {
         baseView.dismissDialog();
-    }
-
-    @Override
-    public void dismissCustomDialog() {
     }
 
     /**
@@ -234,10 +154,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
     /**
      * =====================================================================
      **/
-    @Override
-    public void initParam() {
-
-    }
 
     /**
      * 初始化根布局
@@ -246,36 +162,21 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      */
     public abstract int initContentView(Bundle savedInstanceState);
 
-    @Override
-    public void initData() {
-
-    }
-
-    @Override
-    public void initViewObservable() {
-
-    }
-
-    @Override
-    public void getWifiRssi(int rssi) {
-
-    }
-
     public void requestPermission(IPermission iPermission, String... permissions) {
         baseView.requestPermission(iPermission, permissions);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModel != null) {
-            viewModel.receiveEvent(event);
+        if (event != null && viewModelDelegate.hasViewModel()) {
+            viewModelDelegate.getCreatedViewModel().receiveEvent(event);
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onStickyEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModel != null) {
-            viewModel.receiveStickyEvent(event);
+        if (event != null && viewModelDelegate.hasViewModel()) {
+            viewModelDelegate.getCreatedViewModel().receiveStickyEvent(event);
         }
     }
 
