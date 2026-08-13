@@ -12,6 +12,7 @@
 - [TakeCameraUtils 拍照](#takecamerautils-拍照)
 - [DownLoadManager 文件下载](#downloadmanager-文件下载)
 - [ImageUtils 图片压缩](#imageutils-图片压缩)
+- [AndroidBug5497Workaround 软键盘遮挡](#androidbug5497workaround-软键盘遮挡)
 
 ## ViewGroup 动态添加 View
 
@@ -592,3 +593,74 @@ ImageUtils.compressWithRx(url, new Consumer<File>() {
 - 输出统一为 JPEG 格式（原图为 PNG/WebP 等也会转 JPEG）；体积较小（< 150KB）的图片会直接返回原文件，不再生成压缩文件；
 - 压缩产物位于应用缓存目录 `cache` 下，系统空间不足时可能被清理，需长期使用请自行拷贝；
 - 压缩为 CPU/IO 密集操作，框架已自动切换到 IO 线程，请勿在 UI 线程直接调用。
+
+## AndroidBug5497Workaround 软键盘遮挡
+
+对应类：`com.ved.framework.utils.AndroidBug5497Workaround`
+
+### 功能与原理
+
+- 用于修复 Android 老版本（4.0 ~ 4.3）上 `windowSoftInputMode="adjustResize"` 失效的问题（Google Issue 5497 / 36911528）：软键盘弹出时不挤压布局，输入框被键盘遮挡；
+- 原理：获取 `android.R.id.content` 下的第一个子 View，注册 `OnGlobalLayoutListener` 监听全局布局变化；每次回调时用 `getWindowVisibleDisplayFrame()` 计算当前可见高度，当「全屏高度 - 可见高度」大于屏高的 1/4 时判定键盘弹出，手动把根 View 的高度压缩为「屏高 - 键盘高」，键盘隐藏时恢复。
+
+### 使用方法
+
+**必须在 Activity 的 `setContentView()` 之后调用**（此时 content 下才有子 View，否则会空指针）：
+
+```java
+public class MainActivity extends AppCompatActivity {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        // 一行启用，传入已设置好布局的 Activity 即可
+        AndroidBug5497Workaround.assistActivity(this);
+    }
+}
+```
+
+### 为什么有时候不生效
+
+| 场景 | 原因 |
+|---|---|
+| **Android 4.4+ 系统** | 系统已修复 `adjustResize`，此方案本来就是针对老系统。在较新系统上若 Activity 未配置 `adjustResize`，它模拟的行为可能与系统默认的 `adjustPan` / `adjustNothing` 冲突，表现为不生效或布局异常 |
+| **沉浸式 / 全屏 / edge-to-edge** | 使用透明状态栏、`decorFitsSystemWindows=false`（Android 11 强制）时，`getWindowVisibleDisplayFrame()` 返回值已包含状态栏/导航栏偏移，按「屏高差值」算出来的键盘高度不准，容易不触发或把布局压错 |
+| **键盘高度不足屏高的 1/4** | 判断阈值是硬编码的 `屏高 / 4`。横屏、分屏（多窗口）、矮键盘、输入法分两段弹出（如候选词条、手写面板）时高度差小于阈值 → 判定为「键盘未弹出」，输入框仍被遮挡 |
+| **其他界面变化被误判为键盘** | 弹出 Dialog / PopupWindow / 状态栏显示隐藏等也会改变可见区域，若高度差恰好大于 1/4，会被误判为键盘，导致布局被错误压缩 |
+| **调用时机不对 / 空指针** | 在 `setContentView()` 之前调用，`content.getChildAt(0)` 为 null，直接 NPE；调用后页面重建（如旋转屏幕、从后台恢复）时也需重新调用 |
+| **根布局不适合改高度** | 只修改 content 第一个子 View 的 `LayoutParams.height`。若根布局是 ConstraintLayout（依赖约束而非固定高度）、CoordinatorLayout 或高度写死，强行改 height 无效或引起内部布局错乱 |
+| **监听未移除 / 重复注册** | `addOnGlobalLayoutListener` 没有在 `onDestroy` 中 `removeOnGlobalLayoutListener`，Activity 销毁后监听仍持有引用导致内存泄漏；重复调用 `assistActivity` 会注册多个监听，相互叠加，行为不可控 |
+
+### 解决办法
+
+#### 方案一（推荐）：放弃 workaround，使用系统方案
+
+1. Manifest 中给 Activity 配置：
+
+```xml
+<activity
+    android:name=".MainActivity"
+    android:windowSoftInputMode="adjustResize"/>
+```
+
+2. 输入区域用 `ScrollView` 包裹，或让底部输入控件随键盘上移；
+3. 现代系统（Android 11+ / edge-to-edge 项目）直接用 WindowInsets 监听 IME 高度（AndroidX）：
+
+```java
+ViewCompat.setOnApplyWindowInsetsListener(rootView, (v, insets) -> {
+    Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+    Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+    // 键盘可见时给根布局加底部 padding，键盘隐藏时为 0
+    v.setPadding(0, 0, 0, Math.max(ime.bottom - bars.bottom, 0));
+    return WindowInsetsCompat.CONSUMED;
+});
+```
+
+#### 方案二：必须保留 workaround 时的加固建议
+
+- 用 `Build.VERSION.SDK_INT < 19`（或 `< 21`）限定只在老系统上启用；
+- 在 `onDestroy` 中保存并移除 `OnGlobalLayoutListener`，防止泄漏与重复注册；
+- 键盘判定不要用固定 1/4 阈值，改用 IME insets（`ViewCompat.getRootWindowInsets()` 的 `ime` 高度）判断键盘是否可见；
+- 若根布局是 ConstraintLayout / 高度写死的布局，改为给根布局设置 `padding` 代替直接改 `height`；
+- 始终在 `setContentView()` 之后调用，并对 `mChildOfContent` 判空。
