@@ -24,17 +24,12 @@ import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 
 /**
- * 网络请求
+ * 网络请求，链式配置请求参数，通过 build() 返回的生命周期事件流可取消请求。
+ * <p>
+ * 详细使用方法（含取消网络请求）见项目 README.md「ARequest 网络请求与取消」章节。
  *
  * @param <T> service interface
  * @param <K> 返回的数据类型
- *
- * 使用生命周期事件流
- * val lifecycleDisposable = PublishSubject.create<Unit>()
- *
- * 当需要取消时
- * lifecycleDisposable.onNext(Unit) 取消网络请求后需要 延时 1 秒再重新请求 才能生效，可能是由于 请求取消后资源未完全释放 或 OkHttp 连接池未及时清理
- *
  */
 public abstract class ARequest<T, K> {
     private BaseViewModel viewModel;
