@@ -1,15 +1,11 @@
 package com.ved.framework.binding.viewadapter.recyclerview;
 
 import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.binding.utils.RecyclerViewLoadMoreScrollListener;
 import com.ved.framework.entity.ScrollDataWrapper;
 
-import java.util.concurrent.TimeUnit;
-
 import androidx.databinding.BindingAdapter;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import io.reactivex.rxjava3.functions.Consumer;
-import io.reactivex.rxjava3.subjects.PublishSubject;
 
 /**
  * Created by ved on 2017/6/16.
@@ -57,9 +53,7 @@ public class ViewAdapter {
     @SuppressWarnings("unchecked")
     @BindingAdapter({"onLoadMoreCommand"})
     public static void onLoadMoreCommand(final RecyclerView recyclerView, final BindingCommand<Integer> onLoadMoreCommand) {
-        RecyclerView.OnScrollListener listener = new OnScrollListener(onLoadMoreCommand);
-        recyclerView.addOnScrollListener(listener);
-
+        recyclerView.addOnScrollListener(new RecyclerViewLoadMoreScrollListener(onLoadMoreCommand));
     }
 
     @BindingAdapter("itemAnimator")
@@ -67,41 +61,4 @@ public class ViewAdapter {
         recyclerView.setItemAnimator(animator);
     }
 
-    public static class OnScrollListener extends RecyclerView.OnScrollListener {
-
-        private PublishSubject<Integer> methodInvoke = PublishSubject.create();
-
-        private BindingCommand<Integer> onLoadMoreCommand;
-
-        public OnScrollListener(final BindingCommand<Integer> onLoadMoreCommand) {
-            this.onLoadMoreCommand = onLoadMoreCommand;
-            methodInvoke.throttleFirst(1, TimeUnit.SECONDS)
-                    .subscribe(new Consumer<Integer>() {
-                        @Override
-                        public void accept(Integer integer) throws Exception {
-                            onLoadMoreCommand.execute(integer);
-                        }
-                    });
-        }
-
-        @Override
-        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
-            LinearLayoutManager layoutManager = (LinearLayoutManager) recyclerView.getLayoutManager();
-            int visibleItemCount = layoutManager.getChildCount();
-            int totalItemCount = layoutManager.getItemCount();
-            int pastVisiblesItems = layoutManager.findFirstVisibleItemPosition();
-            if ((visibleItemCount + pastVisiblesItems) >= totalItemCount) {
-                if (onLoadMoreCommand != null) {
-                    methodInvoke.onNext(recyclerView.getAdapter().getItemCount());
-                }
-            }
-        }
-
-        @Override
-        public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-            super.onScrollStateChanged(recyclerView, newState);
-        }
-
-
-    }
 }

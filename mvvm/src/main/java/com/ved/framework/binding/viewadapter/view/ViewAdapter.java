@@ -2,16 +2,15 @@ package com.ved.framework.binding.viewadapter.view;
 
 import android.annotation.SuppressLint;
 import android.graphics.drawable.Drawable;
-import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.jakewharton.rxbinding4.view.RxView;
 import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.binding.utils.ViewBindingUtils;
 import com.ved.framework.listener.OnViewGlobalLayoutListener;
 import com.ved.framework.utils.CalendarUtil;
 import com.ved.framework.utils.CorpseUtils;
@@ -19,7 +18,6 @@ import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.TimeUtils;
 
-import java.text.DecimalFormat;
 import java.util.concurrent.TimeUnit;
 
 import androidx.databinding.BindingAdapter;
@@ -148,133 +146,79 @@ public class ViewAdapter {
      * @param view   显示浮点数的视图
      * @param text   必须为数字类型
      */
-    @SuppressLint("SetTextI18n")
     @BindingAdapter(value = {"decimal_tow"}, requireAll = false)
-    public static void decimalTowPoint(TextView view,String text) {
-        if (TextUtils.isEmpty(text)){
-            view.setText("0.00");
-        }else {
-            DecimalFormat decimalFormat = new DecimalFormat("######0.00");
-            try {
-                String result = decimalFormat.format(StringUtils.parseDouble(text));
-                view.setText(result);
-            } catch (Exception e) {
-                e.printStackTrace();
-                view.setText("0.00");
-            }
-        }
+    public static void decimalTowPoint(TextView view, String text) {
+        view.setText(ViewBindingUtils.formatDecimal(text));
     }
 
     @BindingAdapter("android:layout_marginTop")
     public static void setTopMargin(View view, int topMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(layoutParams.leftMargin, DpiUtils.dip2px(view.getContext(),topMargin),
-                layoutParams.rightMargin,layoutParams.bottomMargin);
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, topMargin, ViewBindingUtils.DIRECTION_TOP);
     }
 
     @BindingAdapter("android:layout_marginBottom")
     public static void setBottomMargin(View view, int bottomMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(layoutParams.leftMargin, layoutParams.topMargin,
-                layoutParams.rightMargin,DpiUtils.dip2px(view.getContext(),bottomMargin));
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, bottomMargin, ViewBindingUtils.DIRECTION_BOTTOM);
     }
 
     @BindingAdapter("android:layout_marginLeft")
     public static void setLeftMargin(View view, int leftMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(DpiUtils.dip2px(view.getContext(),leftMargin), layoutParams.topMargin,
-                layoutParams.rightMargin,layoutParams.bottomMargin);
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, leftMargin, ViewBindingUtils.DIRECTION_LEFT);
     }
 
     @BindingAdapter("android:layout_marginStart")
     public static void setStartMargin(View view, int startMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(DpiUtils.dip2px(view.getContext(),startMargin), layoutParams.topMargin,
-                layoutParams.rightMargin,layoutParams.bottomMargin);
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, startMargin, ViewBindingUtils.DIRECTION_START);
     }
 
     @BindingAdapter("android:layout_marginRight")
     public static void setRightMargin(View view, int rightMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(layoutParams.leftMargin, layoutParams.topMargin,
-                DpiUtils.dip2px(view.getContext(),rightMargin),layoutParams.bottomMargin);
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, rightMargin, ViewBindingUtils.DIRECTION_RIGHT);
     }
 
     @BindingAdapter("android:layout_marginEnd")
     public static void setEndMargin(View view, int endMargin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(layoutParams.leftMargin, layoutParams.topMargin,
-                DpiUtils.dip2px(view.getContext(),endMargin),layoutParams.bottomMargin);
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, endMargin, ViewBindingUtils.DIRECTION_END);
     }
 
     @BindingAdapter("android:layout_margin")
     public static void setMargin(View view, int margin) {
-        ViewGroup.MarginLayoutParams layoutParams = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
-        layoutParams.setMargins(DpiUtils.dip2px(view.getContext(),margin), DpiUtils.dip2px(view.getContext(),margin),
-                DpiUtils.dip2px(view.getContext(),margin),DpiUtils.dip2px(view.getContext(),margin));
-        view.setLayoutParams(layoutParams);
+        ViewBindingUtils.setMargin(view, margin, ViewBindingUtils.DIRECTION_ALL);
     }
 
     @BindingAdapter("android:paddingLeft")
     public static void setPaddingLeft(View view, int paddingLeft) {
-        view.setPadding(DpiUtils.dip2px(view.getContext(),paddingLeft),
-                view.getPaddingTop(),
-                view.getPaddingRight(),
-                view.getPaddingBottom());
+        ViewBindingUtils.setPadding(view, paddingLeft, ViewBindingUtils.DIRECTION_LEFT);
     }
 
     @BindingAdapter("android:paddingStart")
     public static void setPaddingStart(View view, int paddingStart) {
-        view.setPadding(DpiUtils.dip2px(view.getContext(),paddingStart),
-                view.getPaddingTop(),
-                view.getPaddingRight(),
-                view.getPaddingBottom());
+        ViewBindingUtils.setPadding(view, paddingStart, ViewBindingUtils.DIRECTION_START);
     }
 
     @BindingAdapter("android:paddingRight")
     public static void setPaddingRight(View view, int paddingRight) {
-        view.setPadding(view.getPaddingLeft(),
-                view.getPaddingTop(),
-                DpiUtils.dip2px(view.getContext(),paddingRight),
-                view.getPaddingBottom());
+        ViewBindingUtils.setPadding(view, paddingRight, ViewBindingUtils.DIRECTION_RIGHT);
     }
 
     @BindingAdapter("android:paddingEnd")
     public static void setPaddingEnd(View view, int paddingEnd) {
-        view.setPadding(view.getPaddingLeft(),
-                view.getPaddingTop(),
-                DpiUtils.dip2px(view.getContext(),paddingEnd),
-                view.getPaddingBottom());
+        ViewBindingUtils.setPadding(view, paddingEnd, ViewBindingUtils.DIRECTION_END);
     }
 
     @BindingAdapter("android:paddingTop")
     public static void setPaddingTop(View view, int paddingTop) {
-        view.setPadding(view.getPaddingLeft(),
-                DpiUtils.dip2px(view.getContext(),paddingTop),
-                view.getPaddingRight(),
-                view.getPaddingBottom());
+        ViewBindingUtils.setPadding(view, paddingTop, ViewBindingUtils.DIRECTION_TOP);
     }
 
     @BindingAdapter("android:paddingBottom")
     public static void setPaddingBottom(View view, int paddingBottom) {
-        view.setPadding(view.getPaddingLeft(),
-                view.getPaddingTop(),
-                view.getPaddingRight(),
-                DpiUtils.dip2px(view.getContext(),paddingBottom));
+        ViewBindingUtils.setPadding(view, paddingBottom, ViewBindingUtils.DIRECTION_BOTTOM);
     }
 
     @BindingAdapter("android:padding")
     public static void setPadding(View view, int padding) {
-        view.setPadding(DpiUtils.dip2px(view.getContext(),padding),
-                DpiUtils.dip2px(view.getContext(),padding),
-                DpiUtils.dip2px(view.getContext(),padding),
-                DpiUtils.dip2px(view.getContext(),padding));
+        ViewBindingUtils.setPadding(view, padding, ViewBindingUtils.DIRECTION_ALL);
     }
 
     @BindingAdapter("android:gravity")
@@ -296,62 +240,36 @@ public class ViewAdapter {
 
     @BindingAdapter("android:drawableRight")
     public static void setDrawableRight(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(null, null, drawable, null);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_RIGHT);
     }
 
     @BindingAdapter("android:drawableEnd")
     public static void setDrawableEnd(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(null, null, drawable, null);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_END);
     }
 
     @BindingAdapter("android:drawablePadding")
     public static void setDrawablePadding(TextView textView, float value){
-        int paddingPx = (int) TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, value, textView.getResources().getDisplayMetrics());
-        textView.setCompoundDrawablePadding(paddingPx);
+        ViewBindingUtils.setDrawablePadding(textView, value);
     }
 
     @BindingAdapter("android:drawableLeft")
     public static void setDrawableLeft(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(drawable, null, null, null);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_LEFT);
     }
 
     @BindingAdapter("android:drawableStart")
     public static void setDrawableStart(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(drawable, null, null, null);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_START);
     }
 
     @BindingAdapter("android:drawableTop")
     public static void setDrawableTop(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(null, drawable, null, null);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_TOP);
     }
 
     @BindingAdapter("android:drawableBottom")
     public static void setDrawableBottom(TextView textView, Drawable drawable){
-        if (drawable != null) {
-            drawable.setBounds(0, 0, drawable.getMinimumWidth(),
-                    drawable.getMinimumHeight());
-            textView.setCompoundDrawables(null, null, null, drawable);
-        }
+        ViewBindingUtils.setCompoundDrawable(textView, drawable, ViewBindingUtils.DIRECTION_BOTTOM);
     }
 }

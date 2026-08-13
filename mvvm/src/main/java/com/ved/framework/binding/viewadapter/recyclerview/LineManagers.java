@@ -16,28 +16,25 @@ public class LineManagers {
 
 
     public static LineManagerFactory both() {
-        return new LineManagerFactory() {
-            @Override
-            public RecyclerView.ItemDecoration create(RecyclerView recyclerView) {
-                return new DividerLine(recyclerView.getContext(), DividerLine.LineDrawMode.BOTH);
-            }
-        };
+        return create(DividerLine.LineDrawMode.BOTH);
     }
 
     public static LineManagerFactory horizontal() {
-        return new LineManagerFactory() {
-            @Override
-            public RecyclerView.ItemDecoration create(RecyclerView recyclerView) {
-                return new DividerLine(recyclerView.getContext(), DividerLine.LineDrawMode.HORIZONTAL);
-            }
-        };
+        return create(DividerLine.LineDrawMode.HORIZONTAL);
     }
 
     public static LineManagerFactory vertical() {
+        return create(DividerLine.LineDrawMode.VERTICAL);
+    }
+
+    /**
+     * 简单工厂模式：根据分隔线绘制模式创建 LineManagerFactory
+     */
+    private static LineManagerFactory create(final DividerLine.LineDrawMode mode) {
         return new LineManagerFactory() {
             @Override
             public RecyclerView.ItemDecoration create(RecyclerView recyclerView) {
-                return new DividerLine(recyclerView.getContext(), DividerLine.LineDrawMode.VERTICAL);
+                return new DividerLine(recyclerView.getContext(), mode);
             }
         };
     }

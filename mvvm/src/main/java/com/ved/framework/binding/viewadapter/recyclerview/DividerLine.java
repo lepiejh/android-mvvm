@@ -7,6 +7,8 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
+import com.ved.framework.utils.DpiUtils;
+
 import androidx.recyclerview.widget.RecyclerView;
 
 /**
@@ -110,7 +112,7 @@ public class DividerLine extends RecyclerView.ItemDecoration {
             final int top = child.getTop() - params.topMargin;
             final int bottom = child.getBottom() + params.bottomMargin;
             final int left = child.getRight() + params.rightMargin;
-            final int right = getDividerSize() == 0 ? left + dip2px(mContext, DEFAULT_DIVIDER_SIZE) : left + getDividerSize();
+            final int right = getDividerSize() == 0 ? left + DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : left + getDividerSize();
             dividerDrawable.setBounds(left, top, right, bottom);
             dividerDrawable.draw(c);
         }
@@ -137,7 +139,7 @@ public class DividerLine extends RecyclerView.ItemDecoration {
             //child的右边(也是分隔线的右边)
             final int right = child.getRight() - params.rightMargin;
             //分隔线的底边所在的位置(那就是分隔线的顶边加上分隔线的高度)
-            final int bottom = getDividerSize() == 0 ? top + dip2px(mContext, DEFAULT_DIVIDER_SIZE) : top + getDividerSize();
+            final int bottom = getDividerSize() == 0 ? top + DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : top + getDividerSize();
             dividerDrawable.setBounds(left, top, right, bottom);
             //画上去
             dividerDrawable.draw(c);
@@ -147,18 +149,5 @@ public class DividerLine extends RecyclerView.ItemDecoration {
     @Override
     public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
         super.getItemOffsets(outRect, view, parent, state);
-//        outRect.bottom = getDividerSize() == 0 ? dip2px(mContext, DEFAULT_DIVIDER_SIZE) : getDividerSize();
-    }
-
-    /**
-     * 将dip或dp值转换为px值，保证尺寸大小不变
-     *
-     * @param dipValue
-     * @param context（DisplayMetrics类中属性density）
-     * @return
-     */
-    public static int dip2px(Context context, float dipValue) {
-        float scale = context.getResources().getDisplayMetrics().density;
-        return (int) (dipValue * scale + 0.5f);
     }
 }
