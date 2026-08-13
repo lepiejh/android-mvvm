@@ -9,6 +9,7 @@
 - [Messenger 消息总线](#messenger-消息总线)
 - [Drawables 动态背景](#drawables-动态背景)
 - [CorpseUtils 工具方法](#corpseutils-工具方法)
+- [TakeCameraUtils 拍照](#takecamerautils-拍照)
 
 ## ViewGroup 动态添加 View
 
@@ -393,3 +394,69 @@ view.setOnClickListener(CorpseUtils.INSTANCE.<View.OnClickListener>noOpDelegate(
 
 - **T 必须是接口**：动态代理只能代理接口，传入普通类会抛 `IllegalArgumentException`；
 - **避免在基本类型返回值的方法上使用**：代理方法默认返回 `null`，若接口方法返回 `int`/`boolean` 等基本类型且被调用方解包，会抛 `NullPointerException`，仅适用于返回 `void` 或引用类型（可 null）的接口。
+
+## TakeCameraUtils 拍照
+
+对应类：`com.ved.framework.take.TakeCameraUtils`（Kotlin 实现，单例）
+
+### 功能
+
+- 封装 `ActivityResultContracts` 拍照流程（调起系统相机、照片存到应用缓存目录 `externalCacheDir`）；
+- 自动通过 FileProvider 生成 content Uri（适配 Android 7.0+ 文件访问限制）；
+- 照片默认保存为 `{externalCacheDir}/{时间戳}.jpg`，无需申请存储权限。
+
+### 使用方法
+
+#### 1. 注册相机回调（须在 Activity 生命周期早期注册）
+
+`getTakeCameraPhoto()` 内部调用 `registerForActivityResult`，**必须在 Activity 的 `onCreate` 中、可绑定生命周期之前调用一次**，之后可多次复用同一个 launcher 打开相机：
+
+```kotlin
+class MainActivity : AppCompatActivity() {
+
+    // 单例
+    private val cameraUtils = TakeCameraUtils.getInstance()
+
+    // 注册相机回调（onCreate 中调用），拍照成功回调文件
+    private val takeCameraPhoto = cameraUtils.getTakeCameraPhoto(this) { file ->
+        // 拍照成功，file 为照片文件（File）
+        imageView.setImageURI(Uri.fromFile(file))
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+    }
+
+    // 点击按钮打开相机
+    fun onTakeCameraClick(view: View) {
+        cameraUtils.openCamera(this, takeCameraPhoto)
+    }
+}
+```
+
+#### 2. FileProvider 配置
+
+框架已在 `mvvm` 模块的 `AndroidManifest.xml` 中声明好 FileProvider（authority 为 `${applicationId}.utilcode.fileprovider`），并使用 `@xml/util_code_provider_paths` 暴露缓存目录，**一般情况下无需再配置**。
+
+如果项目 manifest 合并后未生效，可手动添加（authority 需与代码中 `${context.packageName}.utilcode.fileprovider` 保持一致）：
+
+```xml
+<provider
+    android:name="com.ved.framework.utils.bland.code.UtilsFileProvider"
+    android:authorities="${applicationId}.utilcode.fileprovider"
+    android:exported="false"
+    android:grantUriPermissions="true">
+    <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/util_code_provider_paths" />
+</provider>
+```
+
+### 注意事项
+
+- `getTakeCameraPhoto()` 必须在 **Activity 的 `onCreate` 中（或首次布局前）调用**，否则 `registerForActivityResult` 会抛 `IllegalStateException`；
+- 需要 `AppCompatActivity` 作为 Context，不能传普通 `Context`/`FragmentActivity` 之外的实例；
+- 照片保存在 `externalCacheDir`，属于应用缓存目录，系统空间不足时可能被清理，如需长期保存请自行拷贝到其他目录；
+- 拍照成功后返回的 `file` 就是 `openCamera` 内部创建的那个文件（时间戳命名），可直接读取；
+- 部分机型相机返回的图片有旋转信息（EXIF），显示时可能需要按方向纠正。
