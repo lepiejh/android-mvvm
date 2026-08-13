@@ -5,120 +5,110 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * 利用反射实现对象之间属性复制（模板方法模式）：
+ * <p>
+ * 全部复制 / 排除复制 / 包含复制共享同一套复制流程 {@link #copyProperties(Object, Object, NameFilter)}，
+ * 三种场景的差异仅在于 getter 方法名的过滤条件，由 {@link NameFilter} 以「策略」形式注入模板。
+ */
 public class BeanPropertiesCopyUtil {
+
     /**
-     * 利用反射实现对象之间属性复制
+     * getter 方法名过滤谓词：模板方法中的差异点
+     */
+    private interface NameFilter {
+        boolean accept(String methodName);
+    }
+
+    /**
+     * 复制对象全部属性
      *
-     * @param from
-     * @param to
+     * @param from 源对象
+     * @param to   目标对象
      */
     public static void copyProperties(Object from, Object to) throws Exception {
-        copyPropertiesExclude(from, to, null);
+        copyProperties(from, to, methodName -> true);
     }
 
     /**
-     * 复制对象属性
+     * 复制对象属性（排除指定属性）
      *
-     * @param from
-     * @param to
-     * @param excludsArray 排除属性列表
-     * @throws Exception
+     * @param from          源对象
+     * @param to            目标对象
+     * @param excludsArray  排除属性列表（小写属性名）
      */
-    @SuppressWarnings("unchecked")
     public static void copyPropertiesExclude(Object from, Object to, String[] excludsArray) throws Exception {
-        List<String> excludesList = null;
-        if (excludsArray != null && excludsArray.length > 0) {
-            excludesList = Arrays.asList(excludsArray);    //构造列表对象
-        }
-        Method[] fromMethods = from.getClass().getDeclaredMethods();
-        Method[] toMethods = to.getClass().getDeclaredMethods();
-        Method fromMethod = null, toMethod = null;
-        String fromMethodName = null, toMethodName = null;
-        for (int i = 0; i < fromMethods.length; i++) {
-            fromMethod = fromMethods[i];
-            fromMethodName = fromMethod.getName();
-            if (!fromMethodName.contains("get") || fromMethodName.contains("getId"))
-                continue;
-            //排除列表检测
-            if (excludesList != null && excludesList.contains(fromMethodName.substring(3).toLowerCase())) {
-                continue;
+        final List<String> excludesList = excludsArray != null && excludsArray.length > 0
+                ? Arrays.asList(excludsArray) : null;
+        copyProperties(from, to, methodName -> {
+            // 排除 getId 系列（id 字段复制无意义）
+            if (methodName.contains("getId")) {
+                return false;
             }
-            toMethodName = "set" + fromMethodName.substring(3);
-            toMethod = findMethodByName(toMethods, toMethodName);
-            if (toMethod == null)
-                continue;
-            Object value = fromMethod.invoke(from, new Object[0]);
-            if (value == null)
-                continue;
-            //集合类判空处理
-            if (value instanceof Collection) {
-                Collection newValue = (Collection) value;
-                if (newValue.size() <= 0)
-                    continue;
-            }
-            toMethod.invoke(to, new Object[]{value});
-        }
+            // 排除列表检测
+            return excludesList == null
+                    || !excludesList.contains(methodName.substring(3).toLowerCase());
+        });
     }
 
     /**
-     * 对象属性值复制，仅复制指定名称的属性值
+     * 复制对象属性（仅复制指定属性）
      *
-     * @param from
-     * @param to
-     * @param includsArray
-     * @throws Exception
+     * @param from          源对象
+     * @param to            目标对象
+     * @param includsArray  包含属性列表（首字母小写属性名）
      */
-    @SuppressWarnings("unchecked")
     public static void copyPropertiesInclude(Object from, Object to, String[] includsArray) throws Exception {
-        List<String> includesList = null;
-        if (includsArray != null && includsArray.length > 0) {
-            includesList = Arrays.asList(includsArray);    //构造列表对象
-        } else {
+        if (includsArray == null || includsArray.length == 0) {
             return;
         }
-        Method[] fromMethods = from.getClass().getDeclaredMethods();
-        Method[] toMethods = to.getClass().getDeclaredMethods();
-        Method fromMethod = null, toMethod = null;
-        String fromMethodName = null, toMethodName = null;
-        for (int i = 0; i < fromMethods.length; i++) {
-            fromMethod = fromMethods[i];
-            fromMethodName = fromMethod.getName();
-            if (!fromMethodName.contains("get"))
-                continue;
-            //排除列表检测
-            String str = fromMethodName.substring(3);
-            if (!includesList.contains(str.substring(0, 1).toLowerCase() + str.substring(1))) {
-                continue;
-            }
-            toMethodName = "set" + fromMethodName.substring(3);
-            toMethod = findMethodByName(toMethods, toMethodName);
-            if (toMethod == null)
-                continue;
-            Object value = fromMethod.invoke(from, new Object[0]);
-            if (value == null)
-                continue;
-            //集合类判空处理
-            if (value instanceof Collection) {
-                Collection newValue = (Collection) value;
-                if (newValue.size() <= 0)
-                    continue;
-            }
-            toMethod.invoke(to, new Object[]{value});
-        }
+        final List<String> includesList = Arrays.asList(includsArray);
+        copyProperties(from, to, methodName -> {
+            String fieldName = methodName.substring(3);
+            // 包含列表检测（属性名首字母转小写）
+            return includesList.contains(fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1));
+        });
     }
 
+    /**
+     * 复制流程模板方法：遍历源对象 getter，过滤后写入目标对象对应 setter
+     */
+    private static void copyProperties(Object from, Object to, NameFilter filter) throws Exception {
+        Method[] fromMethods = from.getClass().getDeclaredMethods();
+        Method[] toMethods = to.getClass().getDeclaredMethods();
+        for (Method fromMethod : fromMethods) {
+            String fromMethodName = fromMethod.getName();
+            if (!fromMethodName.contains("get") || !filter.accept(fromMethodName)) {
+                continue;
+            }
+            Method toMethod = findMethodByName(toMethods, "set" + fromMethodName.substring(3));
+            if (toMethod == null) {
+                continue;
+            }
+            Object value = fromMethod.invoke(from);
+            if (value == null) {
+                continue;
+            }
+            // 集合类判空处理
+            if (value instanceof Collection && ((Collection<?>) value).size() <= 0) {
+                continue;
+            }
+            toMethod.invoke(to, value);
+        }
+    }
 
     /**
      * 从方法数组中获取指定名称的方法
      *
-     * @param methods
-     * @param name
-     * @return
+     * @param methods 方法数组
+     * @param name    方法名
+     * @return 匹配的方法，不存在返回 null
      */
     public static Method findMethodByName(Method[] methods, String name) {
-        for (int j = 0; j < methods.length; j++) {
-            if (methods[j].getName().equals(name))
-                return methods[j];
+        for (Method method : methods) {
+            if (method.getName().equals(name)) {
+                return method;
+            }
         }
         return null;
     }

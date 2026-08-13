@@ -8,7 +8,6 @@ import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -20,83 +19,75 @@ import com.trello.rxlifecycle4.android.FragmentEvent;
 import com.trello.rxlifecycle4.components.support.RxFragment;
 import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
-import com.ved.framework.utils.KLog;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel> extends RxFragment implements IBaseView<V, VM> {
+/**
+ * Fragment 基类（委托模式）：
+ * 公共逻辑全部收敛到 {@link FragmentDelegate}，本类只保留 super 生命周期调用与宿主能力方法，
+ * 与 {@link BaseDialogFragment} 共享同一份委托实现。
+ */
+public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel>
+        extends RxFragment implements FragmentDelegate.Host<V, VM> {
 
-    protected boolean menuVisibleTag = false;
-    protected boolean isLoadData = false;
-    private final BaseView<V, VM> baseView = new BaseView<>(this);
+    private final FragmentDelegate<V, VM> delegate = new FragmentDelegate<>(this);
 
     protected V binding;
-    private final ViewModelDelegate<VM> viewModelDelegate = new ViewModelDelegate<>(this);
 
     protected VM getViewModel() {
-        return viewModelDelegate.getViewModel();
+        return delegate.getViewModel();
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        initParam();
+        delegate.onCreate(savedInstanceState);
         super.onCreate(savedInstanceState);
     }
 
     @Override
     public void setMenuVisibility(boolean menuVisible) {
         super.setMenuVisibility(menuVisible);
-        menuVisibleTag = menuVisible;
+        delegate.setMenuVisibility(menuVisible);
     }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = DataBindingUtil.inflate(inflater, initContentView(inflater, container, savedInstanceState), container, false);
+        binding = delegate.createBinding(inflater, container, savedInstanceState);
         return binding.getRoot();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        baseView.onDestroy();
+        delegate.onDestroy();
     }
 
     @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        baseView.initialize(savedInstanceState);
+        delegate.onViewCreated(view, savedInstanceState);
     }
 
     @Override
     public VM ensureViewModelCreated() {
-        return viewModelDelegate.ensureViewModelCreated();
+        return delegate.ensureViewModelCreated();
     }
 
     @Override
     public boolean needReload() {
-        return true;
+        return delegate.needReload();
     }
 
     @Override
     public void initView() {
-        if (needReload()){
-            KLog.i("BaseFragment menuVisibleTag ："+menuVisibleTag+", isLoadData : "+isLoadData);
-            if (menuVisibleTag && !isLoadData) {
-                isLoadData = true;
-                refreshView();
-            }
-        }else {
-            refreshView();
-        }
+        delegate.initView();
     }
 
     @Override
-    public void refreshView(){
-        //页面数据初始化方法
-        BaseFragment.this.initData();
-        BaseFragment.this.loadData();
+    public void refreshView() {
+        delegate.refreshView();
     }
 
     @Override
@@ -144,90 +135,65 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
         return BaseFragment.this;
     }
 
-    public void loadData(){
-
+    public void loadData() {
     }
 
     public void showDialog() {
-        baseView.showDialog();
+        delegate.showDialog();
     }
 
     public void showDialog(String title) {
-        baseView.showDialog(title);
+        delegate.showDialog(title);
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
-        baseView.requestPermission(iPermission, permissions);
+        delegate.requestPermission(iPermission, permissions);
     }
 
     /**
      * 跳转页面
-     *
-     * @param clz 所跳转的目的Activity类
      */
     public void startActivity(Class<?> clz) {
-        baseView.startActivity(clz);
+        delegate.startActivity(clz);
     }
 
-    /**
-     * 跳转页面
-     *
-     * @param clz    所跳转的目的Activity类
-     * @param bundle 跳转所携带的信息
-     */
     public void startActivity(Class<?> clz, Bundle bundle) {
-        baseView.startActivity(clz, bundle);
+        delegate.startActivity(clz, bundle);
     }
 
     public void startActivityForResult(Class<?> clz, int requestCode, Bundle bundle) {
-        baseView.startActivityForResult(clz, requestCode, bundle);
+        delegate.startActivityForResult(clz, requestCode, bundle);
     }
 
-    /**
-     * 跳转容器页面
-     *
-     * @param canonicalName 规范名 : Fragment.class.getCanonicalName()
-     */
     public void startContainerActivity(String canonicalName) {
-        baseView.startContainerActivity(canonicalName);
+        delegate.startContainerActivity(canonicalName);
     }
 
-    /**
-     * 跳转容器页面
-     *
-     * @param canonicalName 规范名 : Fragment.class.getCanonicalName()
-     * @param bundle        跳转所携带的信息
-     */
     public void startContainerActivity(String canonicalName, Bundle bundle) {
-        baseView.startContainerActivity(canonicalName, bundle);
+        delegate.startContainerActivity(canonicalName, bundle);
     }
 
     /**
      * 初始化根布局
-     *
-     * @return 布局layout的id
      */
+    @Override
     public abstract int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
 
     public void dismissDialog() {
-        baseView.dismissDialog();
+        delegate.dismissDialog();
     }
 
     public boolean isBackPressed() {
-        return false;
+        return delegate.isBackPressed();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModelDelegate.hasViewModel()) {
-            viewModelDelegate.getCreatedViewModel().receiveEvent(event);
-        }
+        delegate.onEventBusCome(event);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN, sticky = true)
     public void onStickyEventBusCome(MessageEvent<?> event) {
-        if (event != null && viewModelDelegate.hasViewModel()) {
-            viewModelDelegate.getCreatedViewModel().receiveStickyEvent(event);
-        }
+        delegate.onStickyEventBusCome(event);
     }
 }
