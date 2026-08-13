@@ -8,17 +8,30 @@ import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.view.View;
 
 import com.ved.framework.utils.constant.MemoryConstants;
 import com.ved.framework.utils.constant.TimeConstants;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by ved on 2017/5/14.
@@ -594,6 +607,308 @@ public final class ConvertUtils {
     public static int px2sp(final float pxValue) {
         final float fontScale = Utils.getContext().getResources().getDisplayMetrics().scaledDensity;
         return (int) (pxValue / fontScale + 0.5f);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // 以下为合并自 com.ved.framework.utils.bland.code.ConvertUtils 的方法
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Int to hex string.
+     *
+     * @param num The int number.
+     * @return the hex string
+     */
+    public static String int2HexString(int num) {
+        return Integer.toHexString(num);
+    }
+
+    /**
+     * Hex string to int.
+     *
+     * @param hexString The hex string.
+     * @return the int
+     */
+    public static int hexString2Int(String hexString) {
+        return Integer.parseInt(hexString, 16);
+    }
+
+    /**
+     * Bytes to hex string.
+     * <p>e.g. bytes2HexString(new byte[] { 0, (byte) 0xa8 }, true) returns "00A8"</p>
+     *
+     * @param bytes       The bytes.
+     * @param isUpperCase True to use upper case, false otherwise.
+     * @return hex string
+     */
+    public static String bytes2HexString(final byte[] bytes, boolean isUpperCase) {
+        if (bytes == null) return "";
+        char[] hexDigits = isUpperCase ?
+                new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'} :
+                new char[]{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+        int len = bytes.length;
+        if (len <= 0) return "";
+        char[] ret = new char[len << 1];
+        for (int i = 0, j = 0; i < len; i++) {
+            ret[j++] = hexDigits[bytes[i] >> 4 & 0x0f];
+            ret[j++] = hexDigits[bytes[i] & 0x0f];
+        }
+        return new String(ret);
+    }
+
+    /**
+     * Bytes to string.
+     */
+    public static String bytes2String(final byte[] bytes) {
+        return bytes2String(bytes, "");
+    }
+
+    /**
+     * Bytes to string.
+     */
+    public static String bytes2String(final byte[] bytes, final String charsetName) {
+        if (bytes == null) return null;
+        try {
+            return new String(bytes, getSafeCharset(charsetName));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return new String(bytes);
+        }
+    }
+
+    /**
+     * String to bytes.
+     */
+    public static byte[] string2Bytes(final String string) {
+        return string2Bytes(string, "");
+    }
+
+    /**
+     * String to bytes.
+     */
+    public static byte[] string2Bytes(final String string, final String charsetName) {
+        if (string == null) return null;
+        try {
+            return string.getBytes(getSafeCharset(charsetName));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            return string.getBytes();
+        }
+    }
+
+    /**
+     * Bytes to JSONObject.
+     */
+    public static JSONObject bytes2JSONObject(final byte[] bytes) {
+        if (bytes == null) return null;
+        try {
+            return new JSONObject(new String(bytes));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * JSONObject to bytes.
+     */
+    public static byte[] jsonObject2Bytes(final JSONObject jsonObject) {
+        if (jsonObject == null) return null;
+        return jsonObject.toString().getBytes();
+    }
+
+    /**
+     * Bytes to JSONArray.
+     */
+    public static JSONArray bytes2JSONArray(final byte[] bytes) {
+        if (bytes == null) return null;
+        try {
+            return new JSONArray(new String(bytes));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * JSONArray to bytes.
+     */
+    public static byte[] jsonArray2Bytes(final JSONArray jsonArray) {
+        if (jsonArray == null) return null;
+        return jsonArray.toString().getBytes();
+    }
+
+    /**
+     * Bytes to Parcelable
+     */
+    public static <T> T bytes2Parcelable(final byte[] bytes,
+                                         final Parcelable.Creator<T> creator) {
+        if (bytes == null) return null;
+        Parcel parcel = Parcel.obtain();
+        parcel.unmarshall(bytes, 0, bytes.length);
+        parcel.setDataPosition(0);
+        T result = creator.createFromParcel(parcel);
+        parcel.recycle();
+        return result;
+    }
+
+    /**
+     * Parcelable to bytes.
+     */
+    public static byte[] parcelable2Bytes(final Parcelable parcelable) {
+        if (parcelable == null) return null;
+        Parcel parcel = Parcel.obtain();
+        parcelable.writeToParcel(parcel, 0);
+        byte[] bytes = parcel.marshall();
+        parcel.recycle();
+        return bytes;
+    }
+
+    /**
+     * Bytes to Serializable.
+     */
+    public static Object bytes2Object(final byte[] bytes) {
+        if (bytes == null) return null;
+        ObjectInputStream ois = null;
+        try {
+            ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
+            return ois.readObject();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (ois != null) {
+                    ois.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Serializable to bytes.
+     */
+    public static byte[] serializable2Bytes(final Serializable serializable) {
+        if (serializable == null) return null;
+        ByteArrayOutputStream baos;
+        ObjectOutputStream oos = null;
+        try {
+            oos = new ObjectOutputStream(baos = new ByteArrayOutputStream());
+            oos.writeObject(serializable);
+            return baos.toByteArray();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (oos != null) {
+                    oos.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * Bitmap to bytes.
+     */
+    public static byte[] bitmap2Bytes(final Bitmap bitmap) {
+        return bitmap2Bytes(bitmap, Bitmap.CompressFormat.PNG, 100);
+    }
+
+    /**
+     * Bitmap to bytes.
+     */
+    public static byte[] bitmap2Bytes(final Bitmap bitmap, final Bitmap.CompressFormat format, int quality) {
+        if (bitmap == null) return null;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        bitmap.compress(format, quality, baos);
+        return baos.toByteArray();
+    }
+
+    /**
+     * Drawable to bytes.
+     */
+    public static byte[] drawable2Bytes(final Drawable drawable) {
+        return drawable == null ? null : bitmap2Bytes(drawable2Bitmap(drawable), Bitmap.CompressFormat.PNG, 100);
+    }
+
+    /**
+     * Drawable to bytes.
+     */
+    public static byte[] drawable2Bytes(final Drawable drawable, final Bitmap.CompressFormat format, int quality) {
+        return drawable == null ? null : bitmap2Bytes(drawable2Bitmap(drawable), format, quality);
+    }
+
+    /**
+     * Size of byte to fit size of memory.
+     *
+     * @param byteSize  Size of byte.
+     * @param precision The precision
+     * @return fit size of memory
+     */
+    @SuppressLint("DefaultLocale")
+    public static String byte2FitMemorySize(final long byteSize, int precision) {
+        if (precision < 0) {
+            throw new IllegalArgumentException("precision shouldn't be less than zero!");
+        }
+        if (byteSize < 0) {
+            throw new IllegalArgumentException("byteSize shouldn't be less than zero!");
+        } else if (byteSize < MemoryConstants.KB) {
+            return String.format("%." + precision + "fB", (double) byteSize);
+        } else if (byteSize < MemoryConstants.MB) {
+            return String.format("%." + precision + "fKB", (double) byteSize / MemoryConstants.KB);
+        } else if (byteSize < MemoryConstants.GB) {
+            return String.format("%." + precision + "fMB", (double) byteSize / MemoryConstants.MB);
+        } else {
+            return String.format("%." + precision + "fGB", (double) byteSize / MemoryConstants.GB);
+        }
+    }
+
+    /**
+     * Input stream to lines.
+     */
+    public static List<String> inputStream2Lines(final InputStream is) {
+        return inputStream2Lines(is, "");
+    }
+
+    /**
+     * Input stream to lines.
+     */
+    public static List<String> inputStream2Lines(final InputStream is,
+                                                 final String charsetName) {
+        BufferedReader reader = null;
+        try {
+            List<String> list = new ArrayList<>();
+            reader = new BufferedReader(new InputStreamReader(is, getSafeCharset(charsetName)));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                list.add(line);
+            }
+            return list;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private static String getSafeCharset(String charsetName) {
+        String cn = charsetName;
+        if (isSpace(charsetName) || !Charset.isSupported(charsetName)) {
+            cn = "UTF-8";
+        }
+        return cn;
     }
 
     /**

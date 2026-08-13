@@ -13,7 +13,7 @@ import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.StringUtils;
-import com.ved.framework.utils.bland.code.RegexUtils;
+import com.ved.framework.utils.RegexUtils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

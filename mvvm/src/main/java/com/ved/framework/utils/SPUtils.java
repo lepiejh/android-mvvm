@@ -1,10 +1,12 @@
 package com.ved.framework.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 import android.util.Base64;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
@@ -13,8 +15,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 不能跨进程保存、获取数据
@@ -28,6 +32,7 @@ import java.util.Map;
  *  MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
  *  String xx = kv.decodeString(XX)
  */
+@SuppressLint("ApplySharedPref")
 public final class SPUtils {
 
     private static final Map<String, SPUtils> sSPMap = new HashMap<>();
@@ -38,10 +43,31 @@ public final class SPUtils {
     }
 
     public static SPUtils getInstance(@Nullable String spName) {
+        return getInstance(spName, Context.MODE_PRIVATE);
+    }
+
+    /**
+     * Return the single {@link SPUtils} instance
+     *
+     * @param mode Operating mode.
+     * @return the single {@link SPUtils} instance
+     */
+    public static SPUtils getInstance(final int mode) {
+        return getInstance("", mode);
+    }
+
+    /**
+     * Return the single {@link SPUtils} instance
+     *
+     * @param spName The name of sp.
+     * @param mode   Operating mode.
+     * @return the single {@link SPUtils} instance
+     */
+    public static SPUtils getInstance(@Nullable String spName, final int mode) {
         if (isSpace(spName)) spName = "spUtils";
         SPUtils sp = sSPMap.get(spName);
         if (sp == null) {
-            sp = new SPUtils(spName);
+            sp = new SPUtils(spName, mode);
             sSPMap.put(spName, sp);
         }
         return sp;
@@ -49,6 +75,10 @@ public final class SPUtils {
 
     private SPUtils(@Nullable final String spName) {
         sp = Utils.getContext().getSharedPreferences(spName, Context.MODE_PRIVATE);
+    }
+
+    private SPUtils(@Nullable final String spName, final int mode) {
+        sp = Utils.getContext().getSharedPreferences(spName, mode);
     }
 
     private static boolean isSpace(@Nullable final String s) {
@@ -63,6 +93,201 @@ public final class SPUtils {
 
     public void put(@Nullable String key, @Nullable Object object) {
         saveValue(key, object);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // 以下为合并自 com.ved.framework.utils.bland.code.SPUtils 的重载方法
+    // 为保证加密/解密语义一致，put 系列统一走 saveValue（commit），isCommit 参数保留但以 commit 实现
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Put the string value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final String value) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the string value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key, final String value, final boolean isCommit) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the int value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final int value) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the int value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key, final int value, final boolean isCommit) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the long value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final long value) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the long value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key, final long value, final boolean isCommit) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the float value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final float value) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the float value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key, final float value, final boolean isCommit) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the boolean value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final boolean value) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the boolean value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key, final boolean value, final boolean isCommit) {
+        saveValue(key, value);
+    }
+
+    /**
+     * Put the set of string value in sp.
+     *
+     * @param key   The key of sp.
+     * @param value The value of sp.
+     */
+    public void put(@NonNull final String key, final Set<String> value) {
+        put(key, value, false);
+    }
+
+    /**
+     * Put the set of string value in sp.
+     *
+     * @param key      The key of sp.
+     * @param value    The value of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void put(@NonNull final String key,
+                    final Set<String> value,
+                    final boolean isCommit) {
+        if (isCommit) {
+            sp.edit().putStringSet(key, value).commit();
+        } else {
+            sp.edit().putStringSet(key, value).apply();
+        }
+    }
+
+    /**
+     * Return the set of string value in sp.
+     *
+     * @param key The key of sp.
+     * @return the set of string value if sp exists
+     * or {@code Collections.<String>emptySet()} otherwise
+     */
+    public Set<String> getStringSet(@NonNull final String key) {
+        return getStringSet(key, Collections.<String>emptySet());
+    }
+
+    /**
+     * Return the set of string value in sp.
+     *
+     * @param key          The key of sp.
+     * @param defaultValue The default value if the sp doesn't exist.
+     * @return the set of string value if sp exists or {@code defaultValue} otherwise
+     */
+    public Set<String> getStringSet(@NonNull final String key,
+                                    final Set<String> defaultValue) {
+        return sp.getStringSet(key, defaultValue);
+    }
+
+    /**
+     * Remove the preference in sp.
+     *
+     * @param key      The key of sp.
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void remove(@NonNull final String key, final boolean isCommit) {
+        if (isCommit) {
+            sp.edit().remove(key).commit();
+        } else {
+            sp.edit().remove(key).apply();
+        }
+    }
+
+    /**
+     * Remove all preferences in sp.
+     *
+     * @param isCommit True to use {@link SharedPreferences.Editor#commit()},
+     *                 false to use {@link SharedPreferences.Editor#apply()}
+     */
+    public void clear(final boolean isCommit) {
+        if (isCommit) {
+            sp.edit().clear().commit();
+        } else {
+            sp.edit().clear().apply();
+        }
     }
 
     public Object get(@Nullable String key, @Nullable Object defaultObject) {

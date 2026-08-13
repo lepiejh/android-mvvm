@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <view xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    class="com.ved.framework.utils.bland.code.ToastUtils$UtilsMaxWidthRelativeLayout"
+    class="com.ved.framework.utils.ToastUtils$UtilsMaxWidthRelativeLayout"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:background="@drawable/ub"

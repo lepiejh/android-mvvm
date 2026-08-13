@@ -4,8 +4,6 @@ import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.ved.framework.utils.bland.code.LogUtils;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -72,12 +70,6 @@ public class KLog {
 
     public static void init(boolean isShowLog) {
         IS_SHOW_LOG = isShowLog;
-        LogUtils.getConfig().setLogSwitch(isShowLog);
-        LogUtils.getConfig().setConsoleSwitch(isShowLog);
-        LogUtils.getConfig().setLogHeadSwitch(isShowLog);
-        LogUtils.getConfig().setLog2FileSwitch(isShowLog);
-        LogUtils.getConfig().setBorderSwitch(isShowLog);
-        LogUtils.getConfig().setSingleTagSwitch(isShowLog);
     }
 
     // ============ 日志文件管理方法 ============

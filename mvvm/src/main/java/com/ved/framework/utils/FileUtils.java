@@ -38,6 +38,8 @@ import javax.net.ssl.HttpsURLConnection;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
+import com.ved.framework.utils.bland.code.FileIOUtils;
+
 public class FileUtils {
     private static final String LINE_SEP = System.getProperty("line.separator");
 
@@ -1199,6 +1201,294 @@ public class FileUtils {
             availableSize = statFs.getAvailableBlocks();
         }
         return blockSize * availableSize;
+    }
+
+    /**
+     * Copy the directory or file.
+     *
+     * @param srcPath  The path of source.
+     * @param destPath The path of destination.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean copy(final String srcPath,
+                               final String destPath) {
+        return copy(getFileByPath(srcPath), getFileByPath(destPath), null);
+    }
+
+    /**
+     * Copy the directory or file.
+     *
+     * @param srcPath  The path of source.
+     * @param destPath The path of destination.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean copy(final String srcPath,
+                               final String destPath,
+                               final OnReplaceListener listener) {
+        return copy(getFileByPath(srcPath), getFileByPath(destPath), listener);
+    }
+
+    /**
+     * Copy the directory or file.
+     *
+     * @param src  The source.
+     * @param dest The destination.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean copy(final File src,
+                               final File dest) {
+        return copy(src, dest, null);
+    }
+
+    /**
+     * Copy the directory or file.
+     *
+     * @param src      The source.
+     * @param dest     The destination.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean copy(final File src,
+                               final File dest,
+                               final OnReplaceListener listener) {
+        if (src == null) return false;
+        if (src.isDirectory()) {
+            return copyDir(src, dest, listener);
+        }
+        return copyFile(src, dest, listener);
+    }
+
+    /**
+     * Copy the directory.
+     *
+     * @param srcDir   The source directory.
+     * @param destDir  The destination directory.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    private static boolean copyDir(final File srcDir,
+                                   final File destDir,
+                                   final OnReplaceListener listener) {
+        return copyOrMoveDir(srcDir, destDir, listener, false);
+    }
+
+    /**
+     * Copy the file.
+     *
+     * @param srcFile  The source file.
+     * @param destFile The destination file.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    private static boolean copyFile(final File srcFile,
+                                    final File destFile,
+                                    final OnReplaceListener listener) {
+        return copyOrMoveFile(srcFile, destFile, listener, false);
+    }
+
+    /**
+     * Move the directory or file.
+     *
+     * @param srcPath  The path of source.
+     * @param destPath The path of destination.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean move(final String srcPath,
+                               final String destPath) {
+        return move(getFileByPath(srcPath), getFileByPath(destPath), null);
+    }
+
+    /**
+     * Move the directory or file.
+     *
+     * @param srcPath  The path of source.
+     * @param destPath The path of destination.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean move(final String srcPath,
+                               final String destPath,
+                               final OnReplaceListener listener) {
+        return move(getFileByPath(srcPath), getFileByPath(destPath), listener);
+    }
+
+    /**
+     * Move the directory or file.
+     *
+     * @param src  The source.
+     * @param dest The destination.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean move(final File src,
+                               final File dest) {
+        return move(src, dest, null);
+    }
+
+    /**
+     * Move the directory or file.
+     *
+     * @param src      The source.
+     * @param dest     The destination.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean move(final File src,
+                               final File dest,
+                               final OnReplaceListener listener) {
+        if (src == null) return false;
+        if (src.isDirectory()) {
+            return moveDir(src, dest, listener);
+        }
+        return moveFile(src, dest, listener);
+    }
+
+    /**
+     * Move the directory.
+     *
+     * @param srcDir   The source directory.
+     * @param destDir  The destination directory.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean moveDir(final File srcDir,
+                                  final File destDir,
+                                  final OnReplaceListener listener) {
+        return copyOrMoveDir(srcDir, destDir, listener, true);
+    }
+
+    /**
+     * Move the file.
+     *
+     * @param srcFile  The source file.
+     * @param destFile The destination file.
+     * @param listener The replace listener.
+     * @return {@code true}: success<br>{@code false}: fail
+     */
+    public static boolean moveFile(final File srcFile,
+                                   final File destFile,
+                                   final OnReplaceListener listener) {
+        return copyOrMoveFile(srcFile, destFile, listener, true);
+    }
+
+    private static boolean copyOrMoveDir(final File srcDir,
+                                         final File destDir,
+                                         final OnReplaceListener listener,
+                                         final boolean isMove) {
+        if (srcDir == null || destDir == null) return false;
+        // destDir's path locate in srcDir's path then return false
+        String srcPath = srcDir.getPath() + File.separator;
+        String destPath = destDir.getPath() + File.separator;
+        if (destPath.contains(srcPath)) return false;
+        if (!srcDir.exists() || !srcDir.isDirectory()) return false;
+        if (!createOrExistsDir(destDir)) return false;
+        File[] files = srcDir.listFiles();
+        if (files != null && files.length > 0) {
+            for (File file : files) {
+                File oneDestFile = new File(destPath + file.getName());
+                if (file.isFile()) {
+                    if (!copyOrMoveFile(file, oneDestFile, listener, isMove)) return false;
+                } else if (file.isDirectory()) {
+                    if (!copyOrMoveDir(file, oneDestFile, listener, isMove)) return false;
+                }
+            }
+        }
+        return !isMove || deleteDir(srcDir);
+    }
+
+    private static boolean copyOrMoveFile(final File srcFile,
+                                          final File destFile,
+                                          final OnReplaceListener listener,
+                                          final boolean isMove) {
+        if (srcFile == null || destFile == null) return false;
+        // srcFile equals destFile then return false
+        if (srcFile.equals(destFile)) return false;
+        // srcFile doesn't exist or isn't a file then return false
+        if (!srcFile.exists() || !srcFile.isFile()) return false;
+        if (destFile.exists()) {
+            if (listener == null || listener.onReplace(srcFile, destFile)) {// require delete the old file
+                if (!destFile.delete()) {// unsuccessfully delete then return false
+                    return false;
+                }
+            } else {
+                return true;
+            }
+        }
+        if (!createOrExistsDir(destFile.getParentFile())) return false;
+        try {
+            return FileIOUtils.writeFileFromIS(new File(destFile.getAbsolutePath()), new FileInputStream(srcFile))
+                    && !(isMove && !deleteFile(srcFile));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Return the size.
+     *
+     * @param filePath The path of file.
+     * @return the size
+     */
+    public static String getSize(final String filePath) {
+        return getSize(getFileByPath(filePath));
+    }
+
+    /**
+     * Return the size.
+     *
+     * @param file The directory.
+     * @return the size
+     */
+    public static String getSize(final File file) {
+        if (file == null) return "";
+        if (file.isDirectory()) {
+            return getDirSize(file);
+        }
+        return getFileSize(file);
+    }
+
+    /**
+     * Return the size of directory.
+     *
+     * @param dir The directory.
+     * @return the size of directory
+     */
+    private static String getDirSize(final File dir) {
+        long len = getDirLength(dir);
+        return len == -1 ? "" : ConvertUtils.byte2FitMemorySize(len);
+    }
+
+    /**
+     * Return the size of file.
+     *
+     * @param file The file.
+     * @return the length of file
+     */
+    private static String getFileSize(final File file) {
+        long len = getFileLength(file);
+        return len == -1 ? "" : ConvertUtils.byte2FitMemorySize(len);
+    }
+
+    /**
+     * Return the MD5 of file.
+     *
+     * @param filePath The path of file.
+     * @return the md5 of file
+     */
+    public static String getFileMD5ToString(final String filePath) {
+        File file = StringUtils.isSpace(filePath) ? null : new File(filePath);
+        return getFileMD5ToString(file);
+    }
+
+    /**
+     * Return the MD5 of file.
+     *
+     * @param file The file.
+     * @return the md5 of file
+     */
+    public static String getFileMD5ToString(final File file) {
+        return ConvertUtils.bytes2HexString(getFileMD5(file));
     }
 
     ///////////////////////////////////////////////////////////////////////////

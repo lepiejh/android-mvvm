@@ -8,9 +8,11 @@ import android.os.Looper;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.style.ForegroundColorSpan;
+import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
@@ -545,6 +547,34 @@ public final class ToastUtils {
         if (sToast != null) {
             sToast.cancel();
             sToast = null;
+        }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // 以下为合并自 com.ved.framework.utils.bland.code.ToastUtils$UtilsMaxWidthRelativeLayout
+    // 供 ac.xml 中 class="...ToastUtils$UtilsMaxWidthRelativeLayout" 引用
+    ///////////////////////////////////////////////////////////////////////////
+
+    public static final class UtilsMaxWidthRelativeLayout extends RelativeLayout {
+
+        private static final int SPACING = ScreenUtils.dp2px(80);
+
+        public UtilsMaxWidthRelativeLayout(Context context) {
+            super(context);
+        }
+
+        public UtilsMaxWidthRelativeLayout(Context context, AttributeSet attrs) {
+            super(context, attrs);
+        }
+
+        public UtilsMaxWidthRelativeLayout(Context context, AttributeSet attrs, int defStyleAttr) {
+            super(context, attrs, defStyleAttr);
+        }
+
+        @Override
+        protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            int widthMaxSpec = MeasureSpec.makeMeasureSpec(ScreenUtils.getAppScreenWidth() - SPACING, MeasureSpec.AT_MOST);
+            super.onMeasure(widthMaxSpec, heightMeasureSpec);
         }
     }
 }

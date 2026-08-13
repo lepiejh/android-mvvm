@@ -1,4 +1,15 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.ConvertUtils;
+import com.ved.framework.utils.FileUtils;
+import com.ved.framework.utils.IntentUtils;
+import com.ved.framework.utils.NotificationUtils;
+import com.ved.framework.utils.ScreenUtils;
+import com.ved.framework.utils.SDCardUtils;
+import com.ved.framework.utils.SPUtils;
+import com.ved.framework.utils.StringUtils;
+import com.ved.framework.utils.TimeUtils;
+import com.ved.framework.utils.ToastUtils;
+import com.ved.framework.utils.Utils;
 
 import android.app.Activity;
 import android.app.Application;
@@ -14,6 +25,7 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.google.gson.Gson;
+import com.ved.framework.utils.RomUtils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -37,17 +49,17 @@ import androidx.core.app.NotificationCompat;
 
 import static android.Manifest.permission.CALL_PHONE;
 
-class UtilsBridge {
+public class UtilsBridge {
 
-    static void init(Application app) {
+    public static void init(Application app) {
         UtilsActivityLifecycleImpl.INSTANCE.init(app);
     }
 
-    static void unInit(Application app) {
+    public static void unInit(Application app) {
         UtilsActivityLifecycleImpl.INSTANCE.unInit(app);
     }
 
-    static void preLoad() {
+    public static void preLoad() {
         preLoad(AdaptScreenUtils.getPreLoadRunnable());
     }
 
@@ -92,7 +104,7 @@ class UtilsBridge {
         return UtilsActivityLifecycleImpl.INSTANCE.getActivityList();
     }
 
-    static Application getApplicationByReflect() {
+    public static Application getApplicationByReflect() {
         return UtilsActivityLifecycleImpl.INSTANCE.getApplicationByReflect();
     }
 
@@ -324,39 +336,39 @@ class UtilsBridge {
     // ImageUtils
     ///////////////////////////////////////////////////////////////////////////
     static byte[] bitmap2Bytes(final Bitmap bitmap) {
-        return ImageUtils.bitmap2Bytes(bitmap);
+        return com.ved.framework.utils.ConvertUtils.bitmap2Bytes(bitmap);
     }
 
     static byte[] bitmap2Bytes(final Bitmap bitmap, final Bitmap.CompressFormat format, int quality) {
-        return ImageUtils.bitmap2Bytes(bitmap, format, quality);
+        return com.ved.framework.utils.ConvertUtils.bitmap2Bytes(bitmap, format, quality);
     }
 
     static Bitmap bytes2Bitmap(final byte[] bytes) {
-        return ImageUtils.bytes2Bitmap(bytes);
+        return com.ved.framework.utils.ConvertUtils.bytes2Bitmap(bytes);
     }
 
     static byte[] drawable2Bytes(final Drawable drawable) {
-        return ImageUtils.drawable2Bytes(drawable);
+        return com.ved.framework.utils.ConvertUtils.drawable2Bytes(drawable);
     }
 
     static byte[] drawable2Bytes(final Drawable drawable, final Bitmap.CompressFormat format, int quality) {
-        return ImageUtils.drawable2Bytes(drawable, format, quality);
+        return com.ved.framework.utils.ConvertUtils.drawable2Bytes(drawable, format, quality);
     }
 
     static Drawable bytes2Drawable(final byte[] bytes) {
-        return ImageUtils.bytes2Drawable(bytes);
+        return com.ved.framework.utils.ConvertUtils.bytes2Drawable(bytes);
     }
 
     static Bitmap view2Bitmap(final View view) {
-        return ImageUtils.view2Bitmap(view);
+        return com.ved.framework.utils.ConvertUtils.view2Bitmap(view);
     }
 
     static Bitmap drawable2Bitmap(final Drawable drawable) {
-        return ImageUtils.drawable2Bitmap(drawable);
+        return com.ved.framework.utils.ConvertUtils.drawable2Bitmap(drawable);
     }
 
     static Drawable bitmap2Drawable(final Bitmap bitmap) {
-        return ImageUtils.bitmap2Drawable(bitmap);
+        return com.ved.framework.utils.ConvertUtils.bitmap2Drawable(bitmap);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -445,7 +457,7 @@ class UtilsBridge {
         return ProcessUtils.getForegroundProcessName();
     }
 
-    static String getCurrentProcessName() {
+    public static String getCurrentProcessName() {
         return ProcessUtils.getCurrentProcessName();
     }
 

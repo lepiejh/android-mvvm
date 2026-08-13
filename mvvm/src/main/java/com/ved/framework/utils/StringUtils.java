@@ -13,12 +13,18 @@ import android.text.style.ForegroundColorSpan;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.util.IllegalFormatException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import androidx.annotation.ArrayRes;
 import androidx.annotation.ColorInt;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 import androidx.core.internal.view.SupportMenu;
+
+import android.content.res.Resources;
 
 /**
  * Created by ved on 2017/5/14.
@@ -655,5 +661,81 @@ public final class StringUtils {
             str2 = str2.substring(i);
         }
         return strArr;
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // 以下为合并自 com.ved.framework.utils.bland.code.StringUtils 的方法
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the string is null or 0-length.
+     *
+     * @param s The string.
+     * @return {@code true}: yes<br> {@code false}: no
+     */
+    public static boolean isEmpty(final CharSequence s) {
+        return s == null || s.length() == 0;
+    }
+
+    /**
+     * Return the string value associated with a particular resource ID.
+     *
+     * @param id The desired resource identifier.
+     * @return the string value associated with a particular resource ID.
+     */
+    public static String getString(@StringRes int id) {
+        return getString(id, (Object[]) null);
+    }
+
+    /**
+     * Return the string value associated with a particular resource ID.
+     *
+     * @param id         The desired resource identifier.
+     * @param formatArgs The format arguments that will be used for substitution.
+     * @return the string value associated with a particular resource ID.
+     */
+    public static String getString(@StringRes int id, Object... formatArgs) {
+        try {
+            return format(Utils.getApp().getString(id), formatArgs);
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
+            return String.valueOf(id);
+        }
+    }
+
+    /**
+     * Return the string array associated with a particular resource ID.
+     *
+     * @param id The desired resource identifier.
+     * @return The string array associated with the resource.
+     */
+    public static String[] getStringArray(@ArrayRes int id) {
+        try {
+            return Utils.getApp().getResources().getStringArray(id);
+        } catch (Resources.NotFoundException e) {
+            e.printStackTrace();
+            return new String[]{String.valueOf(id)};
+        }
+    }
+
+    /**
+     * Format the string.
+     *
+     * @param str  The string.
+     * @param args The args.
+     * @return a formatted string.
+     */
+    public static String format(@Nullable String str, Object... args) {
+        String text = str;
+        if (text != null) {
+            if (args != null && args.length > 0) {
+                try {
+                    text = String.format(str, args);
+                } catch (IllegalFormatException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return text;
     }
 }

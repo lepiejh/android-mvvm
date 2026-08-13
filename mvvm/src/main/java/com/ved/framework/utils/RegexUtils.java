@@ -1,11 +1,14 @@
 package com.ved.framework.utils;
 
+import com.ved.framework.utils.bland.code.ArrayUtils;
 import com.ved.framework.utils.constant.RegexConstants;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import androidx.collection.SimpleArrayMap;
 
 /**
  * Created by ved on 2017/6/19.
@@ -433,5 +436,156 @@ public final class RegexUtils {
         }else {
             return 0;
         }
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // 以下为合并自 com.ved.framework.utils.bland.code.RegexUtils 的方法
+    ///////////////////////////////////////////////////////////////////////////
+
+    private final static SimpleArrayMap<String, String> CITY_MAP = new SimpleArrayMap<>();
+
+    /**
+     * Return whether input matches regex of number.
+     *
+     * @param input The input.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isNumeric(final CharSequence input) {
+        return isMatch(RegexConstants.REGEX_NUMBER, input);
+    }
+
+    /**
+     * Returns the domain part of a given Email address.
+     *
+     * @param email The Email address. E.g. Returns "protonmail.com" from the given Email "johnsmith@protonmail.com".
+     * @return the domain part of a given Email address.
+     */
+    public static String extractEmailProvider(String email) {
+        return email.substring(email.lastIndexOf("@") + 1);
+    }
+
+    /**
+     * Returns the username part of a given Email address. E.g. Returns "johnsmith" from the given Email "johnsmith@protonmail.com".
+     *
+     * @param email The Email address.
+     * @return the username part of a given Email address.
+     */
+    public static String extractEmailUsername(String email) {
+        return email.substring(0, email.lastIndexOf("@"));
+    }
+
+    /**
+     * Return whether a given Email address is on a specified Email provider.
+     *
+     * @param email         The Email address.
+     * @param emailProvider The Email provider to testify against.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isFromEmailProvider(String email, String emailProvider) {
+        return extractEmailProvider(email).equalsIgnoreCase(emailProvider);
+    }
+
+    /**
+     * Return whether a given Email address is on any of the specified Email providers list (array).
+     *
+     * @param email          The Email address.
+     * @param emailProviders The list of Email providers to testify against.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isFromAnyOfEmailProviders(String email, String[] emailProviders) {
+        return ArrayUtils.contains(emailProviders, extractEmailProvider(email));
+    }
+
+    /**
+     * Return whether input matches regex of exact mobile.
+     *
+     * @param input       The input.
+     * @param newSegments The new segments of mobile number.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isMobileExact(final CharSequence input, List<String> newSegments) {
+        boolean match = isMatch(RegexConstants.REGEX_MOBILE_EXACT, input);
+        if (match) return true;
+        if (newSegments == null) return false;
+        if (input == null || input.length() != 11) return false;
+        String content = input.toString();
+        for (char c : content.toCharArray()) {
+            if (!Character.isDigit(c)) {
+                return false;
+            }
+        }
+        for (String newSegment : newSegments) {
+            if (content.startsWith(newSegment)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Return whether input matches regex of exact id card number which length is 18.
+     *
+     * @param input The input.
+     * @return {@code true}: yes<br>{@code false}: no
+     */
+    public static boolean isIDCard18Exact(final CharSequence input) {
+        if (isIDCard18(input)) {
+            int[] factor = new int[]{7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2};
+            char[] suffix = new char[]{'1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2'};
+            if (CITY_MAP.isEmpty()) {
+                CITY_MAP.put("11", "北京");
+                CITY_MAP.put("12", "天津");
+                CITY_MAP.put("13", "河北");
+                CITY_MAP.put("14", "山西");
+                CITY_MAP.put("15", "内蒙古");
+
+                CITY_MAP.put("21", "辽宁");
+                CITY_MAP.put("22", "吉林");
+                CITY_MAP.put("23", "黑龙江");
+
+                CITY_MAP.put("31", "上海");
+                CITY_MAP.put("32", "江苏");
+                CITY_MAP.put("33", "浙江");
+                CITY_MAP.put("34", "安徽");
+                CITY_MAP.put("35", "福建");
+                CITY_MAP.put("36", "江西");
+                CITY_MAP.put("37", "山东");
+
+                CITY_MAP.put("41", "河南");
+                CITY_MAP.put("42", "湖北");
+                CITY_MAP.put("43", "湖南");
+                CITY_MAP.put("44", "广东");
+                CITY_MAP.put("45", "广西");
+                CITY_MAP.put("46", "海南");
+
+                CITY_MAP.put("50", "重庆");
+                CITY_MAP.put("51", "四川");
+                CITY_MAP.put("52", "贵州");
+                CITY_MAP.put("53", "云南");
+                CITY_MAP.put("54", "西藏");
+
+                CITY_MAP.put("61", "陕西");
+                CITY_MAP.put("62", "甘肃");
+                CITY_MAP.put("63", "青海");
+                CITY_MAP.put("64", "宁夏");
+                CITY_MAP.put("65", "新疆");
+
+                CITY_MAP.put("71", "台湾老");
+                CITY_MAP.put("81", "香港");
+                CITY_MAP.put("82", "澳门");
+                CITY_MAP.put("83", "台湾新");
+                CITY_MAP.put("91", "国外");
+            }
+            if (CITY_MAP.get(input.subSequence(0, 2).toString()) != null) {
+                int weightSum = 0;
+                for (int i = 0; i < 17; ++i) {
+                    weightSum += (input.charAt(i) - '0') * factor[i];
+                }
+                int idCardMod = weightSum % 11;
+                char idCardLast = input.charAt(17);
+                return idCardLast == suffix[idCardMod];
+            }
+        }
+        return false;
     }
 }
