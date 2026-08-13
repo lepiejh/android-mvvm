@@ -7,6 +7,7 @@
 - [ViewGroup 动态添加 View](#viewgroup-动态添加-view)
 - [ARequest 网络请求与取消](#arequest-网络请求与取消)
 - [Messenger 消息总线](#messenger-消息总线)
+- [Drawables 动态背景](#drawables-动态背景)
 
 ## ViewGroup 动态添加 View
 
@@ -204,3 +205,112 @@ Messenger.getDefault().unregister(this);
 
 - token 最好不要重名，否则可能出现逻辑上的 bug；为了更好的维护和清晰的逻辑，建议以 `aa_bb_cc` 的格式定义 token：`aa` 为 TOKEN，`bb` 为 ViewModel 的类名，`cc` 为动作名（功能名）；
 - 为了避免大量使用 Messenger，建议**只在 ViewModel 与 ViewModel 之间使用**；View 与 ViewModel 之间采用 `ObservableField` 去监听 UI 上的逻辑，可在继承了 Base 的 Activity 或 Fragment 中重写 `initViewObservable()` 方法来初始化 UI 的监听。
+
+## Drawables 动态背景
+
+对应类：`com.ved.framework.binding.viewadapter.drawable.Drawables`
+
+### 功能
+
+- 在布局 XML 中直接用 `app:` 属性配置 View 的背景 Drawable，免去手写 `res/drawable` 下的 shape / selector 资源文件；
+- 支持形状、纯色、描边/虚线、圆角、渐变、尺寸、margin、圆环等全部 shape 属性；
+- 支持多状态背景（按下/选中/勾选/禁用/聚焦等），自动生成 selector；
+- 也可通过 `Drawables.create(...)` 在 Java 代码中创建 Drawable。
+
+### 用法一：布局中配置普通背景
+
+所有属性均为可选（`requireAll = false`），用到哪个写哪个。基础属性：
+
+| 属性 | 类型 | 说明 |
+|---|---|---|
+| `app:drawable_shapeMode` | integer | 形状：`RECTANGLE=0`、`OVAL=1`、`LINE=2`、`RING=3` |
+| `app:drawable_solidColor` | color | 填充色 |
+| `app:drawable_strokeColor` | color | 描边颜色 |
+| `app:drawable_strokeWidth` | float(dp) | 描边宽度 |
+| `app:drawable_strokeDash` / `drawable_strokeDashGap` | float(dp) | 虚线：线段长 / 间隔 |
+| `app:drawable_radius` | float(dp) | 统一圆角 |
+| `app:drawable_radiusLT` / `radiusLB` / `radiusRT` / `radiusRB` | float(dp) | 四个角分别圆角 |
+| `app:drawable_startColor` / `centerColor` / `endColor` | color | 渐变三色 |
+| `app:drawable_orientation` | integer | 渐变方向：`TOP_BOTTOM=0`、`TR_BL=1`、`RIGHT_LEFT=2`、`BR_TL=3`、`BOTTOM_TOP=4`、`BL_TR=5`、`LEFT_RIGHT=6`、`TL_BR=7` |
+| `app:drawable_gradientType` | integer | 渐变类型：`LINEAR=0`、`RADIAL=1`、`SWEEP=2` |
+| `app:drawable_radialCenterX` / `radialCenterY` / `radialRadius` | float | 径向渐变中心（0~1）与半径 |
+| `app:drawable_width` / `height` | float(dp) | Drawable 尺寸 |
+| `app:drawable_marginLeft` / `marginTop` / `marginRight` / `marginBottom` | float(dp) | Drawable 内边距偏移（包一层 InsetDrawable） |
+| `app:drawable_ringThickness` / `ringThicknessRatio` / `ringInnerRadius` / `ringInnerRadiusRatio` | float | 圆环（RING 模式）参数 |
+| `app:drawable` | reference | 直接指定 drawable 资源 |
+
+示例——圆角描边按钮（布局中先 import `Drawables` 以便使用常量，也可直接写数字）：
+
+```xml
+<TextView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="圆角按钮"
+    android:padding="16dp"
+    app:drawable_shapeMode="@{Drawables.ShapeMode.RECTANGLE}"
+    app:drawable_solidColor="@{0xFF4CAF50}"
+    app:drawable_strokeColor="@{0xFF333333}"
+    app:drawable_strokeWidth="@{2f}"
+    app:drawable_radius="@{8f}"/>
+```
+
+示例——线性渐变背景：
+
+```xml
+<Button
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:text="渐变按钮"
+    app:drawable_startColor="@{0xFF4CAF50}"
+    app:drawable_endColor="@{0xFF2196F3}"
+    app:drawable_orientation="@{Drawables.Orientation.LEFT_RIGHT}"
+    app:drawable_radius="@{20f}"/>
+```
+
+### 用法二：多状态背景（selector）
+
+状态前缀：`drawable_`（默认）、`drawable_pressed_`（按下）、`drawable_selected_`（选中）、`drawable_checked_`（勾选）、`drawable_checkable_`（可勾选）、`drawable_enabled_`（可用）、`drawable_focused_`（聚焦）。
+
+每个状态都支持用法一中的全部 shape 属性（`drawable_pressed_solidColor`、`drawable_pressed_radius` ...）。
+
+示例——按下变色的按钮：
+
+```xml
+<Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="状态按钮"
+    app:drawable_solidColor="@{0xFF4CAF50}"
+    app:drawable_radius="@{8f}"
+    app:drawable_pressed_solidColor="@{0xFF388E3C}"
+    app:drawable_pressed_radius="@{8f}"/>
+```
+
+说明：
+
+- 未指定默认状态时，会自动保留 View 原有背景作为默认状态；
+- 状态优先级与 Android selector 一致（pressed / selected / checked / focused / enabled / 默认）。
+
+### 用法三：Java 代码创建 Drawable
+
+```java
+GradientDrawable drawable = Drawables.create(
+        Drawables.ShapeMode.RECTANGLE,          // shapeMode
+        0xFF4CAF50,                             // solidColor
+        0xFF333333, 2, 0, 0,                    // strokeColor, strokeWidth, strokeDash, strokeDashGap
+        8, 0, 0, 0, 0,                          // radius, radiusLT, radiusLB, radiusRT, radiusRB
+        0, 0, 0,                                // startColor, centerColor, endColor
+        Drawables.Orientation.TOP_BOTTOM,
+        Drawables.GradientType.LINEAR,          // orientation, gradientType
+        0.5f, 0.5f, 0,                          // radialCenterX, radialCenterY, radialRadius
+        0, 0,                                   // width, height
+        0, 0, 0, 0,                             // marginLeft, marginTop, marginRight, marginBottom
+        0, 0, 0, 0);                            // ringThickness, ringThicknessRatio, ringInnerRadius, ringInnerRadiusRatio
+view.setBackground(drawable);
+```
+
+### 注意事项
+
+- `LINE` 模式只能画水平线（线高由 strokeWidth 决定），且引用虚线的 View 需添加 `android:layerType="software"`，否则虚线无法显示；
+- 设置 `margin*` 属性时，InsetDrawable 会导致 View 自身 padding 失效，框架会自动恢复原 padding；
+- `RING` 模式通过反射设置圆环参数，对性能有要求的场景请谨慎使用。

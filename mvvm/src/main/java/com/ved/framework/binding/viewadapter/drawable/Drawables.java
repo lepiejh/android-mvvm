@@ -19,6 +19,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 
+/**
+ * Drawable 绑定适配器：在布局 XML 中直接通过 app: 属性为 View 配置背景 Drawable，
+ * 免去手写 res/drawable 下的 shape / selector 资源文件。
+ * <p>
+ * 支持形状、纯色、描边虚线、圆角、渐变、尺寸、margin、圆环等属性，以及
+ * pressed / selected / checked / enabled / focused / checkable 多状态背景；
+ * 也可通过 {@link #create} 在 Java 代码中创建 Drawable。
+ * <p>
+ * 详细使用方法见项目 README.md「Drawables 动态背景」章节。
+ */
 public class Drawables {
 
     private static final int INVALID = 0;
