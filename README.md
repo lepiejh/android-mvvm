@@ -8,6 +8,7 @@
 - [ARequest 网络请求与取消](#arequest-网络请求与取消)
 - [Messenger 消息总线](#messenger-消息总线)
 - [Drawables 动态背景](#drawables-动态背景)
+- [CorpseUtils 工具方法](#corpseutils-工具方法)
 
 ## ViewGroup 动态添加 View
 
@@ -314,3 +315,81 @@ view.setBackground(drawable);
 - `LINE` 模式只能画水平线（线高由 strokeWidth 决定），且引用虚线的 View 需添加 `android:layerType="software"`，否则虚线无法显示；
 - 设置 `margin*` 属性时，InsetDrawable 会导致 View 自身 padding 失效，框架会自动恢复原 padding；
 - `RING` 模式通过反射设置圆环参数，对性能有要求的场景请谨慎使用。
+
+## CorpseUtils 工具方法
+
+对应类：`com.ved.framework.utils.CorpseUtils`（Kotlin `object`，Java 中通过 `CorpseUtils.INSTANCE` 访问）
+
+### expandTouchView 扩大点击区域
+
+#### 功能与原理
+
+扩展方法：在不改变 View 视觉尺寸的前提下，扩大 View 的触摸响应区域（默认向外扩大 `10dp`，单位 dp）。
+
+原理：获取目标 View 的父 View，通过 `getHitRect()` 取目标 View 在父容器中的矩形，四周各扩大 `expandSize` 后，给**父 View** 设置 `TouchDelegate`——只要触摸点落在扩大后的矩形内（且在父 View 区域内），事件就会转发给目标 View。
+
+#### 使用方法
+
+Kotlin：
+
+```kotlin
+import com.ved.framework.utils.expandTouchView
+
+// 把 targetView 的点击区域向外扩大 20dp
+targetView.expandTouchView(20f)
+
+// 使用默认 10dp
+targetView.expandTouchView()
+```
+
+Java：
+
+```java
+CorpseUtils.INSTANCE.expandTouchView(view, 20f);
+```
+
+#### expandTouchView 不生效的常见原因
+
+| 原因 | 说明 |
+|---|---|
+| **目标 View 没有父 View** | 代码中 `parent as? View` 为 null 时会静默跳过。对根布局、尚未 add 进容器的 View 调用无效（方法注释也明确要求 targetView 必须有父 View） |
+| **同一父容器中多个子 View 都调用了** | `parentView.touchDelegate` 是单一赋值，后调用的会**覆盖**先调用的，导致前一个失效。同一父 View 下只建议给一个子 View 扩大 |
+| **调用时机过早** | 若在 View 未完成布局、未 attach 到 Window 时调用，`getHitRect()` 拿到的矩形可能是 0 或错误值。虽然内部已用 `post` 延迟一帧，但极端场景（异步数据加载后 View 尚未 measure）仍会失效。建议在布局完成后再调用 |
+| **目标 View 尺寸为 0 或 GONE** | 矩形区域无效，扩大无意义 |
+| **触摸点落在可点击的兄弟 View 上** | 事件被兄弟 View 消费，不会走到父 View 的 TouchDelegate，属正常行为，不是失效 |
+
+> 提示：`expandSize` 单位为 dp，内部自动 `dip2px` 转换；传入 0 或负数等于没扩大。
+
+### noOpDelegate 空实现代理
+
+#### 功能
+
+利用 Java 动态代理（`Proxy.newProxyInstance`）生成一个**接口的空实现实例**：所有方法调用都被忽略（引用类型方法返回 null）。
+
+适用场景：
+
+- 需要一个回调/监听器但暂时什么都不想处理（如空 `OnClickListener`）；
+- 作为接口类型参数的占位符/兜底，避免写一长串空实现类；
+- 替代「接口 + 空实现类」的样板代码。
+
+#### 使用方法
+
+Kotlin（`reified` 泛型自动推断）：
+
+```kotlin
+import com.ved.framework.utils.noOpDelegate
+
+// 接口必须实现时，用空实现占位
+view.setOnClickListener(noOpDelegate<View.OnClickListener>())
+```
+
+Java（需显式指定泛型）：
+
+```java
+view.setOnClickListener(CorpseUtils.INSTANCE.<View.OnClickListener>noOpDelegate());
+```
+
+#### 注意事项
+
+- **T 必须是接口**：动态代理只能代理接口，传入普通类会抛 `IllegalArgumentException`；
+- **避免在基本类型返回值的方法上使用**：代理方法默认返回 `null`，若接口方法返回 `int`/`boolean` 等基本类型且被调用方解包，会抛 `NullPointerException`，仅适用于返回 `void` 或引用类型（可 null）的接口。
