@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,7 +44,8 @@ public class CacheUtil {
     private static final int MAX_SIZE = 1000 * 1000 * 50; // 50 mb
     private static final int MAX_COUNT = Integer.MAX_VALUE; // 不限制存放数据的数量
     //    private static CacheManager mCacheManager;
-    private static Map<String, CacheUtil> mInstanceMap = new HashMap<>();
+    // 线程安全的实例缓存：get 可能在任意线程被调用
+    private static final Map<String, CacheUtil> mInstanceMap = new ConcurrentHashMap<>();
     private static String mCacheName;
     private ACacheManager mCache;
 
@@ -70,10 +72,12 @@ public class CacheUtil {
     }
 
     public static CacheUtil get(File cacheDir, long max_size, int max_count) {
-        CacheUtil manager = mInstanceMap.get(cacheDir.getAbsoluteFile() + cacheName());
+        // 修复：get 与 put 必须使用同一把 key，否则缓存永不命中，每次都会 new 实例并无限累积
+        String key = cacheDir.getAbsolutePath() + cacheName();
+        CacheUtil manager = mInstanceMap.get(key);
         if (manager == null) {
             manager = new CacheUtil(cacheDir, max_size, max_count);
-            mInstanceMap.put(cacheDir.getAbsolutePath() + myPid(), manager);
+            mInstanceMap.put(key, manager);
         }
         return manager;
     }
@@ -91,15 +95,13 @@ public class CacheUtil {
 //        return manager;
 //    }
 
-    private static String myPid() {
-        return "_" + android.os.Process.myPid();
-    }
-
     private static String cacheName() {
+        // 修复：原实现 mCacheName 为空时拼出 "-null"，非空时又错误地忽略缓存名
         if (TextUtils.isEmpty(mCacheName)) {
-            return "-" + mCacheName;
+            // 未设置缓存名：用进程号区分，避免多进程共用同一 key
+            return "_" + android.os.Process.myPid();
         }
-        return "_" + android.os.Process.myPid();
+        return "_" + mCacheName;
     }
 
     private CacheUtil(File cacheDir, long max_size, int max_count) {

@@ -732,8 +732,6 @@ public class ImageUtils {
         return uri.toString();
     }
 
-    static Bitmap bitmap = null;
-
     public static Bitmap loadPicasaImageFromGalley(final Uri uri,
                                                    final Activity context) {
 
@@ -744,28 +742,23 @@ public class ImageUtils {
             cursor.moveToFirst();
 
             int columIndex = cursor.getColumnIndex(MediaColumns.DISPLAY_NAME);
-            if (columIndex != -1) {
-                new Thread(new Runnable() {
-
-                    @Override
-                    public void run() {
-                        try {
-                            bitmap = MediaStore.Images.Media
-                                    .getBitmap(context.getContentResolver(),
-                                            uri);
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-                }).start();
-            }
+            // 先关闭 Cursor，避免 decode 期间持有 ContentProvider 的游标资源
             cursor.close();
-            return bitmap;
-        } else
-            return null;
+            if (columIndex != -1) {
+                // 同步解码并返回：原实现用 new Thread 异步写入静态字段，
+                // 但方法立即 return 导致恒返回 null，且静态字段多线程并发互相覆盖。
+                try {
+                    return MediaStore.Images.Media
+                            .getBitmap(context.getContentResolver(),
+                                    uri);
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return null;
     }
 
     /******************************************************************/
@@ -820,21 +813,22 @@ public class ImageUtils {
 
     //压缩图片大小
     public static Bitmap revitionImageSize(File file) throws IOException {
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(file));
+        // 流全部用 try-finally 关闭，避免文件句柄泄漏
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(in, null, options);
-        in.close();
+        try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
+            BitmapFactory.decodeStream(in, null, options);
+        }
         int i = 1;
         Bitmap bitmap = null;
         while (true) {
             if (((options.outWidth / i) <= 600)
                     && ((options.outHeight / i) <= 600)) {
-                in = new BufferedInputStream(
-                        new FileInputStream(file));
                 options.inSampleSize = i;
                 options.inJustDecodeBounds = false;
-                bitmap = BitmapFactory.decodeStream(in, null, options);
+                try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(file))) {
+                    bitmap = BitmapFactory.decodeStream(in, null, options);
+                }
                 break;
             }
             i += 1;

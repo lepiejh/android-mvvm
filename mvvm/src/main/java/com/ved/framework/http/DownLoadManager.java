@@ -23,12 +23,16 @@ import retrofit2.http.Url;
  * 文件下载管理，封装一行代码实现下载
  */
 public class DownLoadManager {
-    private static DownLoadManager instance;
 
     private static Retrofit retrofit;
 
     private DownLoadManager() {
         buildNetWork();
+    }
+
+    // 静态内部类单例：由 JVM 保证类加载时的线程安全，且延迟到首次使用时才初始化
+    private static class SingletonHolder {
+        private static final DownLoadManager INSTANCE = new DownLoadManager();
     }
 
     /**
@@ -37,10 +41,7 @@ public class DownLoadManager {
      * @return DownLoadManager
      */
     public static DownLoadManager getInstance() {
-        if (instance == null) {
-            instance = new DownLoadManager();
-        }
-        return instance;
+        return SingletonHolder.INSTANCE;
     }
 
     //下载

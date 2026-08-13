@@ -5,15 +5,12 @@ import android.text.TextUtils;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.ved.framework.mode.EntityResponse;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.JsonPraise;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.StringUtils;
-import com.ved.framework.utils.RegexUtils;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -33,27 +30,57 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
         this.type = type;
     }
 
+    // ==================== 享元模式：EntityResponse 解析元数据缓存 ====================
+    // 反射开销较大（getDeclaredMethods 会复制整个方法数组），而 EntityResponse 类结构是固定的，
+    // 因此只在类加载时解析一次，之后每次网络响应转换都复用缓存结果。
+    private static final Class<?> ENTITY_RESPONSE_CLASS = resolveEntityResponseClass();
+    // 返回类型为 int 的方法（业务 code），取最后一个匹配，与原逐次反射的语义保持一致
+    private static final Method ENTITY_RESPONSE_CODE_METHOD = resolveMethodByReturnType("int");
+    // 返回类型为 Object 的方法（错误时取 data/msg 内容），取最后一个匹配
+    private static final Method ENTITY_RESPONSE_CONTENT_METHOD = resolveMethodByReturnType("Object");
+    // 返回类型为 String 的方法（错误信息），取最后一个匹配
+    private static final Method ENTITY_RESPONSE_MSG_METHOD = resolveMethodByReturnType("String");
+
+    private static Class<?> resolveEntityResponseClass() {
+        try {
+            return Class.forName("com.ved.framework.mode.EntityResponse");
+        } catch (ClassNotFoundException e) {
+            KLog.e(e.getMessage());
+            return null;
+        }
+    }
+
+    private static Method resolveMethodByReturnType(String returnSimpleName) {
+        if (ENTITY_RESPONSE_CLASS == null) {
+            return null;
+        }
+        Method found = null;
+        for (Method method : ENTITY_RESPONSE_CLASS.getDeclaredMethods()) {
+            if (returnSimpleName.equals(method.getReturnType().getSimpleName())) {
+                found = method;
+            }
+        }
+        return found;
+    }
+    // ==========================================================================
+
     /**
      * 针对数据返回成功、错误不同类型字段处理
      */
     @Override
     public T convert(ResponseBody value) throws IOException {
+        // 注意：value.string() 会消费并关闭 body，之后不可再读取 value 流
         String response = value.string();
-        Class<?> entityResponse = null;
-        try {
-            entityResponse = Class.forName("com.ved.framework.mode.EntityResponse");
-        } catch (ClassNotFoundException e) {
-            KLog.e(e.getMessage());
-        }
         boolean isStandardJson = CorpseUtils.INSTANCE.isStandardJson(response);
-        if (entityResponse == null) {
-            if (isStandardJson){
+        if (ENTITY_RESPONSE_CLASS == null) {
+            // 该分支实际为死代码（EntityResponse 类始终存在），保留兼容逻辑
+            if (isStandardJson) {
                 int code = StringUtils.parseInt(JsonPraise.optCode(response, "code"));
                 if (code == Configure.getCode()) {
-                    JsonReader jsonReader = gson.newJsonReader(value.charStream());
                     try {
-                        return (T) gson.getAdapter(TypeToken.get(type)).read(jsonReader);
-                    } catch (IOException e) {
+                        // 直接解析已取出的字符串，避免访问已关闭的 body 抛 IllegalStateException
+                        return (T) gson.getAdapter(TypeToken.get(type)).fromJson(response);
+                    } catch (RuntimeException e) {
                         KLog.e(e.getMessage());
                         throw new ResultException("服务器异常", -2);
                     }
@@ -62,82 +89,50 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                     String msg = JsonPraise.optCode(response, pram);
                     throw new ResultException(msg, code);
                 }
-            }else {
+            } else {
                 return gson.fromJson(response, type);
             }
         } else {
-            if (isStandardJson){
+            if (isStandardJson) {
                 Object result;
                 try {
-                    result = gson.fromJson(response, entityResponse);
+                    result = gson.fromJson(response, ENTITY_RESPONSE_CLASS);
                 } catch (JsonSyntaxException e) {
                     e.printStackTrace();
                     return gson.fromJson(response, type);
                 }
-                Method[] allMethods = entityResponse.getDeclaredMethods();
-                String methodName = "";
-                String methodNameContent = "";
-                String methodResultStr = "";
-                for (Method method : allMethods) {
-                    String returnSimpleName = method.getReturnType().getSimpleName();
-                    switch (returnSimpleName) {
-                        case "int":
-                            methodName = method.getName();
-                            break;
-                        case "Object":
-                            methodNameContent = method.getName();
-                            break;
-                        case "String":
-                            methodResultStr = method.getName();
-                            break;
-                    }
-                }
-                Method method = null;
-                try {
-                    method = entityResponse.getDeclaredMethod(methodName);
-                } catch (NoSuchMethodException e) {
-                    KLog.e(e.getMessage());
-                }
                 int code = 0;
-                try {
-                    if (method != null) {
-                        Object o = method.invoke(result);
+                if (ENTITY_RESPONSE_CODE_METHOD != null) {
+                    try {
+                        Object o = ENTITY_RESPONSE_CODE_METHOD.invoke(result);
                         if (o instanceof Integer) {
                             code = (int) o;
                         } else if (o instanceof String) {
                             code = StringUtils.parseInt((String) o);
                         } else {
                             if (o != null) {
-                                code = StringUtils.parseInt((String) o.toString());
+                                code = StringUtils.parseInt(o.toString());
                             }
                         }
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        KLog.e(e.getMessage());
                     }
-                } catch (IllegalAccessException | InvocationTargetException e) {
-                    KLog.e(e.getMessage());
                 }
                 if (code == Configure.getCode()) {
                     return gson.fromJson(response, type);
                 } else {
-                    Object errResponse = gson.fromJson(response, entityResponse);
-                    if (!TextUtils.isEmpty(methodNameContent)) {
-                        Method methodContent = null;
-                        try {
-                            methodContent = entityResponse.getDeclaredMethod(methodNameContent);
-                        } catch (NoSuchMethodException e) {
-                            KLog.e(e.getMessage());
-                        }
+                    Object errResponse = gson.fromJson(response, ENTITY_RESPONSE_CLASS);
+                    if (ENTITY_RESPONSE_CONTENT_METHOD != null) {
                         String errorMsg = null;
                         try {
-                            if (methodContent != null) {
-                                Object o = methodContent.invoke(errResponse);
-                                if (o instanceof String) {
-                                    errorMsg = (String) o;
-                                } else if (o instanceof Integer) {
-                                    errorMsg = String.valueOf((int) o);
-                                } else {
-                                    if (o != null) {
-                                        errorMsg = o.toString();
-                                    }
+                            Object o = ENTITY_RESPONSE_CONTENT_METHOD.invoke(errResponse);
+                            if (o instanceof String) {
+                                errorMsg = (String) o;
+                            } else if (o instanceof Integer) {
+                                errorMsg = String.valueOf((int) o);
+                            } else {
+                                if (o != null) {
+                                    errorMsg = o.toString();
                                 }
                             }
                         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -145,25 +140,17 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                         }
                         if (!TextUtils.isEmpty(errorMsg)) {
                             throw new ResultException(errorMsg, code);
-                        } else if (!TextUtils.isEmpty(methodResultStr)) {
-                            Method methodResult2 = null;
-                            try {
-                                methodResult2 = entityResponse.getDeclaredMethod(methodResultStr);
-                            } catch (NoSuchMethodException e) {
-                                KLog.e(e.getMessage());
-                            }
+                        } else if (ENTITY_RESPONSE_MSG_METHOD != null) {
                             String errorMsg2 = null;
                             try {
-                                if (methodResult2 != null) {
-                                    Object o = methodResult2.invoke(errResponse);
-                                    if (o instanceof String) {
-                                        errorMsg2 = (String) o;
-                                    } else if (o instanceof Integer) {
-                                        errorMsg2 = String.valueOf((int) o);
-                                    } else {
-                                        if (o != null) {
-                                            errorMsg2 = o.toString();
-                                        }
+                                Object o = ENTITY_RESPONSE_MSG_METHOD.invoke(errResponse);
+                                if (o instanceof String) {
+                                    errorMsg2 = (String) o;
+                                } else if (o instanceof Integer) {
+                                    errorMsg2 = String.valueOf((int) o);
+                                } else {
+                                    if (o != null) {
+                                        errorMsg2 = o.toString();
                                     }
                                 }
                             } catch (IllegalAccessException | InvocationTargetException e) {
@@ -173,25 +160,17 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                         } else {
                             throw new ResultException("", code);
                         }
-                    } else if (!TextUtils.isEmpty(methodResultStr)) {
-                        Method methodResult = null;
-                        try {
-                            methodResult = entityResponse.getDeclaredMethod(methodResultStr);
-                        } catch (NoSuchMethodException e) {
-                            e.printStackTrace();
-                        }
+                    } else if (ENTITY_RESPONSE_MSG_METHOD != null) {
                         String errorMsg1 = null;
                         try {
-                            if (methodResult != null) {
-                                Object o = methodResult.invoke(errResponse);
-                                if (o instanceof String) {
-                                    errorMsg1 = (String) o;
-                                } else if (o instanceof Integer) {
-                                    errorMsg1 = String.valueOf((int) o);
-                                } else {
-                                    if (o != null) {
-                                        errorMsg1 = o.toString();
-                                    }
+                            Object o = ENTITY_RESPONSE_MSG_METHOD.invoke(errResponse);
+                            if (o instanceof String) {
+                                errorMsg1 = (String) o;
+                            } else if (o instanceof Integer) {
+                                errorMsg1 = String.valueOf((int) o);
+                            } else {
+                                if (o != null) {
+                                    errorMsg1 = o.toString();
                                 }
                             }
                         } catch (IllegalAccessException | InvocationTargetException e) {
@@ -202,7 +181,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                         throw new ResultException("服务器异常", code);
                     }
                 }
-            }else {
+            } else {
                 return gson.fromJson(response, type);
             }
         }

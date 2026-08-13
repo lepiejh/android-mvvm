@@ -43,6 +43,10 @@ public class BaseInterceptor implements Interceptor {
             //从request中获取原有的HttpUrl实例oldHttpUrl
             HttpUrl oldHttpUrl = request.url();
             HttpUrl newBaseUrl = HttpUrl.parse(headerValue);
+            if (newBaseUrl == null) {
+                // 非法 URL，忽略 url_name 头，使用原始地址继续请求
+                return chain.proceed(chain.request());
+            }
             //重建新的HttpUrl，修改需要修改的url部分
             HttpUrl newFullUrl = oldHttpUrl
                     .newBuilder()

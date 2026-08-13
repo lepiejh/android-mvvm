@@ -80,6 +80,10 @@ public class LoggingInterceptor implements Interceptor {
         int code = response.code();
         boolean isSuccessful = response.isSuccessful();
         ResponseBody responseBody = response.body();
+        if (responseBody == null) {
+            // 空 body（如 204 No Content）无需打日志，直接返回
+            return response;
+        }
         MediaType contentType = responseBody.contentType();
 
         String subtype = null;

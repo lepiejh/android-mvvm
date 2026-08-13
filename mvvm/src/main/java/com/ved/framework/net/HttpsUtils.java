@@ -65,6 +65,11 @@ class HttpsUtils {
                 manager = trustManager;
             } else if (trustManagers != null) {
                 manager = chooseTrustManager(trustManagers);
+                if (manager == null) {
+                    // 传入了证书流但未找到 X509TrustManager 实现，回退到默认信任所有，
+                    // 避免 sslContext.init 收到 null TrustManager 抛 KeyManagementException
+                    manager = UnSafeTrustManager;
+                }
             } else {
                 manager = UnSafeTrustManager;
             }

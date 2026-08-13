@@ -63,10 +63,10 @@ public abstract class ProgressCallBack<T> {
             fos.flush();
             unsubscribe();
             //onCompleted();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
+            // 保存失败需通知调用方，避免异常被静默吞掉
             e.printStackTrace();
+            onError(e);
         } finally {
             try {
                 if (is != null) is.close();

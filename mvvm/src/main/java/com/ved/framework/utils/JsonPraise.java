@@ -20,6 +20,12 @@ public class JsonPraise {
 
     private static final Gson gson = MyGson.getInstance().getGson();
 
+    // 带 MapTypeAdapter 的 Gson 实例（享元模式）：仅需一份，线程安全，全局复用
+    private static final Gson mapGson = new GsonBuilder()
+            .registerTypeAdapter(new TypeToken<Map<String, Object>>() {
+            }.getType(), new MapTypeAdapter())
+            .create();
+
     /**
      * 判断字符串是否为json格式
      * @param jsonString
@@ -52,7 +58,7 @@ public class JsonPraise {
 
     public static <T> T jsonToObj(@Nullable final String json, @Nullable final Class<? extends T> clazz) {
         try {
-            return new Gson().fromJson(json, clazz);
+            return gson.fromJson(json, clazz);
         } catch (Exception e) {
             e.printStackTrace();
             return null;
@@ -71,9 +77,7 @@ public class JsonPraise {
     }
 
     public static Map<String, Object> gsonToMap(String strJson) {
-        Gson gson = new GsonBuilder()
-                .registerTypeAdapter(new TypeToken<Map<String, Object>>(){}.getType(),new MapTypeAdapter()).create();
-        return gson.fromJson(strJson, new TypeToken<Map<String, Object>>() {
+        return mapGson.fromJson(strJson, new TypeToken<Map<String, Object>>() {
         }.getType());
     }
 
@@ -89,9 +93,7 @@ public class JsonPraise {
     }
 
     public static <T> T parseJSON(String json, Type type) {
-        Gson gson = new Gson();
-        T info = gson.fromJson(json, type);
-        return info;
+        return gson.fromJson(json, type);
     }
 
     /**
@@ -141,7 +143,12 @@ public class JsonPraise {
     public static Object opt001ObjData(String jsonStr,
                                        @SuppressWarnings("rawtypes") Class clazz, String keys) throws Exception {
         JSONObject dataJson = new JSONObject(jsonStr);
-        JSONObject obj = (JSONObject) dataJson.opt(keys);
+        Object opt = dataJson.opt(keys);
+        if (!(opt instanceof JSONObject)) {
+            // 目标 key 不存在或不是对象，避免 obj.toString() 空指针
+            return null;
+        }
+        JSONObject obj = (JSONObject) opt;
         return optObj(obj.toString(), clazz);
     }
 

@@ -90,6 +90,43 @@ class RetrofitClient {
     }
 
     /**
+     * 全局基础 OkHttpClient（享元/单例思想）：
+     * 连接池、Cache 目录、Cookie 持久化、SSL、超时、代理等与具体请求无关的组件全局唯一，
+     * 避免每次 create() 都重建 ConnectionPool 导致 TCP 连接无法复用、Cache 目录被重复打开。
+     * 使用 DCL 双重检查锁保证多线程下的安全初始化。
+     */
+    private static volatile OkHttpClient baseClient;
+
+    private static OkHttpClient getBaseClient() {
+        OkHttpClient client = baseClient;
+        if (client == null) {
+            synchronized (RetrofitClient.class) {
+                client = baseClient;
+                if (client == null) {
+                    client = createBaseClient();
+                    baseClient = client;
+                }
+            }
+        }
+        return client;
+    }
+
+    private static OkHttpClient createBaseClient() {
+        HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
+        return RetrofitUrlManager.getInstance().with(new OkHttpClient.Builder())
+                .cache(new Cache(new File(Utils.getContext().getCacheDir(), "ved_cache"), Constant.CACHE_TIMEOUT))
+                .cookieJar(new CookieJarImpl(new PersistentCookieStore(Utils.getContext())))
+                .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
+                .addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
+                .connectTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+                .readTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(Constant.DEFAULT_TIMEOUT, TimeUnit.SECONDS)
+                .connectionPool(new ConnectionPool(8, 15, TimeUnit.SECONDS))
+                .proxy(Proxy.NO_PROXY)
+                .build();
+    }
+
+    /**
      * 建造者模式：封装 OkHttpClient 的构建细节，
      * 将拦截器、缓存、Cookie、SSL、超时、连接池等配置集中在 Builder 中维护，
      * 新增配置只需扩展 Builder 方法，符合开闭原则。
@@ -148,13 +185,11 @@ class RetrofitClient {
         }
 
         public OkHttpClient build() {
-            HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
-            return RetrofitUrlManager.getInstance().with(new OkHttpClient.Builder())
-                    .cache(new Cache(new File(Utils.getContext().getCacheDir(), "ved_cache"), Constant.CACHE_TIMEOUT))
-                    .cookieJar(new CookieJarImpl(new PersistentCookieStore(Utils.getContext())))
+            // 复用全局基础 client 的连接池/Cache/SSL/Cookie（享元模式），
+            // 仅通过 newBuilder() 追加与本次调用相关的拦截器，保持拦截器顺序与原实现一致。
+            OkHttpClient.Builder builder = getBaseClient().newBuilder()
                     .addInterceptor(new MyInterceptor(headers))
                     .addInterceptor(new CacheInterceptor(Utils.getContext()))
-                    .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
                     .addInterceptor(chain -> {
                         Request request = chain.request();
                         long startTime = System.currentTimeMillis();
@@ -178,8 +213,13 @@ class RetrofitClient {
                         }
                         long endTime = System.currentTimeMillis();
                         long duration = endTime - startTime;
-                        MediaType mediaType = response.body().contentType();
-                        String content = response.body().string();
+                        ResponseBody body = response.body();
+                        if (body == null) {
+                            // 空 body（如 204 No Content）直接返回，避免后续 NPE
+                            return response;
+                        }
+                        MediaType mediaType = body.contentType();
+                        String content = body.string();
                         CorpseUtils.INSTANCE.inspectRequestBody(request);
                         KLog.e("Interceptor", "请求体返回：| Response:" + content);
                         KLog.e("Interceptor", "----------请求耗时:" + duration + "毫秒----------");
@@ -203,13 +243,21 @@ class RetrofitClient {
                             }
                         }
                         return response.newBuilder().body(ResponseBody.create(mediaType, content)).build();
-                    }).addInterceptor(new HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS))
-                    .connectTimeout(connectTimeout, TimeUnit.SECONDS)
-                    .readTimeout(readTimeout, TimeUnit.SECONDS)
-                    .writeTimeout(writeTimeout, TimeUnit.SECONDS)
-                    .connectionPool(new ConnectionPool(poolMaxIdle, poolKeepAliveDuration, TimeUnit.SECONDS))
-                    .proxy(Proxy.NO_PROXY)
-                    .build();
+                    });
+            // 兼容 Builder 预留的个性化配置（默认值与全局 baseClient 一致时无需重复设置）
+            if (connectTimeout != Constant.DEFAULT_TIMEOUT) {
+                builder.connectTimeout(connectTimeout, TimeUnit.SECONDS);
+            }
+            if (readTimeout != Constant.DEFAULT_TIMEOUT) {
+                builder.readTimeout(readTimeout, TimeUnit.SECONDS);
+            }
+            if (writeTimeout != Constant.DEFAULT_TIMEOUT) {
+                builder.writeTimeout(writeTimeout, TimeUnit.SECONDS);
+            }
+            if (poolMaxIdle != 8 || poolKeepAliveDuration != 15) {
+                builder.connectionPool(new ConnectionPool(poolMaxIdle, poolKeepAliveDuration, TimeUnit.SECONDS));
+            }
+            return builder.build();
         }
     }
 

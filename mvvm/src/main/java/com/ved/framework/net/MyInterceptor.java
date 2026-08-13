@@ -35,8 +35,9 @@ class MyInterceptor implements Interceptor {
             builder.addHeader("token", token);
         }
         request = builder.build();
-        Response r = chain.proceed(request);
-        r.close();
-        return r;
+        // 注意：绝不能在此关闭 Response！
+        // 该 Response 会沿拦截器链返回给 Retrofit，由 GsonResponseBodyConverter 读取 body。
+        // 若在此 close()，后续 value.string() 会抛 IllegalStateException("closed")，导致所有请求解析失败。
+        return chain.proceed(request);
     }
 }

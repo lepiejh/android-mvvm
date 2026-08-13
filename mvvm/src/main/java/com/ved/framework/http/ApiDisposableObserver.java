@@ -22,7 +22,8 @@ public abstract class ApiDisposableObserver<T> extends DisposableObserver<T> {
     @Override
     public void onError(Throwable e) {
         e.printStackTrace();
-        onError(e.getMessage());
+        // e.getMessage() 可能为 null，兜底避免把 null 传给业务回调
+        onError(e.getMessage() == null ? "未知错误" : e.getMessage());
         if (e instanceof ResponseThrowable) {
             ResponseThrowable rError = (ResponseThrowable) e;
             ToastUtils.showLong(rError.message);
@@ -38,7 +39,8 @@ public abstract class ApiDisposableObserver<T> extends DisposableObserver<T> {
         // if  NetworkAvailable no !   must to call onCompleted
         if (!NetworkUtil.isNetworkAvailable(Utils.getContext())) {
             onError("网络错误");
-            onComplete();
+            // 主动取消订阅，避免无网络时订阅链悬挂造成资源泄漏
+            dispose();
         }
     }
 
