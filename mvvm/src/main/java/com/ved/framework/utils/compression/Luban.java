@@ -19,6 +19,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
@@ -260,46 +261,80 @@ public class Luban {
             return Observable.fromIterable(mListFile).map(new Function<String, File>() {
                 @Override
                 public File apply(String s) throws Exception {
-                    if (TextUtils.isEmpty(s)) {
-                        return null;
-                    } else {
-                        if (Build.VERSION.SDK_INT >= 29) {
-                            s = Uri2PathUtil.getRealPathFromUri(Utils.getContext(), Uri.parse(s));
-                        }
-                        File file = new File(s);
-                        if (file.exists()) {
-                            return firstCompress(file);
-                        } else {
+                    try {
+                        if (TextUtils.isEmpty(s)) {
                             return null;
+                        } else {
+                            if (Build.VERSION.SDK_INT >= 29) {
+                                s = Uri2PathUtil.getRealPathFromUri(Utils.getContext(), Uri.parse(s));
+                            }
+                            File file = new File(s);
+                            if (file.exists()) {
+                                return firstCompress(file);
+                            } else {
+                                return null;
+                            }
                         }
+                    } catch (Exception e) {
+                        // 单张图片压缩失败不能中断整个流程
+                        e.printStackTrace();
+                        return null;
                     }
+                }
+            }).filter(new Predicate<File>() {
+                @Override
+                public boolean test(File file) throws Exception {
+                    return file != null && file.exists();
                 }
             });
         else if (gear == THIRD_GEAR)
             return Observable.fromIterable(mListFile).map(new Function<String, File>() {
                 @Override
                 public File apply(String s) throws Exception {
-                    if (TextUtils.isEmpty(s)) {
-                        return null;
-                    } else {
-                        if (Build.VERSION.SDK_INT >= 29) {
-                            s = Uri2PathUtil.getRealPathFromUri(Utils.getContext(), Uri.parse(s));
-                        }
-                        File file = new File(s);
-                        if (file.exists()) {
-                            return thirdCompress(file);
-                        } else {
+                    try {
+                        if (TextUtils.isEmpty(s)) {
                             return null;
+                        } else {
+                            if (Build.VERSION.SDK_INT >= 29) {
+                                s = Uri2PathUtil.getRealPathFromUri(Utils.getContext(), Uri.parse(s));
+                            }
+                            File file = new File(s);
+                            if (file.exists()) {
+                                return thirdCompress(file);
+                            } else {
+                                return null;
+                            }
                         }
+                    } catch (Exception e) {
+                        // 单张图片压缩失败不能中断整个流程
+                        e.printStackTrace();
+                        return null;
                     }
+                }
+            }).filter(new Predicate<File>() {
+                @Override
+                public boolean test(File file) throws Exception {
+                    return file != null && file.exists();
                 }
             });
         else return Observable.empty();
     }
 
+    /**
+     * 生成唯一的压缩文件名。
+     * 多张图片同时压缩时，如果只使用 System.currentTimeMillis()，
+     * 同一毫秒内完成的多张图片会生成相同的文件名，后写入的会覆盖先写入的，
+     * 导致压缩结果丢失，表现为"一次压缩多张图片就失败"。
+     */
+    private String generateFileName() {
+        if (!TextUtils.isEmpty(filename)) {
+            return filename;
+        }
+        return System.currentTimeMillis() + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 8);
+    }
+
     private File thirdCompress(@NonNull File file) {
-        String thumb = mCacheDir.getAbsolutePath() + File.separator +
-                (TextUtils.isEmpty(filename) ? System.currentTimeMillis() : filename) + ".jpg";
+        String thumb = mCacheDir.getAbsolutePath() + File.separator + generateFileName() + ".jpg";
 
         double size;
         String filePath = file.getAbsolutePath();
@@ -363,8 +398,7 @@ public class Luban {
         int shortSide = 1280;
 
         String filePath = file.getAbsolutePath();
-        String thumbFilePath = mCacheDir.getAbsolutePath() + File.separator +
-                (TextUtils.isEmpty(filename) ? System.currentTimeMillis() : filename) + ".jpg";
+        String thumbFilePath = mCacheDir.getAbsolutePath() + File.separator + generateFileName() + ".jpg";
 
         long size = 0;
         long maxSize = file.length() / 5;
@@ -499,6 +533,10 @@ public class Luban {
      */
     private File compress(String largeImagePath, String thumbFilePath, int width, int height, int angle, long size) {
         Bitmap thbBitmap = compress(largeImagePath, width, height);
+        if (thbBitmap == null) {
+            // 解码失败（图片损坏/格式不支持/内存不足），返回 null，由上层过滤掉这张图
+            return null;
+        }
 
         thbBitmap = rotatingImage(angle, thbBitmap);
 
@@ -513,6 +551,9 @@ public class Luban {
      * @param bitmap target image               目标图片
      */
     private static Bitmap rotatingImage(int angle, Bitmap bitmap) {
+        if (bitmap == null) {
+            return null;
+        }
         //rotate image
         Matrix matrix = new Matrix();
         matrix.postRotate(angle);
@@ -553,6 +594,8 @@ public class Luban {
             fos.close();
         } catch (IOException e) {
             e.printStackTrace();
+            // 写文件失败时返回 null，避免调用方拿到损坏的图片文件
+            return null;
         }
 
         return new File(filePath);

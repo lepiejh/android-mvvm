@@ -53,6 +53,7 @@ import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.core.Observer;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
+import io.reactivex.rxjava3.functions.Predicate;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 
 /**
@@ -912,7 +913,14 @@ public class ImageUtils {
                 .load(files)
                 .putGear(Luban.THIRD_GEAR)
                 .asListObservable()
-                .subscribeOn(Schedulers.computation())
+                .filter(new Predicate<File>() {
+                    @Override
+                    public boolean test(File file) throws Exception {
+                        // 过滤掉压缩失败（返回 null）或不存在的文件，保证下发的都是有效图片
+                        return file != null && file.exists();
+                    }
+                })
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -939,7 +947,7 @@ public class ImageUtils {
                 .load(url)
                 .putGear(Luban.THIRD_GEAR)
                 .asObservable()
-                .subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override
@@ -962,7 +970,7 @@ public class ImageUtils {
                 .load(url)
                 .putGear(Luban.THIRD_GEAR)
                 .asObservable()
-                .subscribeOn(Schedulers.computation())
+                .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(new Consumer<Throwable>() {
                     @Override

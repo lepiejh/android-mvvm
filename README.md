@@ -10,6 +10,8 @@
 - [Drawables 动态背景](#drawables-动态背景)
 - [CorpseUtils 工具方法](#corpseutils-工具方法)
 - [TakeCameraUtils 拍照](#takecamerautils-拍照)
+- [DownLoadManager 文件下载](#downloadmanager-文件下载)
+- [ImageUtils 图片压缩](#imageutils-图片压缩)
 
 ## ViewGroup 动态添加 View
 
@@ -460,3 +462,133 @@ class MainActivity : AppCompatActivity() {
 - 照片保存在 `externalCacheDir`，属于应用缓存目录，系统空间不足时可能被清理，如需长期保存请自行拷贝到其他目录；
 - 拍照成功后返回的 `file` 就是 `openCamera` 内部创建的那个文件（时间戳命名），可直接读取；
 - 部分机型相机返回的图片有旋转信息（EXIF），显示时可能需要按方向纠正。
+
+## DownLoadManager 文件下载
+
+对应类：`com.ved.framework.http.DownLoadManager`、`com.ved.framework.http.download.ProgressCallBack`
+
+### 功能
+
+- 一行代码下载文件（图片、APK 等），自动保存到指定目录；
+- 基于 OkHttp + Retrofit + RxJava 实现，回调开始、进度、成功、失败；
+- 进度回调在 Android 主线程，可直接刷新 UI。
+
+### 使用方法
+
+#### 1. 创建下载回调（构造参数：本地保存目录 + 文件名）
+
+```java
+ProgressCallBack<ResponseBody> callBack = new ProgressCallBack<ResponseBody>(destFileDir, destFileName) {
+    @Override
+    public void onSuccess(ResponseBody body) {
+        // 下载完成，文件已自动保存到 destFileDir/destFileName，无需再读取 body
+    }
+
+    @Override
+    public void progress(long progress, long total) {
+        // 下载进度（主线程回调），可用于更新进度条
+        int percent = total > 0 ? (int) (progress * 100 / total) : 0;
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        // 下载失败
+    }
+};
+```
+
+#### 2. 开始下载
+
+```java
+DownLoadManager.getInstance().load("https://example.com/demo.apk", callBack);
+```
+
+可选回调：重写 `onStart()`（开始下载）、`onCompleted()`（下载流程完成）。
+
+### 注意事项
+
+- 文件自动保存到 `destFileDir/destFileName`，父目录不存在会自动创建；
+- `progress(long progress, long total)` 回调在主线程，可直接更新进度条；
+- 不支持断点续传，重复下载会覆盖同名文件；
+- 已知限制（会导致部分图片/文件下载失败）：
+  - 请求未携带 Referer / User-Agent 等自定义 header，图片防盗链场景会直接返回 403/404；
+  - 仅配置了 `connectTimeout`，未配置 `readTimeout`，慢网或大文件容易被默认的 read timeout 中断；
+  - HTTPS 自签名证书场景会因证书校验失败而握手失败；
+  - 框架目前未开放自定义 header / 超时配置入口，遇到下载失败请先排查服务器限制与网络环境。
+
+## ImageUtils 图片压缩
+
+对应类：`com.ved.framework.utils.ImageUtils`（内部基于 Luban 压缩算法）
+
+### 功能
+
+- 支持单图、多图压缩，多图使用 `compressWithRx(List<String>, Observer)`；
+- 大图自动等比缩放并降低质量，输出 JPEG 文件到应用缓存目录；
+- 压缩自动在 IO 线程执行，回调在主线程；
+- 多图压缩时单张图片失败不会影响其他图片（跳过失败图，其余正常返回）。
+
+### 使用方法
+
+#### 1. 多图压缩
+
+```java
+List<String> paths = new ArrayList<>();
+paths.add("/storage/emulated/0/DCIM/Camera/a.jpg");
+paths.add("/storage/emulated/0/DCIM/Camera/b.jpg");
+
+ImageUtils.compressWithRx(paths, new Observer<File>() {
+    @Override
+    public void onSubscribe(Disposable d) {
+    }
+
+    @Override
+    public void onNext(File file) {
+        // 每压缩完一张图片回调一次，file 为压缩后的文件
+    }
+
+    @Override
+    public void onError(Throwable e) {
+        // 压缩过程异常
+    }
+
+    @Override
+    public void onComplete() {
+        // 全部图片压缩完成
+    }
+});
+```
+
+#### 2. 单图压缩
+
+```java
+ImageUtils.compressWithRx(url, new Consumer<File>() {
+    @Override
+    public void accept(File file) throws Exception {
+        // 压缩完成，file 为压缩后的文件
+    }
+});
+```
+
+#### 3. 单图压缩（带失败回调）
+
+```java
+ImageUtils.compressWithRx(url, new Consumer<File>() {
+    @Override
+    public void accept(File file) throws Exception {
+        // 压缩完成
+    }
+}, new IThrowable() {
+    @Override
+    public void accept(Throwable throwable) {
+        // 压缩失败，throwable 为异常信息
+    }
+});
+```
+
+### 注意事项
+
+- 多图压缩时每张图片生成**独立文件**，即使某一张解码失败（损坏图/格式不支持/内存不足）也只跳过这一张，其余图片正常回调；可通过 `onNext` 收到的文件数量对比原列表，判断是否有图片被跳过；
+- 回调收到的 `File` 均为真实存在且写入完整的文件；
+- 输出统一为 JPEG 格式（原图为 PNG/WebP 等也会转 JPEG）；体积较小（< 150KB）的图片会直接返回原文件，不再生成压缩文件；
+- 压缩产物位于应用缓存目录 `cache` 下，系统空间不足时可能被清理，需长期使用请自行拷贝；
+- 压缩为 CPU/IO 密集操作，框架已自动切换到 IO 线程，请勿在 UI 线程直接调用。
