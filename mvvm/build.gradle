@@ -6,10 +6,11 @@ apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.lixiong'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 33
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 30
+        targetSdkVersion 33
+        multiDexEnabled true
     }
     buildFeatures{
         //noinspection DataBindingWithoutKapt
@@ -30,6 +31,19 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+configurations.all {
+    resolutionStrategy {
+        //lifecycle 2.4.0 起 ktx 子包已改为空壳（Kotlin 扩展类并入主 artifact），
+        //将 espresso androidTest 依赖链引入的 2.3.1 旧 ktx 统一提升到 2.4.0，
+        //消除其与主链路新版 lifecycle-viewmodel/livedata-core 之间的重复类冲突。
+        //注意不能 force 到 2.5.1：该版本部分 jar 携带 module-info.class，
+        //会导致 JDK 8 的 javac 在编译时报 "unrecognized Attribute name MODULE"。
+        force 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.4.0'
+        force 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.4.0'
+        force 'androidx.lifecycle:lifecycle-livedata-ktx:2.4.0'
     }
 }
 
