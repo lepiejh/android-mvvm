@@ -39,7 +39,7 @@ public class ByteUtil {
         if (delim == null) {
             delim = "";
         }
-        if (src == null) {
+        if (src == null || src.length == 0) {
             return "";
         }
         StringBuffer sb = new StringBuffer();
@@ -50,7 +50,7 @@ public class ByteUtil {
         }
         String toPrint = sb.toString();
         int start = toPrint.length() - delim.length();
-        if (delim.equals(toPrint.substring(start, toPrint.length()))) {
+        if (start >= 0 && delim.equals(toPrint.substring(start, toPrint.length()))) {
             toPrint = toPrint.substring(0, start);
         }
         return toPrint;

@@ -382,17 +382,14 @@ public final class ConvertUtils {
      */
     public static OutputStream bytes2OutputStream(final byte[] bytes) {
         if (bytes == null || bytes.length <= 0) return null;
-        ByteArrayOutputStream os = null;
+        // 注意: 不能在此关闭流, 返回的流由调用方负责关闭
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
-            os = new ByteArrayOutputStream();
             os.write(bytes);
-            return os;
         } catch (IOException e) {
             e.printStackTrace();
-            return null;
-        } finally {
-            CloseUtils.closeIO(os);
         }
+        return os;
     }
 
     /**

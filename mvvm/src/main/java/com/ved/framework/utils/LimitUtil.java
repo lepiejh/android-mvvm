@@ -70,7 +70,7 @@ public class LimitUtil {
      */
     public static void clearLimit(EditText editText) {
         editText.setInputType(EditorInfo.TYPE_CLASS_PHONE | TYPE_CLASS_NUMBER | TYPE_CLASS_TEXT);
-        editText.setFilters(new InputFilter[]{null});
+        editText.setFilters(new InputFilter[0]);
         editText.setKeyListener(null);
     }
 

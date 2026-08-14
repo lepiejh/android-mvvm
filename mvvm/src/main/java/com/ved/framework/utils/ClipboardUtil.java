@@ -15,10 +15,12 @@ public class ClipboardUtil {
 
     }
 
-    public static void getClipboardText(Context context) {
+    public static String getClipboardText(Context context) {
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         if (clipboardManager != null && clipboardManager.hasPrimaryClip()) {
-            clipboardManager.getPrimaryClip().getItemAt(0).getText();
+            CharSequence text = clipboardManager.getPrimaryClip().getItemAt(0).getText();
+            return text == null ? "" : text.toString();
         }
+        return "";
     }
 }

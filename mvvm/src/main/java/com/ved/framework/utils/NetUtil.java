@@ -15,6 +15,9 @@ public class NetUtil{
             ConnectivityManager connectivityManager = (ConnectivityManager) context
                     //连接服务 CONNECTIVITY_SERVICE
                     .getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager == null) {
+                return NETWORK_NONE;
+            }
             //网络信息 NetworkInfo
             NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 

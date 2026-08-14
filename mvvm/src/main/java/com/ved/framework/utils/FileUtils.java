@@ -33,7 +33,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.net.ssl.HttpsURLConnection;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
@@ -971,11 +970,16 @@ public class FileUtils {
         boolean isURL = filePath.matches("[a-zA-z]+://[^\\s]*");
         if (isURL) {
             try {
-                HttpsURLConnection conn = (HttpsURLConnection) new URL(filePath).openConnection();
+                // 用 HttpURLConnection 接收, 兼容 http/https(HttpsURLConnection 是其子类)
+                java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new URL(filePath).openConnection();
                 conn.setRequestProperty("Accept-Encoding", "identity");
                 conn.connect();
-                if (conn.getResponseCode() == 200) {
-                    return conn.getContentLength();
+                try {
+                    if (conn.getResponseCode() == 200) {
+                        return conn.getContentLength();
+                    }
+                } finally {
+                    conn.disconnect();
                 }
                 return -1;
             } catch (IOException e) {

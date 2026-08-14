@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.blankj.swipepanel.SwipePanel;
@@ -123,9 +121,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         // 广播相关
         viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
 
-        // Fragment Resume事件
-        if (viewModel.getUC().getOnResumeEvent() != null && viewDelegate.getLifecycleOwner() != null) {
-            if (viewDelegate.getLifecycleOwner() instanceof Fragment){
+        // Fragment Resume事件（修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
+        // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
+        if (viewModel.getUC().getOnResumeEvent() != null && owner != null) {
+            if (viewDelegate.isFragment()){
                 viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
             }else {
                 viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.refreshView());
@@ -134,13 +133,12 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     }
 
     private void handleOnLoadEvent() {
-        if (viewDelegate.getLifecycleOwner() != null) {
-            if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-                viewDelegate.initView();
-                initSwipeBack();
-            } else{
-                viewDelegate.loadView();
-            }
+        if (viewDelegate.isFragment()) {
+            // Fragment 宿主：延迟到 onResume 事件中懒加载（loadView 为默认空实现）
+            viewDelegate.loadView();
+        } else {
+            viewDelegate.initView();
+            initSwipeBack();
         }
         registerEventBusIfNeeded();
         viewDelegate.initViewObservable();
@@ -161,9 +159,8 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
                 isEventBusRegistered = true;
             }
         } catch (Exception e) {
-            Object target = viewDelegate.getLifecycleOwner();
-            isEventBusRegistered = (target instanceof FragmentActivity && EventBus.getDefault().isRegistered(target)) ||
-                    (target instanceof Fragment && EventBus.getDefault().isRegistered(target));
+            Object target = resolveEventBusTarget();
+            isEventBusRegistered = target != null && EventBus.getDefault().isRegistered(target);
         }
     }
 

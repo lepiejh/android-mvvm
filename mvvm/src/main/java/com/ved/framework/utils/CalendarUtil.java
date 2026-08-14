@@ -102,10 +102,13 @@ public class CalendarUtil {
         if (TextUtils.isEmpty(mills)) {
             return "";
         }
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTimeInMillis(Long.parseLong(mills));
-        String time = getFormat(type).format(calendar.getTime());
-        return time;
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTimeInMillis(Long.parseLong(mills));
+            return getFormat(type).format(calendar.getTime());
+        } catch (NumberFormatException e) {
+            return "";
+        }
     }
 
     //java--》php

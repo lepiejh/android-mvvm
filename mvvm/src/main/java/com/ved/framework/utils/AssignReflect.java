@@ -127,11 +127,11 @@ public class AssignReflect {
      * @return 首个字母小写的字符串
      */
     private String  getString(String string){
-        if(Objects.equals(string, "") || string == null){
+        if(string == null || Objects.equals(string, "")){
             return null;
         }
+        // 只将首字母转为小写, 避免 replace 替换掉属性名中所有同名大写字符(如 getCCName -> cCName)
         String s = string.substring(0, 1);
-        string  = string.replace(s, s.toLowerCase());
-        return string;
+        return s.toLowerCase() + string.substring(1);
     }
 }

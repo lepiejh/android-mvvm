@@ -25,8 +25,11 @@ public class FilterEditText extends AppCompatEditText {
     }
 
     private void init() {
-        InputFilter[] filters = new InputFilter[1];
-        filters[0] = new SpecialCharacterFilter();
+        // 保留 XML 中已配置的过滤器(如 maxLength), 追加自定义字符过滤器, 避免覆盖
+        InputFilter[] original = getFilters();
+        InputFilter[] filters = new InputFilter[original.length + 1];
+        System.arraycopy(original, 0, filters, 0, original.length);
+        filters[original.length] = new SpecialCharacterFilter();
         setFilters(filters);
     }
 }

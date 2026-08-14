@@ -17,7 +17,14 @@ public class MemoryCookieStore implements CookieStore {
 
     @Override
     public synchronized void saveCookie(HttpUrl url, List<Cookie> cookies) {
+        if (cookies == null || cookies.isEmpty()) {
+            return;
+        }
         List<Cookie> oldCookies = memoryCookies.get(url.host());
+        if (oldCookies == null) {
+            oldCookies = new ArrayList<>();
+            memoryCookies.put(url.host(), oldCookies);
+        }
         List<Cookie> needRemove = new ArrayList<>();
         for (Cookie newCookie : cookies) {
             for (Cookie oldCookie : oldCookies) {
@@ -32,7 +39,14 @@ public class MemoryCookieStore implements CookieStore {
 
     @Override
     public synchronized void saveCookie(HttpUrl url, Cookie cookie) {
+        if (cookie == null) {
+            return;
+        }
         List<Cookie> cookies = memoryCookies.get(url.host());
+        if (cookies == null) {
+            cookies = new ArrayList<>();
+            memoryCookies.put(url.host(), cookies);
+        }
         List<Cookie> needRemove = new ArrayList<>();
         for (Cookie item : cookies) {
             if (cookie.name().equals(item.name())) {
@@ -73,8 +87,11 @@ public class MemoryCookieStore implements CookieStore {
 
     @Override
     public synchronized boolean removeCookie(HttpUrl url, Cookie cookie) {
+        if (cookie == null) {
+            return false;
+        }
         List<Cookie> cookies = memoryCookies.get(url.host());
-        return (cookie != null) && cookies.remove(cookie);
+        return cookies != null && cookies.remove(cookie);
     }
 
     @Override

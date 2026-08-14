@@ -121,7 +121,8 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                 if (code == Configure.getCode()) {
                     return gson.fromJson(response, type);
                 } else {
-                    Object errResponse = gson.fromJson(response, ENTITY_RESPONSE_CLASS);
+                    // 修复：复用上方已解析的 result，避免对同一 response 二次 Gson 解析
+                    Object errResponse = result;
                     if (ENTITY_RESPONSE_CONTENT_METHOD != null) {
                         String errorMsg = null;
                         try {

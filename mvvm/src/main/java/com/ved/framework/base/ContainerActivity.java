@@ -57,7 +57,11 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        getSupportFragmentManager().putFragment(outState, ParameterField.FRAGMENT_TAG, mFragment.get());
+        // 修复：WeakReference 可能在极端场景下已被清空，避免 putFragment(null) 抛 IllegalStateException
+        Fragment fragment = mFragment.get();
+        if (fragment != null) {
+            getSupportFragmentManager().putFragment(outState, ParameterField.FRAGMENT_TAG, fragment);
+        }
     }
 
     protected Fragment initFromIntent(Intent data) {

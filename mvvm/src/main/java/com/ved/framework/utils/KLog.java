@@ -614,7 +614,7 @@ public class KLog {
                             message = jsonArray.toString(JSON_INDENT);
                         }
                     } catch (JSONException e) {
-                        e(tag, e.getCause().getMessage() + "\n" + msg);
+                        e(tag, (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()) + "\n" + msg);
                         return;
                     }
 

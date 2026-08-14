@@ -40,7 +40,7 @@ public class SoftKeyboardUtil {
      */
     public static boolean isOpenInputMethod(Activity activity){
         InputMethodManager imm =(InputMethodManager)activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        return imm.isActive();
+        return imm != null && imm.isActive();
     }
 
     /**

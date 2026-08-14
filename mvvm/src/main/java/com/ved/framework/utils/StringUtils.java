@@ -541,6 +541,13 @@ public final class StringUtils {
     }
 
     public static byte[] hexStringToByteArray(String str) {
+        if (str == null || str.length() == 0) {
+            return new byte[0];
+        }
+        // 奇数长度时末尾补一个 0, 避免 charAt(i + 1) 越界
+        if ((str.length() & 1) == 1) {
+            str = "0" + str;
+        }
         int length = str.length();
         byte[] bArr = new byte[(length / 2)];
         for (int i = 0; i < length; i += 2) {
@@ -653,12 +660,17 @@ public final class StringUtils {
     }
 
     private static String[] splitByNumber(String str, int i) {
+        if (str == null || i <= 0) {
+            return new String[0];
+        }
         int length = (str.length() / i) + (str.length() % i == 0 ? 0 : 1);
         String[] strArr = new String[length];
         String str2 = str;
         for (int i2 = 0; i2 < length; i2++) {
-            strArr[i2] = str2.substring(0, i);
-            str2 = str2.substring(i);
+            // 末尾不足 i 位时只取剩余部分, 避免 substring 越界
+            int end = Math.min(i, str2.length());
+            strArr[i2] = str2.substring(0, end);
+            str2 = str2.substring(end);
         }
         return strArr;
     }

@@ -33,7 +33,11 @@ public class UIUtils {
     }
 
     public static boolean equals(Drawable drawable,@DrawableRes int id){
-        return Objects.equals(drawable.getConstantState(), Objects.requireNonNull(ContextCompat.getDrawable(Utils.getContext(), id)).getConstantState());
+        if (drawable == null) {
+            return false;
+        }
+        Drawable target = ContextCompat.getDrawable(Utils.getContext(), id);
+        return target != null && Objects.equals(drawable.getConstantState(), target.getConstantState());
     }
 
     public static boolean equals(Object s1,Object s2){

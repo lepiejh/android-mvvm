@@ -9,8 +9,6 @@ import android.telephony.TelephonyManager;
 
 import androidx.core.app.ActivityCompat;
 
-import com.ved.framework.utils.Utils;
-
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
@@ -126,6 +124,9 @@ public class NetworkUtil {
     public static boolean is3G(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            return false;
+        }
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
         if (activeNetInfo != null
                 && activeNetInfo.getType() == ConnectivityManager.TYPE_MOBILE) {
@@ -142,6 +143,9 @@ public class NetworkUtil {
     public static boolean isWifi(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            return false;
+        }
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
         if (activeNetInfo != null
                 && activeNetInfo.getType() == ConnectivityManager.TYPE_WIFI) {
@@ -158,6 +162,9 @@ public class NetworkUtil {
     public static boolean is2G(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (connectivityManager == null) {
+            return false;
+        }
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
         if (activeNetInfo != null
                 && (activeNetInfo.getSubtype() == TelephonyManager.NETWORK_TYPE_EDGE
@@ -176,7 +183,10 @@ public class NetworkUtil {
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         TelephonyManager mgrTel = (TelephonyManager) context
                 .getSystemService(Context.TELEPHONY_SERVICE);
-        if (ActivityCompat.checkSelfPermission(Utils.getContext(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
+        if (mgrConn == null || mgrTel == null) {
+            return false;
+        }
+        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             return false;
         }
         return ((mgrConn.getActiveNetworkInfo() != null && mgrConn

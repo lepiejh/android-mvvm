@@ -51,11 +51,17 @@ class CopyUtils {
 
     /**
      * 将属性名字段首字母转大写（getUsername / setId 的方法名拼接辅助）
+     * 首字符非小写字母时原样返回, 避免非法字符转换
      */
     private static String capitalize(String fieldName) {
-        char[] chars = fieldName.toCharArray();
-        chars[0] -= 32;
-        return String.valueOf(chars);
+        if (fieldName == null || fieldName.isEmpty()) {
+            return fieldName;
+        }
+        char first = fieldName.charAt(0);
+        if (first >= 'a' && first <= 'z') {
+            return (char) (first - 32) + fieldName.substring(1);
+        }
+        return fieldName;
     }
 
     /**

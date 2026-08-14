@@ -1,6 +1,5 @@
 package com.ved.framework.net;
 
-import android.annotation.SuppressLint;
 import android.text.TextUtils;
 import android.view.View;
 
@@ -15,10 +14,12 @@ import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.Utils;
 
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.annotation.Nullable;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.subjects.PublishSubject;
@@ -97,7 +98,6 @@ public abstract class ARequest<T, K> {
         return request(viewModel,method,service,viewState,seatSuccess,seatError,headers,index,isLoading,response);
     }
 
-    @SuppressLint("CheckResult")
     private PublishSubject<Object> request(@Nullable BaseViewModel viewModel,
                                           @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,
                                           View view,ISeatSuccess seatSuccess,ISeatError seatError,Map<String, String> headers,
@@ -120,22 +120,23 @@ public abstract class ARequest<T, K> {
                 viewModel.showDialog();
             }
             try {
-                final String[] msg = new String[1];
+                final AtomicReference<String> msg = new AtomicReference<>();
                 if (method != null) {
                     Observable o = method.method(RetrofitClient.getInstance().create(service, index, headers, (message, code) -> {
                         if (code!= Configure.getCode())
                         {
-                            msg[0] =message;
+                            msg.set(message);
                         }
                     },viewModel,iResponse));
-                    if (viewModel != null) {
-                        o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider())); // 请求与View周期同步
+                    if (viewModel != null && viewModel.getLifecycleProvider() != null) {
+                        // 修复：接收 compose 返回值，请求才能真正绑定 View 生命周期（页面销毁时自动取消订阅）
+                        o = o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider()));
                     }
-                    o.compose(RxUtils.schedulersTransformer())
+                    Disposable disposable = o.compose(RxUtils.schedulersTransformer())
                             .compose(observable -> observable
                                     .onErrorResumeNext((Function<Throwable, ObservableSource>) throwable -> {
                                         KLog.e(throwable.getMessage());
-                                        parseError(isLoading,viewModel,msg[0],view,seatError,iResponse,null);
+                                        parseError(isLoading,viewModel,msg.get(),view,seatError,iResponse,null);
                                         return Observable.error(throwable);
                                     }))
                             .takeUntil(lifecycleDisposable)
@@ -143,6 +144,10 @@ public abstract class ARequest<T, K> {
                                             parseSuccess(viewModel,view, isLoading, iResponse, response),
                                     (Consumer<ResponseThrowable>) throwable ->
                                             parseError(isLoading,viewModel, null,view,seatError,iResponse, throwable));
+                    // 将订阅纳入 ViewModel 的 CompositeDisposable 统一管理，onCleared 时自动释放
+                    if (viewModel != null) {
+                        viewModel.accept(disposable);
+                    }
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());

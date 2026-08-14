@@ -38,7 +38,7 @@ public class ListUtil {
             return true;
         }
 
-        if (aList.size() != bList.size()) {
+        if (aList == null || bList == null || aList.size() != bList.size()) {
             return false;
         }
 

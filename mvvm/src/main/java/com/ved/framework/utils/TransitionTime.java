@@ -15,7 +15,13 @@ import java.util.GregorianCalendar;
 public class TransitionTime {
 
     private Date endDate;
-    static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    // SimpleDateFormat 非线程安全, 用 ThreadLocal 避免多线程共享实例导致错乱
+    private static final ThreadLocal<SimpleDateFormat> FORMATTER = new ThreadLocal<SimpleDateFormat>() {
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd");
+        }
+    };
     public static final int WEEKDAYS = 7;
     public static String[] WEEK = {"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"};
 
@@ -111,7 +117,7 @@ public class TransitionTime {
 
     // 根据输入的毫秒数，获得日期字符串
     public static String getDate(long millis) {
-        return formatter.format(millis);
+        return FORMATTER.get().format(millis);
 
     }
 
@@ -169,6 +175,9 @@ public class TransitionTime {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
         ParsePosition pos = new ParsePosition(0);
         Date date = formatter.parse(data, pos);
+        if (date == null) {
+            return "";
+        }
         // 再转换为时间
         Calendar c = Calendar.getInstance();
         c.setTime(date);

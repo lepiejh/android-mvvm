@@ -17,9 +17,12 @@ public abstract class MemoryLeakHandler<T extends BaseActivity> extends Handler 
 
     @Override
     public void handleMessage(Message msg) {
-        T activity = mActivity.get();
         super.handleMessage(msg);
-        handleMessage(msg,activity);
+        T activity = mActivity.get();
+        // 弱引用被回收(Activity 已销毁)时不再回调, 避免子类对 null 的 activity 操作导致 NPE
+        if (activity != null) {
+            handleMessage(msg, activity);
+        }
     }
 
     protected abstract void handleMessage(Message msg, T activity);

@@ -14,8 +14,14 @@ public class OnViewGlobalLayoutListener implements ViewTreeObserver.OnGlobalLayo
 
     @Override
     public void onGlobalLayout() {
-        if (view.getHeight() > maxHeight){
+        int height = view.getHeight();
+        if (height > maxHeight) {
             view.getLayoutParams().height = maxHeight;
+            view.requestLayout();
+        }
+        if (height > 0) {
+            // 修复：完成首次测量后移除监听，避免布局循环导致无限回调
+            view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         }
     }
 }

@@ -19,7 +19,11 @@ public class ControlDistributeLinearLayout extends LinearLayout {
     public ControlDistributeLinearLayout(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         TypedArray typedArray = getContext().obtainStyledAttributes(attrs, R.styleable.ControlDistributeLinearLayout);
-        isDistributeEvent = typedArray.getBoolean(R.styleable.ControlDistributeLinearLayout_distribute_event, false);
+        try {
+            isDistributeEvent = typedArray.getBoolean(R.styleable.ControlDistributeLinearLayout_distribute_event, false);
+        } finally {
+            typedArray.recycle();
+        }
     }
 
     public ControlDistributeLinearLayout(Context context, AttributeSet attrs) {

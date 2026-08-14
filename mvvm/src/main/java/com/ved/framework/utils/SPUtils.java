@@ -422,8 +422,12 @@ public final class SPUtils {
             return sp.getLong(key, (Long) defaultValue);
         }else if (defaultValue instanceof Collection){
             Collection<?> collection = (Collection<?>) defaultValue;
+            if (collection.isEmpty()) {
+                return defaultValue;
+            }
             Class<?> elementType = collection.iterator().next().getClass();
-            return getCollection(elementType);
+            Collection<?> ret = getCollection(elementType);
+            return ret != null ? ret : defaultValue;
         }else {
             if (defaultValue != null) {
                 return getEntity(defaultValue.getClass(), defaultValue);

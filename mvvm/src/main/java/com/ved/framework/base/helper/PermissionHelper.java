@@ -4,8 +4,6 @@ import android.Manifest;
 import android.os.Build;
 
 import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 
 import com.orhanobut.dialog.utils.WifiSignalHelper;
 import com.ved.framework.base.BaseViewModel;
@@ -29,10 +27,12 @@ public class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewMode
 
     /** 申请运行时权限 */
     public void requestPermission(IPermission iPermission, String... permissions) {
-        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-            RxPermission.requestPermission((FragmentActivity) viewDelegate.getLifecycleOwner(), iPermission, permissions);
-        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
-            RxPermission.requestPermission((Fragment) viewDelegate.getLifecycleOwner(), iPermission, permissions);
+        // 修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
+        // 导致 Fragment 内请求权限静默失效，需用 viewDelegate 判断宿主类型
+        if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+            RxPermission.requestPermission(viewDelegate.getFragment(), iPermission, permissions);
+        } else if (viewDelegate.FragmentActivity() != null) {
+            RxPermission.requestPermission(viewDelegate.FragmentActivity(), iPermission, permissions);
         }
     }
 

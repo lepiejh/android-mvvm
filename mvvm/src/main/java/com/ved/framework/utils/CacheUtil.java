@@ -167,13 +167,16 @@ public class CacheUtil {
         BufferedReader in = null;
         try {
             in = new BufferedReader(new FileReader(file));
-            String readString = "";
-            String currentLine;
-            while ((currentLine = in.readLine()) != null) {
-                readString += currentLine;
+            // 用 char 缓冲读取, 保留原始内容中的换行符(readLine 会丢弃换行)
+            StringBuilder readString = new StringBuilder();
+            char[] buf = new char[1024];
+            int n;
+            while ((n = in.read(buf)) != -1) {
+                readString.append(buf, 0, n);
             }
-            if (!Utils.isDue(readString)) {
-                return Utils.clearDateInfo(readString);
+            String str = readString.toString();
+            if (!Utils.isDue(str)) {
+                return Utils.clearDateInfo(str);
             } else {
                 removeFile = true;
                 return null;
@@ -474,10 +477,11 @@ public class CacheUtil {
      * @return signBitmap 数据
      */
     public Bitmap getAsBitmap(String key) {
-        if (getAsBinary(key) == null) {
+        byte[] data = getAsBinary(key);
+        if (data == null) {
             return null;
         }
-        return Utils.Bytes2Bimap(getAsBinary(key));
+        return Utils.Bytes2Bimap(data);
     }
 
     // =======================================
@@ -512,10 +516,11 @@ public class CacheUtil {
      * @return Drawable 数据
      */
     public Drawable getAsDrawable(String key) {
-        if (getAsBinary(key) == null) {
+        byte[] data = getAsBinary(key);
+        if (data == null) {
             return null;
         }
-        return Utils.bitmap2Drawable(Utils.Bytes2Bimap(getAsBinary(key)));
+        return Utils.bitmap2Drawable(Utils.Bytes2Bimap(data));
     }
 
     /**

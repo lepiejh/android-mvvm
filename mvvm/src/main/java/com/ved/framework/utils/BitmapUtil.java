@@ -111,6 +111,9 @@ public final class BitmapUtil {
     public static String bitmapToString(String filePath) {
 
         Bitmap bm = getSmallBitmap(filePath);
+        if (bm == null) {
+            return "";
+        }
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.JPEG, 40, baos);
         byte[] b = baos.toByteArray();
@@ -141,9 +144,13 @@ public final class BitmapUtil {
                     && (options.outHeight >> i <= 1000)) {
                 in = new BufferedInputStream(
                         new FileInputStream(new File(path)));
-                options.inSampleSize = (int) Math.pow(2.0D, i);
-                options.inJustDecodeBounds = false;
-                bitmap = BitmapFactory.decodeStream(in, null, options);
+                try {
+                    options.inSampleSize = (int) Math.pow(2.0D, i);
+                    options.inJustDecodeBounds = false;
+                    bitmap = BitmapFactory.decodeStream(in, null, options);
+                } finally {
+                    in.close();
+                }
                 break;
             }
             i += 1;
@@ -234,14 +241,22 @@ public final class BitmapUtil {
             String filePath = PathUtil.getCacheDir() + "/img";
             FileUtils.createDir(filePath);
             File file = new File(filePath, fileName);//将要保存图片的路径
+            BufferedOutputStream bos = null;
             try {
-                BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file));
+                bos = new BufferedOutputStream(new FileOutputStream(file));
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
                 bos.flush();
-                bos.close();
                 return file.getAbsolutePath();
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                if (bos != null) {
+                    try {
+                        bos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
         return "";

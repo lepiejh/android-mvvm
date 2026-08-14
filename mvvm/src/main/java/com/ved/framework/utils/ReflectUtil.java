@@ -43,7 +43,7 @@ public class ReflectUtil {
             throw new IllegalArgumentException("fieldName can't be blank");
         }
 
-        for (Class<?> superClass = formClass(className); superClass != Object.class; superClass = superClass.getSuperclass()) {
+        for (Class<?> superClass = formClass(className); superClass != null && superClass != Object.class; superClass = superClass.getSuperclass()) {
             try {
                 Field field = superClass.getDeclaredField(fieldName);
                 makeAccessible(field);
@@ -64,7 +64,7 @@ public class ReflectUtil {
             throw new IllegalArgumentException("fieldName can't be blank");
         }
 
-        for (Class<?> superClass = obj.getClass(); superClass != Object.class; superClass = superClass.getSuperclass()) {
+        for (Class<?> superClass = obj.getClass(); superClass != null && superClass != Object.class; superClass = superClass.getSuperclass()) {
             try {
                 Field field = superClass.getDeclaredField(fieldName);
                 makeAccessible(field);

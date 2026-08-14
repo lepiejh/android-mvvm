@@ -4,6 +4,7 @@ import com.ved.framework.binding.command.BindingCommand;
 
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.subjects.PublishSubject;
 
 /**
@@ -20,14 +21,26 @@ public final class LoadMoreTrigger {
 
     private final BindingCommand<Integer> onLoadMoreCommand;
 
+    private final Disposable disposable;
+
     public LoadMoreTrigger(BindingCommand<Integer> onLoadMoreCommand) {
         this.onLoadMoreCommand = onLoadMoreCommand;
-        methodInvoke.throttleFirst(THROTTLE_SECONDS, TimeUnit.SECONDS)
+        // 修复：持有订阅，避免未管理导致无法释放
+        disposable = methodInvoke.throttleFirst(THROTTLE_SECONDS, TimeUnit.SECONDS)
                 .subscribe(integer -> {
                     if (onLoadMoreCommand != null) {
                         onLoadMoreCommand.execute(integer);
                     }
                 });
+    }
+
+    /**
+     * 释放订阅（可在 ViewModel.onCleared 或页面销毁时调用）
+     */
+    public void dispose() {
+        if (disposable != null && !disposable.isDisposed()) {
+            disposable.dispose();
+        }
     }
 
     /**

@@ -79,9 +79,7 @@ public class RedDotUtil {
                 num = "0";
             }
 
-            int numInt = Integer.valueOf(num);
-
-            if (numInt > 99) {// 超过99
+            if (isOverLimit(num)) {
                 num = "99+";
             }
 
@@ -164,9 +162,7 @@ public class RedDotUtil {
                 num = "0";
             }
 
-            int numInt = Integer.valueOf(num);
-
-            if (numInt > 99) {// 超过99
+            if (isOverLimit(num)) {
                 num = "99+";
             }
 
@@ -266,6 +262,17 @@ public class RedDotUtil {
         drawable.getPaint().setStyle(Paint.Style.FILL);
         drawable.getPaint().setColor(DEFAULT_STROKE_COLOR);// 设置颜色
         return drawable;
+    }
+
+    /**
+     * 判断数字是否超过99, 用 Long 解析避免 Integer.valueOf 溢出抛 NumberFormatException
+     */
+    private static boolean isOverLimit(String num) {
+        try {
+            return Long.parseLong(num) > 99;
+        } catch (NumberFormatException e) {
+            return true;
+        }
     }
 
     /**

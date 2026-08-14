@@ -74,6 +74,9 @@ public class NetworkUtils {
     public static boolean isNetWorkAvailable(Context context){
         boolean isAvailable = false ;
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            return false;
+        }
         NetworkInfo networkInfo = cm.getActiveNetworkInfo();
         if(networkInfo!=null && networkInfo.isAvailable()){
             isAvailable = true;
@@ -92,7 +95,9 @@ public class NetworkUtils {
         }
         ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         // cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
-        if (cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnectedOrConnecting())
+        // 注意: getNetworkInfo(int) 在 API 29+ 已废弃且可能返回 null, 需判空
+        NetworkInfo wifiInfo = cm != null ? cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
+        if (wifiInfo != null && wifiInfo.isConnectedOrConnecting())
             return NetworkUtils.WIFI;
         else
             return NetworkUtils.NO_WIFI;
@@ -106,8 +111,11 @@ public class NetworkUtils {
     @SuppressWarnings("static-access")
     public static boolean isWiFiConnected(Context context){
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (manager == null) {
+            return false;
+        }
         NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-        return networkInfo.getType() == manager.TYPE_WIFI;
+        return networkInfo != null && networkInfo.getType() == manager.TYPE_WIFI;
     }
 
     /**
@@ -119,7 +127,8 @@ public class NetworkUtils {
     public static boolean isMobileDataEnable(Context context){
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         boolean isMobileDataEnable = false;
-        isMobileDataEnable = manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).isConnectedOrConnecting();
+        NetworkInfo mobileInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE) : null;
+        isMobileDataEnable = mobileInfo != null && mobileInfo.isConnectedOrConnecting();
         return isMobileDataEnable;
     }
 
@@ -132,7 +141,8 @@ public class NetworkUtils {
     public static boolean isWifiDataEnable(Context context){
         ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         boolean isWifiDataEnable = false;
-        isWifiDataEnable = manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).isConnectedOrConnecting();
+        NetworkInfo wifiInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
+        isWifiDataEnable = wifiInfo != null && wifiInfo.isConnectedOrConnecting();
         return isWifiDataEnable;
     }
 
@@ -353,8 +363,6 @@ public class NetworkUtils {
                     (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
             if (tm == null) return false;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                if (ActivityCompat.checkSelfPermission(Utils.getApp(), Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                }
                 return tm.isDataEnabled();
             }
             @SuppressLint("PrivateApi")
@@ -385,10 +393,15 @@ public class NetworkUtils {
      */
     public static boolean isUsingVPN() {
         ConnectivityManager cm = (ConnectivityManager) Utils.getApp().getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (cm == null) {
+            return false;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            return cm.getNetworkInfo(ConnectivityManager.TYPE_VPN).isConnectedOrConnecting();
+            NetworkInfo info = cm.getNetworkInfo(ConnectivityManager.TYPE_VPN);
+            return info != null && info.isConnectedOrConnecting();
         } else {
-            return cm.getNetworkInfo(NetworkCapabilities.TRANSPORT_VPN).isConnectedOrConnecting();
+            NetworkInfo info = cm.getNetworkInfo(NetworkCapabilities.TRANSPORT_VPN);
+            return info != null && info.isConnectedOrConnecting();
         }
     }
 
@@ -576,9 +589,9 @@ public class NetworkUtils {
                         return NetworkType.NETWORK_5G;
                     default:
                         String subtypeName = info.getSubtypeName();
-                        if (subtypeName.equalsIgnoreCase("TD-SCDMA")
+                        if (subtypeName != null && (subtypeName.equalsIgnoreCase("TD-SCDMA")
                                 || subtypeName.equalsIgnoreCase("WCDMA")
-                                || subtypeName.equalsIgnoreCase("CDMA2000")) {
+                                || subtypeName.equalsIgnoreCase("CDMA2000"))) {
                             return NetworkType.NETWORK_3G;
                         } else {
                             return NetworkType.NETWORK_UNKNOWN;
@@ -853,8 +866,12 @@ public class NetworkUtils {
         if (!getWifiEnabled()) return result;
         @SuppressLint("WifiManagerLeak")
         WifiManager wm = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
-        //noinspection ConstantConditions
+        if (wm == null) {
+            return result;
+        }
+        // 未授权定位权限时 getScanResults() 会抛 SecurityException, 直接返回空结果
         if (ActivityCompat.checkSelfPermission(Utils.getApp(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return result;
         }
         List<ScanResult> results = wm.getScanResults();
         if (results != null) {

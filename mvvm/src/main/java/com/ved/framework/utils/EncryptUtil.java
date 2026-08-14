@@ -939,11 +939,15 @@ public final class EncryptUtil {
         }
 
         public static byte[] build3DesKey(byte[] temp) {
+            if (temp == null || temp.length == 0) {
+                return new byte[24];
+            }
             byte[] key = new byte[24]; // 声明一个24位的字节数组，默认里面都是0
-            System.arraycopy(temp, 0, key, 0, temp.length);
-            // 补充的8字节就是16字节密钥的前8位
+            int copyLen = Math.min(temp.length, key.length);
+            System.arraycopy(temp, 0, key, 0, copyLen);
+            // 补充的8字节取前8位(不足则补0), 避免 temp 长度不足8时越界
             for (int i = 0; i < 8; i++) {
-                key[16 + i] = temp[i];
+                key[16 + i] = (i < temp.length) ? temp[i] : 0;
             }
             return key;
         }

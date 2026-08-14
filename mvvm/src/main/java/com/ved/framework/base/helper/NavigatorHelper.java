@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.databinding.ViewDataBinding;
-import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
 
 import com.orhanobut.dialog.navigation.ActivityNavigator;
 import com.ved.framework.base.BaseViewModel;
@@ -45,10 +43,12 @@ public class NavigatorHelper<V extends ViewDataBinding, VM extends BaseViewModel
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        if (viewDelegate.getLifecycleOwner() instanceof FragmentActivity) {
-            ((FragmentActivity) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
-        } else if (viewDelegate.getLifecycleOwner() instanceof Fragment) {
-            ((Fragment) viewDelegate.getLifecycleOwner()).startActivityForResult(intent, requestCode);
+        // 修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
+        // 需用 viewDelegate.isFragment()/getFragment()/FragmentActivity() 判断宿主类型
+        if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
+            viewDelegate.getFragment().startActivityForResult(intent, requestCode);
+        } else if (viewDelegate.FragmentActivity() != null) {
+            viewDelegate.FragmentActivity().startActivityForResult(intent, requestCode);
         }
     }
 

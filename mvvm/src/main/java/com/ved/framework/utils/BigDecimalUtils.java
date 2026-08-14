@@ -52,8 +52,11 @@ public class BigDecimalUtils {
      * @return
      */
     public static String toDecimal(String value, int point) {
+        if (BlankUtil.isEmptyObj(value)) {
+            return "";
+        }
         BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        bd = bd.setScale(point, BigDecimal.ROUND_HALF_UP);
         return bd.toString();
     }
 
@@ -67,7 +70,7 @@ public class BigDecimalUtils {
     public static String toDecimal(float value, int point) {
         double d = Double.parseDouble(String.valueOf(value));  // 保证精度不丢失
         BigDecimal bd = new BigDecimal(d);
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        bd = bd.setScale(point, BigDecimal.ROUND_HALF_UP);
         return bd.toString();
     }
 

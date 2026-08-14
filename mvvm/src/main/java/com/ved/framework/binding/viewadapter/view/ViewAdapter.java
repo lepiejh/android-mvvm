@@ -41,13 +41,14 @@ public class ViewAdapter {
             }
         }
         if (isThrottleFirst) {
+            // 修复：isThrottleFirst=true 时开启防快速点击节流（原逻辑写反，导致节流分支永不生效）
             RxView.clicks(view)
+                    .throttleFirst(StringUtils.getThrottle(countThrottle), TimeUnit.SECONDS)
                     .subscribe(unit -> {
                         if (clickCommand != null) clickCommand.execute();
                     });
         } else {
             RxView.clicks(view)
-                    .throttleFirst(StringUtils.getThrottle(countThrottle), TimeUnit.SECONDS)
                     .subscribe(unit -> {
                         if (clickCommand != null) clickCommand.execute();
                     });

@@ -54,6 +54,9 @@ public class DeleteFile {
         boolean flag = true;
         // 删除文件夹中的所有文件包括子目录
         File[] files = dirFile.listFiles();
+        if (files == null) {
+            return false;
+        }
         for (File file : files) {
             // 删除子文件
             if (file.isFile()) {

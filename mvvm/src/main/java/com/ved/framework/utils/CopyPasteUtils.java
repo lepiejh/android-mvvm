@@ -50,8 +50,8 @@ public class CopyPasteUtils {
     public static void clearClipboard() {
         if (manager != null) {
             try {
-                manager.setPrimaryClip(manager.getPrimaryClip());
-                manager.setText(null);
+                // 用空文本 ClipData 覆盖剪贴板, setPrimaryClip 自己给自己无效
+                manager.setPrimaryClip(ClipData.newPlainText("", ""));
             } catch (Exception e) {
                 KLog.e(e.getMessage());
             }

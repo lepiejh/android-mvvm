@@ -65,8 +65,17 @@ public class FileSizeUtils {
         long size = 0;
         if (file.exists()) {
             FileInputStream fis = null;
-            fis = new FileInputStream(file);
-            size = fis.available();
+            try {
+                fis = new FileInputStream(file);
+                size = fis.available();
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (Exception ignored) {
+                    }
+                }
+            }
         } else {
             file.createNewFile();
             KLog.e("获取文件大小", "文件不存在!");
@@ -84,11 +93,14 @@ public class FileSizeUtils {
     private static long getFileSizes(File f) throws Exception {
         long size = 0;
         File flist[] = f.listFiles();
-        for (int i = 0; i < flist.length; i++) {
-            if (flist[i].isDirectory()) {
-                size = size + getFileSizes(flist[i]);
+        if (flist == null) {
+            return 0;
+        }
+        for (File file : flist) {
+            if (file.isDirectory()) {
+                size = size + getFileSizes(file);
             } else {
-                size = size + getFileSize(flist[i]);
+                size = size + getFileSize(file);
             }
         }
         return size;
