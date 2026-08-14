@@ -237,9 +237,13 @@ object CorpseUtils {
         }
     }
 
-    fun isStandardJson(jsonString: String) = try {
+    fun isStandardJson(jsonString: String): Boolean = try {
         val json = JSONObject(jsonString)
-        json.length() == 3 && json.has("code") && json.has("msg") && json.has("data")
+        // 键名通过 Configure 配置（默认 code/msg/data），兼容不同后台的字段命名
+        json.length() >= 3 &&
+            json.has(Configure.getCodeKey()) &&
+            json.has(Configure.getMsgKey()) &&
+            json.has(Configure.getDataKey())
     } catch (e: Exception) {
         false
     }

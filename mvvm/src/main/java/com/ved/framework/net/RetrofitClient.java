@@ -220,15 +220,9 @@ class RetrofitClient {
                         if (StringUtils.isNotEmpty(content)) {
                             try {
                                 JSONObject jsonObject = new JSONObject(content);
-                                int code = 0;
-                                String message = null;
-                                if (CorpseUtils.INSTANCE.isStandardJson(content)) {
-                                    code = jsonObject.optInt("code");
-                                    message = jsonObject.optString("msg");
-                                } else {
-                                    code = jsonObject.optInt("status");
-                                    message = jsonObject.optString("message");
-                                }
+                                // 使用 Configure 配置的键名读取业务码与消息（默认 code/msg，键名不同时调用 setResponseKeys 配置）
+                                int code = jsonObject.optInt(Configure.getCodeKey());
+                                String message = jsonObject.optString(Configure.getMsgKey());
                                 if (iResult != null) {
                                     iResult.onInfoResult(message, code);
                                 }
