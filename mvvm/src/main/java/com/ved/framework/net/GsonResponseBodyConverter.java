@@ -41,13 +41,33 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
     public T convert(ResponseBody value) throws IOException {
         // 注意：value.string() 会消费并关闭 body，之后不可再读取 value 流
         String response = value.string();
-        Object result = gson.fromJson(response, type);
+        if (TextUtils.isEmpty(response)) {
+            // 空响应：统一转业务异常，避免空串解析抛晦涩异常
+            throw new ResultException("服务器返回数据为空", -1);
+        }
+        Object result;
+        try {
+            result = gson.fromJson(response, type);
+        } catch (Exception e) {
+            // 后台返回非预期数据（非法 JSON / 与声明类型不匹配等）时，优先从原始 JSON 中
+            // 提取业务码与消息，保证错误可读、可处理，而不是把解析异常冒泡给用户。
+            throw buildParseException(response);
+        }
         if (result instanceof IEntityResponse<?>) {
             // 项目自定义的响应实体基类实现了约定接口：直接通过接口做业务码校验（与字段名无关）
             IEntityResponse<?> entityResponse = (IEntityResponse<?>) result;
             int code = entityResponse.getCode();
             if (code != Configure.getCode()) {
                 throw new ResultException(resolveErrorMsg(entityResponse), code);
+            }
+            // 兜底复核：实体字段名与后台键名不一致时，getCode() 会取到默认值且恰好等于成功码，
+            // 后台真实的业务失败会被误判为成功。此处以原始 JSON 中配置键名的业务码为准再校验一次。
+            if (JsonPraise.hasKey(response, Configure.getCodeKey())) {
+                int rawCode = StringUtils.parseInt(JsonPraise.optCode(response, Configure.getCodeKey()));
+                if (rawCode != code) {
+                    String rawMsg = JsonPraise.optCode(response, Configure.getMsgKey());
+                    throw new ResultException(TextUtils.isEmpty(rawMsg) ? resolveErrorMsg(entityResponse) : rawMsg, rawCode);
+                }
             }
             return (T) result;
         }
@@ -61,6 +81,21 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
             }
         }
         return (T) result;
+    }
+
+    /**
+     * 解析失败时构造业务异常：优先提取后台返回的业务码/消息，保证错误信息可读、可处理。
+     */
+    private ResultException buildParseException(String response) {
+        int code = StringUtils.parseInt(JsonPraise.optCode(response, Configure.getCodeKey()));
+        String msg = JsonPraise.optCode(response, Configure.getMsgKey());
+        if (!TextUtils.isEmpty(msg)) {
+            return new ResultException(msg, code);
+        }
+        if (CorpseUtils.INSTANCE.isStandardJson(response)) {
+            return new ResultException("数据格式异常", code);
+        }
+        return new ResultException("服务器返回数据格式异常", -1);
     }
 
     /**
