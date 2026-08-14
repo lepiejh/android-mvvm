@@ -1,4 +1,4 @@
-package com.ved.framework.binding.utils;
+package com.ved.framework.utils;
 
 import com.ved.framework.binding.command.BindingCommand;
 

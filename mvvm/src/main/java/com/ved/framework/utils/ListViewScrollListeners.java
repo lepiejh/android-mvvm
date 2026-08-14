@@ -1,4 +1,4 @@
-package com.ved.framework.binding.utils;
+package com.ved.framework.utils;
 
 import android.widget.AbsListView;
 import android.widget.ListView;

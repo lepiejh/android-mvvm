@@ -4,8 +4,8 @@ import android.widget.AbsListView;
 import android.widget.ListView;
 
 import com.ved.framework.binding.command.BindingCommand;
-import com.ved.framework.binding.utils.ListViewLoadMoreScrollListener;
-import com.ved.framework.binding.utils.ListViewScrollListeners;
+import com.ved.framework.utils.ListViewLoadMoreScrollListener;
+import com.ved.framework.utils.ListViewScrollListeners;
 import com.ved.framework.entity.ListViewScrollDataWrapper;
 
 import androidx.databinding.BindingAdapter;
