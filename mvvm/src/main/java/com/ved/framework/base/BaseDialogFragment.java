@@ -177,8 +177,6 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
      * 初始化根布局
      * <p>
      * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
-     * 例如 {@code BaseDialogFragment<HistoricalDialogBinding, HistoricalViewModel>}
-     * 会解析到 {@code R.layout.historical_dialog}，因此无需覆写本方法。
      * 若泛型无法推断（如直接声明 {@code ViewDataBinding}），请覆写本方法返回布局 id。
      */
     @Override
