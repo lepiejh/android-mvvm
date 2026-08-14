@@ -124,7 +124,8 @@ object CorpseUtils {
      * 获取最大值
      */
     fun findMax(list: List<Int?>): Int? {
-        return list.sortedWith(compareBy { it }).last()
+        // 空列表返回 null，且过滤掉 null 元素，避免 sortedWith 对 null 比较抛 NPE / last() 抛 NoSuchElementException
+        return list.filterNotNull().maxOrNull()
     }
 
     fun makeTime(t:Int?) : String?{

@@ -101,83 +101,23 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                     e.printStackTrace();
                     return gson.fromJson(response, type);
                 }
-                int code = 0;
-                if (ENTITY_RESPONSE_CODE_METHOD != null) {
-                    try {
-                        Object o = ENTITY_RESPONSE_CODE_METHOD.invoke(result);
-                        if (o instanceof Integer) {
-                            code = (int) o;
-                        } else if (o instanceof String) {
-                            code = StringUtils.parseInt((String) o);
-                        } else {
-                            if (o != null) {
-                                code = StringUtils.parseInt(o.toString());
-                            }
-                        }
-                    } catch (IllegalAccessException | InvocationTargetException e) {
-                        KLog.e(e.getMessage());
-                    }
-                }
+                int code = invokeCode(ENTITY_RESPONSE_CODE_METHOD, result);
                 if (code == Configure.getCode()) {
                     return gson.fromJson(response, type);
                 } else {
                     // 修复：复用上方已解析的 result，避免对同一 response 二次 Gson 解析
                     Object errResponse = result;
                     if (ENTITY_RESPONSE_CONTENT_METHOD != null) {
-                        String errorMsg = null;
-                        try {
-                            Object o = ENTITY_RESPONSE_CONTENT_METHOD.invoke(errResponse);
-                            if (o instanceof String) {
-                                errorMsg = (String) o;
-                            } else if (o instanceof Integer) {
-                                errorMsg = String.valueOf((int) o);
-                            } else {
-                                if (o != null) {
-                                    errorMsg = o.toString();
-                                }
-                            }
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            KLog.e(e.getMessage());
-                        }
+                        String errorMsg = invokeToString(ENTITY_RESPONSE_CONTENT_METHOD, errResponse);
                         if (!TextUtils.isEmpty(errorMsg)) {
                             throw new ResultException(errorMsg, code);
                         } else if (ENTITY_RESPONSE_MSG_METHOD != null) {
-                            String errorMsg2 = null;
-                            try {
-                                Object o = ENTITY_RESPONSE_MSG_METHOD.invoke(errResponse);
-                                if (o instanceof String) {
-                                    errorMsg2 = (String) o;
-                                } else if (o instanceof Integer) {
-                                    errorMsg2 = String.valueOf((int) o);
-                                } else {
-                                    if (o != null) {
-                                        errorMsg2 = o.toString();
-                                    }
-                                }
-                            } catch (IllegalAccessException | InvocationTargetException e) {
-                                KLog.e(e.getMessage());
-                            }
-                            throw new ResultException(errorMsg2, code);
+                            throw new ResultException(invokeToString(ENTITY_RESPONSE_MSG_METHOD, errResponse), code);
                         } else {
                             throw new ResultException("", code);
                         }
                     } else if (ENTITY_RESPONSE_MSG_METHOD != null) {
-                        String errorMsg1 = null;
-                        try {
-                            Object o = ENTITY_RESPONSE_MSG_METHOD.invoke(errResponse);
-                            if (o instanceof String) {
-                                errorMsg1 = (String) o;
-                            } else if (o instanceof Integer) {
-                                errorMsg1 = String.valueOf((int) o);
-                            } else {
-                                if (o != null) {
-                                    errorMsg1 = o.toString();
-                                }
-                            }
-                        } catch (IllegalAccessException | InvocationTargetException e) {
-                            KLog.e(e.getMessage());
-                        }
-                        throw new ResultException(errorMsg1, code);
+                        throw new ResultException(invokeToString(ENTITY_RESPONSE_MSG_METHOD, errResponse), code);
                     } else {
                         throw new ResultException("服务器异常", code);
                     }
@@ -186,5 +126,55 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody,
                 return gson.fromJson(response, type);
             }
         }
+    }
+
+    /**
+     * 反射调用方法并将结果安全转为 String（统一处理 null / String / Integer / 其他对象）
+     *
+     * @param method 目标方法，为 null 时直接返回 null
+     * @param target 反射调用目标对象
+     */
+    private String invokeToString(Method method, Object target) {
+        if (method == null) {
+            return null;
+        }
+        try {
+            Object o = method.invoke(target);
+            if (o instanceof String) {
+                return (String) o;
+            } else if (o instanceof Integer) {
+                return String.valueOf((int) o);
+            } else if (o != null) {
+                return o.toString();
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            KLog.e(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 反射调用方法并将结果安全转为 int 业务码
+     *
+     * @param method 目标方法，为 null 时返回 0
+     * @param target 反射调用目标对象
+     */
+    private int invokeCode(Method method, Object target) {
+        if (method == null) {
+            return 0;
+        }
+        try {
+            Object o = method.invoke(target);
+            if (o instanceof Integer) {
+                return (int) o;
+            } else if (o instanceof String) {
+                return StringUtils.parseInt((String) o);
+            } else if (o != null) {
+                return StringUtils.parseInt(o.toString());
+            }
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            KLog.e(e.getMessage());
+        }
+        return 0;
     }
 }

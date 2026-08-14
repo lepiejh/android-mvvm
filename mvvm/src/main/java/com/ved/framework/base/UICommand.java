@@ -29,9 +29,8 @@ public class UICommand implements ICommand {
     }
 
     public void startActivity(Class<?> clz, Bundle bundle) {
-        ActivityCommandBuilder.create()
+        newActivityBuilder(bundle)
                 .setTarget(clz)
-                .setBundle(bundle)
                 .execute(liveData.getStartActivityEvent());
     }
 
@@ -40,9 +39,8 @@ public class UICommand implements ICommand {
     }
 
     public void startActivityForResult(Class<?> clz, Bundle bundle, int requestCode) {
-        ActivityCommandBuilder.create()
+        newActivityBuilder(bundle)
                 .setTarget(clz)
-                .setBundle(bundle)
                 .setRequestCode(requestCode)
                 .execute(liveData.getStartActivityForResultEvent());
     }
@@ -52,10 +50,16 @@ public class UICommand implements ICommand {
     }
 
     public void startContainerActivity(String canonicalName, Bundle bundle) {
-        ActivityCommandBuilder.create()
+        newActivityBuilder(bundle)
                 .setCanonicalName(canonicalName)
-                .setBundle(bundle)
                 .execute(liveData.getStartContainerActivityEvent());
+    }
+
+    /**
+     * 统一创建 Activity 跳转 Builder，消除三个 start 方法中重复的创建+参数注入逻辑
+     */
+    private ActivityCommandBuilder newActivityBuilder(Bundle bundle) {
+        return ActivityCommandBuilder.create().setBundle(bundle);
     }
 
     public void requestPermissions(IPermission iPermission, String... permissions) {

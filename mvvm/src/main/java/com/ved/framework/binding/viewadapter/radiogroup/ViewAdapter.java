@@ -15,11 +15,17 @@ public class ViewAdapter {
     @BindingAdapter(value = {"onCheckedChangedCommand","isRepeat"}, requireAll = false)
     public static void onCheckedChangedCommand(final RadioGroup radioGroup, final BindingCommand<String> bindingCommand,final boolean isRepeat) {
         radioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            // checkedId 可能为 -1（RadioGroup.clearCheck() 时触发），需判空避免 NPE
             RadioButton radioButton = group.findViewById(checkedId);
+            if (radioButton == null) {
+                return;
+            }
             if (isRepeat && !radioButton.isPressed()){
                 return;
             }
-            bindingCommand.execute(radioButton.getText().toString());
+            if (bindingCommand != null) {
+                bindingCommand.execute(radioButton.getText().toString());
+            }
         });
     }
 }

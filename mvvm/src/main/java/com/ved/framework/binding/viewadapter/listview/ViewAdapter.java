@@ -5,6 +5,7 @@ import android.widget.ListView;
 
 import com.ved.framework.binding.command.BindingCommand;
 import com.ved.framework.binding.utils.ListViewLoadMoreScrollListener;
+import com.ved.framework.binding.utils.ListViewScrollListeners;
 import com.ved.framework.entity.ListViewScrollDataWrapper;
 
 import androidx.databinding.BindingAdapter;
@@ -19,7 +20,7 @@ public final class ViewAdapter {
     public static void onScrollChangeCommand(final ListView listView,
                                              final BindingCommand<ListViewScrollDataWrapper> onScrollChangeCommand,
                                              final BindingCommand<Integer> onScrollStateChangedCommand) {
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+        ListViewScrollListeners.addListener(listView, new AbsListView.OnScrollListener() {
             private int scrollState;
 
             @Override
@@ -37,7 +38,6 @@ public final class ViewAdapter {
                 }
             }
         });
-
     }
 
 
@@ -53,6 +53,6 @@ public final class ViewAdapter {
 
     @BindingAdapter({"onLoadMoreCommand"})
     public static void onLoadMoreCommand(final ListView listView, final BindingCommand<Integer> onLoadMoreCommand) {
-        listView.setOnScrollListener(new ListViewLoadMoreScrollListener(onLoadMoreCommand));
+        ListViewScrollListeners.addListener(listView, new ListViewLoadMoreScrollListener(onLoadMoreCommand));
     }
 }

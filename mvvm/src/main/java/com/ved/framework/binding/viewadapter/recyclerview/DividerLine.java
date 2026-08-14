@@ -60,6 +60,13 @@ public class DividerLine extends RecyclerView.ItemDecoration {
         this.dividerSize = dividerSize;
     }
 
+    /**
+     * 解析实际分隔线厚度：未显式设置时回退到默认 1dp
+     */
+    private int resolveDividerSize() {
+        return getDividerSize() == 0 ? DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : getDividerSize();
+    }
+
     public LineDrawMode getMode() {
         return mMode;
     }
@@ -112,7 +119,7 @@ public class DividerLine extends RecyclerView.ItemDecoration {
             final int top = child.getTop() - params.topMargin;
             final int bottom = child.getBottom() + params.bottomMargin;
             final int left = child.getRight() + params.rightMargin;
-            final int right = getDividerSize() == 0 ? left + DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : left + getDividerSize();
+            final int right = left + resolveDividerSize();
             dividerDrawable.setBounds(left, top, right, bottom);
             dividerDrawable.draw(c);
         }
@@ -139,7 +146,7 @@ public class DividerLine extends RecyclerView.ItemDecoration {
             //child的右边(也是分隔线的右边)
             final int right = child.getRight() - params.rightMargin;
             //分隔线的底边所在的位置(那就是分隔线的顶边加上分隔线的高度)
-            final int bottom = getDividerSize() == 0 ? top + DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : top + getDividerSize();
+            final int bottom = top + resolveDividerSize();
             dividerDrawable.setBounds(left, top, right, bottom);
             //画上去
             dividerDrawable.draw(c);

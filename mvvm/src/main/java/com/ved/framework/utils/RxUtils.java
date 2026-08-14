@@ -26,11 +26,10 @@ public class RxUtils {
      * @param lifecycle Activity
      */
     public static <T> LifecycleTransformer<T> bindToLifecycle(@NonNull Context lifecycle) {
-        if (lifecycle instanceof LifecycleProvider) {
-            return ((LifecycleProvider) lifecycle).bindToLifecycle();
-        } else {
+        if (!(lifecycle instanceof LifecycleProvider)) {
             throw new IllegalArgumentException("context not the LifecycleProvider type");
         }
+        return bindToLifecycle((LifecycleProvider) lifecycle);
     }
 
     /**
@@ -39,17 +38,16 @@ public class RxUtils {
      * @param lifecycle Fragment
      */
     public static LifecycleTransformer bindToLifecycle(@NonNull Fragment lifecycle) {
-        if (lifecycle instanceof LifecycleProvider) {
-            return ((LifecycleProvider) lifecycle).bindToLifecycle();
-        } else {
+        if (!(lifecycle instanceof LifecycleProvider)) {
             throw new IllegalArgumentException("fragment not the LifecycleProvider type");
         }
+        return bindToLifecycle((LifecycleProvider) lifecycle);
     }
 
     /**
      * 生命周期绑定
      *
-     * @param lifecycle Fragment
+     * @param lifecycle LifecycleProvider
      */
     public static LifecycleTransformer bindToLifecycle(@NonNull LifecycleProvider lifecycle) {
         return lifecycle.bindToLifecycle();

@@ -6,7 +6,6 @@ import android.view.View;
 import com.ved.framework.base.BaseViewModel;
 import com.ved.framework.http.ResponseThrowable;
 import com.ved.framework.utils.Configure;
-import com.ved.framework.utils.CorpseUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetUtil;
 import com.ved.framework.utils.RxUtils;
@@ -175,17 +174,8 @@ public abstract class ARequest<T, K> {
      */
     private void dispatchError(boolean isLoading, @Nullable BaseViewModel viewModel, String error,
                                View view, ISeatError seatError, IResponse<K> iResponse) {
-        if (viewModel != null) {
-            viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12), (coroutineScope, continuation) -> null, continuation -> {
-                parseError(isLoading, viewModel, error, view, seatError, iResponse, null);
-                return null;
-            }, throwable -> null, throwable -> null);
-        } else {
-            CorpseUtils.INSTANCE.handlerThread(() -> {
-                parseError(isLoading, null, error, view, seatError, iResponse, null);
-                return null;
-            });
-        }
+        UiThreadDispatcher.runOnUiThread(viewModel, () ->
+                parseError(isLoading, viewModel, error, view, seatError, iResponse, null));
     }
 
     private void parseError(boolean isLoading, @Nullable BaseViewModel viewModel, String error, View viewState,

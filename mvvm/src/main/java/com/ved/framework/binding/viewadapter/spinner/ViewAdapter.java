@@ -49,7 +49,9 @@ public class ViewAdapter {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 IKeyAndValue iKeyAndValue = itemDatas.get(position);
                 //将IKeyAndValue对象交给ViewModel
-                bindingCommand.execute(iKeyAndValue);
+                if (bindingCommand != null) {
+                    bindingCommand.execute(iKeyAndValue);
+                }
             }
 
             @Override
