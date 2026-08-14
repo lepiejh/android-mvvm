@@ -49,8 +49,15 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
         try {
             result = gson.fromJson(response, type);
         } catch (Exception e) {
-            // 后台返回非预期数据（非法 JSON / 与声明类型不匹配等）时，优先从原始 JSON 中
-            // 提取业务码与消息，保证错误可读、可处理，而不是把解析异常冒泡给用户。
+            // 声明类型与整体响应结构不匹配（如后台是标准包装结构、声明类型是业务实体/List 等）时，
+            // 优先提取包装结构中的 data 字段内容重新解析，让
+            // new ARequest<ApiService, UserBean>() 这类「直接声明业务实体」的写法也能解析成功。
+            Object data = parseDataField(response);
+            if (data != null) {
+                return (T) data;
+            }
+            // 提取不到可解析的数据时，优先从原始 JSON 中提取业务码与消息，
+            // 保证错误可读、可处理，而不是把解析异常冒泡给用户。
             throw buildParseException(response);
         }
         if (result instanceof IEntityResponse<?>) {
@@ -79,8 +86,30 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
                 String msg = JsonPraise.optCode(response, Configure.getMsgKey());
                 throw new ResultException(TextUtils.isEmpty(msg) ? "服务器异常" : msg, code);
             }
+            // 业务码通过校验：声明类型是普通业务实体（如 UserBean）时，
+            // 提取包装结构中的 data 字段内容重新解析，避免 Gson 静默赋默认值导致业务数据全空。
+            Object data = parseDataField(response);
+            if (data != null) {
+                return (T) data;
+            }
         }
         return (T) result;
+    }
+
+    /**
+     * 从标准包装结构中提取 data 字段内容，并按声明类型重新解析。
+     * 返回 null 表示无 data 字段或解析失败（data 为 JSON null、内容与声明类型不匹配等）。
+     */
+    private Object parseDataField(String response) {
+        String dataContent = JsonPraise.optCode(response, Configure.getDataKey());
+        if (TextUtils.isEmpty(dataContent) || "null".equals(dataContent)) {
+            return null;
+        }
+        try {
+            return gson.fromJson(dataContent, type);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     /**
