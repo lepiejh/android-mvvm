@@ -164,13 +164,7 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * @return 布局layout的id
      */
     public int initContentView(Bundle savedInstanceState) {
-        int layoutId = BindingLayoutResolver.resolveLayoutId(this, getClass());
-        if (layoutId != 0) {
-            return layoutId;
-        }
-        throw new IllegalStateException("无法从 ViewDataBinding 泛型推断布局文件，"
-                + "请确认泛型声明为具体的 Binding 类（如 XxxActivityBinding），或覆写 initContentView() 返回布局 id。"
-                + "class=" + getClass().getName());
+        return BindingLayoutResolver.resolveLayoutIdOrThrow(this, getClass());
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {

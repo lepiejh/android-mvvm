@@ -29,6 +29,27 @@ public final class BindingLayoutResolver {
     private static final Map<String, Integer> LAYOUT_ID_CACHE = new ConcurrentHashMap<>();
 
     /**
+     * 从宿主类解析布局 id，无法解析时抛出统一异常。
+     * <p>
+     * 供 {@code BaseActivity} / {@code BaseFragment} / {@code BaseDialogFragment} 的
+     * 默认 {@code initContentView()} 委托调用，收敛重复的解析 + 异常处理逻辑（委托模式）。
+     *
+     * @param context   上下文（Activity / Fragment 均可）
+     * @param hostClass 宿主类（页面 Class，如 {@code HistoricalDetailsActivity.class}）
+     * @return 布局资源 id
+     * @throws IllegalStateException 无法从 ViewDataBinding 泛型推断布局文件时抛出
+     */
+    public static int resolveLayoutIdOrThrow(@NonNull Context context, @NonNull Class<?> hostClass) {
+        int layoutId = resolveLayoutId(context, hostClass);
+        if (layoutId == 0) {
+            throw new IllegalStateException("无法从 ViewDataBinding 泛型推断布局文件，"
+                    + "请确认泛型声明为具体的 Binding 类（如 XxxBinding），或覆写 initContentView() 返回布局 id。"
+                    + "class=" + hostClass.getName());
+        }
+        return layoutId;
+    }
+
+    /**
      * 从宿主类解析布局 id。
      *
      * @param context   上下文（Activity / Fragment 均可）

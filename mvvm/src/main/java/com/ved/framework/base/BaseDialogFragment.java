@@ -181,13 +181,7 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
      */
     @Override
     public int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        int layoutId = BindingLayoutResolver.resolveLayoutId(requireContext(), getClass());
-        if (layoutId != 0) {
-            return layoutId;
-        }
-        throw new IllegalStateException("无法从 ViewDataBinding 泛型推断布局文件，"
-                + "请确认泛型声明为具体的 Binding 类（如 XxxDialogBinding），或覆写 initContentView() 返回布局 id。"
-                + "class=" + getClass().getName());
+        return BindingLayoutResolver.resolveLayoutIdOrThrow(requireContext(), getClass());
     }
 
     public void dismissDialog() {
