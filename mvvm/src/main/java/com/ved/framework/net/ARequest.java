@@ -12,6 +12,8 @@ import com.ved.framework.utils.RxUtils;
 import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.Utils;
 
+import java.io.IOException;
+import java.net.SocketException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -138,6 +140,9 @@ public abstract class ARequest<T, K> {
                                         parseError(isLoading,viewModel,msg.get(),view,seatError,iResponse,null);
                                         return Observable.error(throwable);
                                     }))
+                            // 取消（dispose）时立即清理连接池中的空闲连接，
+                            // 避免取消后的下一次请求复用「半死」连接导致失败或需要等待连接释放
+                            .doOnDispose(() -> RetrofitClient.getInstance().evictConnections())
                             .takeUntil(lifecycleDisposable)
                             .subscribe((Consumer<K>) response ->
                                             parseSuccess(viewModel,view, isLoading, iResponse, response),
@@ -178,10 +183,33 @@ public abstract class ARequest<T, K> {
                 parseError(isLoading, viewModel, error, view, seatError, iResponse, null));
     }
 
+    /**
+     * 判断是否为用户主动取消请求导致的异常。
+     * <p>
+     * OkHttp 取消请求时会抛 {@code IOException("Canceled")}（请求尚未发出/正在执行）或
+     * {@code SocketException("Socket closed")}（读取响应时连接被关闭）。
+     * 取消是预期行为，不应触发错误 UI / 错误回调，否则取消后立即重新发起的请求
+     * 会被旧请求的错误回调干扰（loading 被关闭、错误占位被显示），表现为「重新请求不生效」。
+     */
+    private boolean isCanceledException(@Nullable ResponseThrowable throwable) {
+        if (throwable == null || throwable.getCause() == null) {
+            return false;
+        }
+        Throwable t = throwable.getCause();
+        if (t instanceof IOException && "Canceled".equals(t.getMessage())) {
+            return true;
+        }
+        return t instanceof SocketException && "Socket closed".equals(t.getMessage());
+    }
+
     private void parseError(boolean isLoading, @Nullable BaseViewModel viewModel, String error, View viewState,
                             ISeatError seatError, IResponse<K> iResponse, ResponseThrowable throwable) {
         if (isLoading && viewModel != null) {
             viewModel.dismissDialog();
+        }
+        if (isCanceledException(throwable)) {
+            // 用户主动取消：仅关闭 loading，不触发错误回调 / 错误占位 / 统一异常处理
+            return;
         }
         if (viewState != null && seatError != null) {
             seatError.onErrorView();

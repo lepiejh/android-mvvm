@@ -139,7 +139,7 @@ val lifecycleDisposable = PublishSubject.create<Unit>()
 lifecycleDisposable.onNext(Unit) // 取消网络请求
 ```
 
-> 注意：取消网络请求后，需要延时 1 秒再重新请求才能生效，可能是由于请求取消后资源未完全释放或 OkHttp 连接池未及时清理。
+> 取消网络请求后可以**立即重新请求**。框架已内置处理：取消时（`takeUntil` 触发）会自动清理连接池中的空闲连接，并且取消导致的 `IOException("Canceled")` / `SocketException("Socket closed")` 不会触发错误回调，避免旧请求的错误回调干扰新请求（如 loading 被误关、错误占位被误显示）。
 
 ## 自定义响应实体基类（IEntityResponse）
 

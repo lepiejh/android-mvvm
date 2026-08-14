@@ -111,6 +111,20 @@ class RetrofitClient {
         return client;
     }
 
+    /**
+     * 立即清理连接池中的空闲连接。
+     * <p>
+     * 用于「取消网络请求后立即重新请求」的场景：请求被取消时，OkHttp 会关闭该请求的 socket，
+     * 但连接对象可能在连接池中短暂残留（异步驱逐），导致新请求复用「半死」连接而失败或需要等待。
+     * 主动驱逐可保证取消后的下一次请求使用全新连接，立即生效。
+     */
+    public static void evictConnections() {
+        OkHttpClient client = baseClient;
+        if (client != null) {
+            client.connectionPool().evictAll();
+        }
+    }
+
     private static OkHttpClient createBaseClient() {
         HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
         return RetrofitUrlManager.getInstance().with(new OkHttpClient.Builder())
@@ -197,12 +211,17 @@ class RetrofitClient {
                         try {
                             response = chain.proceed(chain.request());
                         } catch (IOException e) {
-                            UiThreadDispatcher.runOnUiThread(viewModel, () -> {
-                                if (viewModel != null) {
-                                    viewModel.dismissDialog();
-                                }
-                                if (iResponse != null) iResponse.onError(e.getMessage(), e instanceof SocketException);
-                            });
+                            // 用户主动取消请求（takeUntil 触发）时 OkHttp 会抛异常，此时不应触发错误回调，
+                            // 否则取消后立即重新发起的请求会被旧请求的异步错误回调干扰
+                            //（loading 被关闭、错误占位被显示），表现为「重新请求不生效」。
+                            if (!chain.call().isCanceled()) {
+                                UiThreadDispatcher.runOnUiThread(viewModel, () -> {
+                                    if (viewModel != null) {
+                                        viewModel.dismissDialog();
+                                    }
+                                    if (iResponse != null) iResponse.onError(e.getMessage(), e instanceof SocketException);
+                                });
+                            }
                             throw e; // 继续抛出，让 RxJava 的 onError 处理
                         }
                         long endTime = System.currentTimeMillis();
