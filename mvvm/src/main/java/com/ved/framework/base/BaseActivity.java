@@ -157,10 +157,23 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
 
     /**
      * 初始化根布局
+     * <p>
+     * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
+     * 例如 {@code BaseActivity<HistoricalDetailsActivityBinding, HistoricalDetailsViewModel>}
+     * 会解析到 {@code R.layout.historical_details_activity}，因此无需覆写本方法。
+     * 若泛型无法推断（如直接声明 {@code ViewDataBinding}），请覆写本方法返回布局 id。
      *
      * @return 布局layout的id
      */
-    public abstract int initContentView(Bundle savedInstanceState);
+    public int initContentView(Bundle savedInstanceState) {
+        int layoutId = BindingLayoutResolver.resolveLayoutId(this, getClass());
+        if (layoutId != 0) {
+            return layoutId;
+        }
+        throw new IllegalStateException("无法从 ViewDataBinding 泛型推断布局文件，"
+                + "请确认泛型声明为具体的 Binding 类（如 XxxActivityBinding），或覆写 initContentView() 返回布局 id。"
+                + "class=" + getClass().getName());
+    }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
         baseView.requestPermission(iPermission, permissions);
