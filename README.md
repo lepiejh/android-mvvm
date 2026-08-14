@@ -143,21 +143,27 @@ lifecycleDisposable.onNext(Unit) // 取消网络请求
 
 ## 自定义响应实体基类（IEntityResponse）
 
-对应接口：`com.ved.framework.net.IEntityResponse`、默认实现：`com.ved.framework.mode.EntityResponse`、配置类：`com.ved.framework.utils.Configure`
+对应接口：`com.ved.framework.net.IEntityResponse`、配置类：`com.ved.framework.utils.Configure`
 
 ### 背景与原理
 
-框架**不绑定任何具体的响应实体类**（框架自带的 `EntityResponse` 只是 `{code, msg, data}` 结构的默认实现）。实际项目应根据自己后台的字段结构，在项目代码中定义响应实体基类并实现 `IEntityResponse` 接口，框架即自动完成业务码校验——**字段名、JSON 键名完全由项目决定，框架不依赖反射、不写死类名/包名**。
+框架**不再内置任何响应实体类**（旧版的 `EntityResponse` 已移除），响应实体基类必须由**项目自己定义**，类名随意（`EntityResponse` / `BaseResponse` / `ApiResponse` 都行）。项目应根据自己后台的字段结构定义实体基类并实现 `IEntityResponse` 接口，框架即自动完成业务码校验——**字段名、JSON 键名完全由项目决定，框架不依赖反射、不写死类名/包名**。
 
-原理：Retrofit 会把 Service 方法声明的返回泛型（如 `Observable<BaseResponse<User>>` 中的 `BaseResponse<User>`）传给转换器，框架解析 JSON 后做一次 `instanceof IEntityResponse` 判断，再通过接口方法读取 code / msg / data。
+原理：Retrofit 会把 Service 方法声明的返回泛型（如 `Observable<EntityResponse<User>>` 中的 `EntityResponse<User>`）传给转换器，框架解析 JSON 后做一次 `instanceof IEntityResponse` 判断，再通过接口方法读取 code / msg / data。
 
 ### 使用方法
 
-#### 1. 定义响应实体基类（字段名与后台对应，可随意命名）
+#### 1. 在项目里新建响应实体基类（类名、字段名与后台对应，可随意命名）
+
+**Java 示例**（放在项目包下，如 `com.xxx.app.base`）：
 
 ```java
-// Java 示例：后台返回结构为 {status, message, result}
-public class BaseResponse<T> implements IEntityResponse<T> {
+package com.xxx.app.base;
+
+import com.ved.framework.net.IEntityResponse;
+
+// 后台返回结构为 {status, message, result}
+public class EntityResponse<T> implements IEntityResponse<T> {
     private int status;          // 对应后台 status 字段
     private String message;      // 对应后台 message 字段
     private T result;            // 对应后台 result 字段
@@ -168,9 +174,15 @@ public class BaseResponse<T> implements IEntityResponse<T> {
 }
 ```
 
+**Kotlin 示例**：
+
 ```kotlin
-// Kotlin 示例
-class BaseResponse<T> : IEntityResponse<T> {
+package com.xxx.app.base
+
+import com.ved.framework.net.IEntityResponse
+
+// 后台返回结构为 {status, message, result}
+class EntityResponse<T> : IEntityResponse<T> {
     var status: Int = 0
     var message: String? = null
     var result: T? = null
@@ -180,6 +192,8 @@ class BaseResponse<T> : IEntityResponse<T> {
     override fun getData(): T? = result
 }
 ```
+
+> 后台键名恰好就是 `code/msg/data` 时，直接把字段命名为 `code/msg/data` 即可；后台有额外字段时 Gson 会自动忽略，不影响解析。
 
 接口三个方法的含义：
 
@@ -221,7 +235,7 @@ Configure.setUrl(0, "https://api.example.com");
 Configure.setResponseKeys("status", "message", "result");
 ```
 
-若后台键名就是 `code/msg/data`，可直接使用框架自带的 `com.ved.framework.mode.EntityResponse`，无需自定义，也无需配置键名。
+若后台键名就是 `code/msg/data`，项目实体基类的字段直接命名为 `code/msg/data` 即可，无需调用 `setResponseKeys` 配置键名。
 
 #### 3. Service 方法声明返回该实体
 
@@ -229,14 +243,14 @@ Configure.setResponseKeys("status", "message", "result");
 // Service 接口
 public interface ApiService {
     @GET("user/info")
-    Observable<BaseResponse<UserBean>> getUser();
+    Observable<EntityResponse<UserBean>> getUser();
 }
 ```
 
 #### 4. 发起请求，回调直接拿业务数据
 
 ```java
-new ARequest<ApiService, BaseResponse<UserBean>>() {
+new ARequest<ApiService, EntityResponse<UserBean>>() {
     @Override
     public void exceptionHandling(@Nullable BaseViewModel viewModel, @Nullable String error, int code) {
         // 统一异常处理（业务码失败、网络异常等都会走到这里）
@@ -244,10 +258,10 @@ new ARequest<ApiService, BaseResponse<UserBean>>() {
 }
         .withViewModel(viewModel)                       // 传入 ViewModel（可选，传入后请求与生命周期绑定）
         .withService(ApiService.class)                  // Retrofit Service
-        .withMethod(apiService -> apiService.getUser()) // 实际请求，返回 Observable<BaseResponse<UserBean>>
-        .withResponse(new IResponse<BaseResponse<UserBean>>() {
+        .withMethod(apiService -> apiService.getUser()) // 实际请求，返回 Observable<EntityResponse<UserBean>>
+        .withResponse(new IResponse<EntityResponse<UserBean>>() {
             @Override
-            public void onSuccess(@Nullable BaseResponse<UserBean> response) {
+            public void onSuccess(@Nullable EntityResponse<UserBean> response) {
                 // 走到这里说明业务码已通过校验，response 不为 null
                 UserBean userBean = response.getData(); // 直接取业务数据
             }
@@ -264,7 +278,7 @@ new ARequest<ApiService, BaseResponse<UserBean>>() {
 
 - **字段名 vs JSON 键名**：`getCode()`/`getMsg()`/`getData()` 的返回值映射到后台什么字段，由你实现的 getter 决定；而 `Configure.setResponseKeys(...)` 只影响「未实现接口时的兜底解析」与网络拦截器的业务码/消息读取，两者用途不同，通常需要同时对应；
 - 业务失败时错误消息取 `data` 优先、`msg` 次之，均空时兜底为「服务器异常」；
-- 旧项目如果直接使用 `EntityResponse`，本次改动后无需任何调整（它已实现 `IEntityResponse`）。
+- 旧项目升级前若直接依赖框架的 `EntityResponse`：升级后需按本节的示例，在项目里自行定义同名的响应实体基类（实现 `IEntityResponse` 即可），其余调用代码无需改动。
 
 ## Messenger 消息总线
 

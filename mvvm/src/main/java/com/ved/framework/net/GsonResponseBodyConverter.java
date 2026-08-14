@@ -52,7 +52,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
             return (T) result;
         }
         // 兜底兼容：声明类型未实现接口，但响应为 {code,msg,data} 标准包装结构时，
-        // 仍按配置键名做业务码校验（与旧版固定 EntityResponse 的行为保持一致）
+        // 仍按配置键名做业务码校验（与声明了包装实体时的行为保持一致）
         if (CorpseUtils.INSTANCE.isStandardJson(response)) {
             int code = StringUtils.parseInt(JsonPraise.optCode(response, Configure.getCodeKey()));
             if (code != Configure.getCode()) {
