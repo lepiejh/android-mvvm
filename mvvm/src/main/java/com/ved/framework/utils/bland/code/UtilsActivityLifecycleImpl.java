@@ -56,6 +56,11 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             KLog.e(e.getMessage());
         }
         try {
+            setResponseKeys(app.getPackageName());
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
+        try {
             setLog(app.getPackageName());
         } catch (Exception e) {
             KLog.e(e.getMessage());
@@ -87,6 +92,49 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                     Configure.setUrl(0,(String) urlObject);
                 }
             }
+        }
+    }
+
+    /**
+     * 反射读取项目 build.gradle 中通过 buildConfigField 配置的响应包装字段名（CODE_KEY / MSG_KEY / DATA_KEY），
+     * 与 BASE_URL 的读取方式一致。字段未配置时传 null，Configure 内部保持默认的 code / msg / data。
+     *
+     * 项目 app/build.gradle 中示例：
+     * <pre>
+     * defaultConfig {
+     *     buildConfigField "String", "CODE_KEY", "\"status\""
+     *     buildConfigField "String", "MSG_KEY", "\"message\""
+     *     buildConfigField "String", "DATA_KEY", "\"result\""
+     * }
+     * </pre>
+     */
+    private void setResponseKeys(String packageName) throws ClassNotFoundException, IllegalAccessException {
+        String codeKey = null;
+        String msgKey = null;
+        String dataKey = null;
+        Field codeKeyField = ReflectUtil.getAccessibleField(packageName + ".BuildConfig", "CODE_KEY");
+        if (codeKeyField != null) {
+            Object codeKeyObject = codeKeyField.get(0);
+            if (codeKeyObject != null) {
+                codeKey = (String) codeKeyObject;
+            }
+        }
+        Field msgKeyField = ReflectUtil.getAccessibleField(packageName + ".BuildConfig", "MSG_KEY");
+        if (msgKeyField != null) {
+            Object msgKeyObject = msgKeyField.get(0);
+            if (msgKeyObject != null) {
+                msgKey = (String) msgKeyObject;
+            }
+        }
+        Field dataKeyField = ReflectUtil.getAccessibleField(packageName + ".BuildConfig", "DATA_KEY");
+        if (dataKeyField != null) {
+            Object dataKeyObject = dataKeyField.get(0);
+            if (dataKeyObject != null) {
+                dataKey = (String) dataKeyObject;
+            }
+        }
+        if (codeKey != null || msgKey != null || dataKey != null) {
+            Configure.setResponseKeys(codeKey, msgKey, dataKey);
         }
     }
 

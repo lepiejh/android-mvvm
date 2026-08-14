@@ -189,7 +189,28 @@ class BaseResponse<T> : IEntityResponse<T> {
 | `getMsg()` | 提示消息 | 业务失败时作为错误消息（`data` 为空时兜底使用） |
 | `getData()` | 业务数据 | 业务失败且 `data` 非空时，优先取 `data` 作为错误消息；成功时就是回调里的业务实体 |
 
-#### 2. 配置成功业务码与响应键名（在 Application.onCreate 初始化时调用一次）
+#### 2. 配置成功业务码与响应键名
+
+**方式一（推荐）：在 app/build.gradle 中通过 `buildConfigField` 声明，框架启动时自动反射读取**
+
+```groovy
+// app/build.gradle
+defaultConfig {
+    // BASE_URL 与 BASE_URL_CODE 为框架已有的成功码 + baseUrl 配置
+    buildConfigField "String", "BASE_URL", "\"https://api.example.com/\""
+    buildConfigField "int", "BASE_URL_CODE", "0"
+
+    // 响应包装字段名（可选，不配置则使用默认的 code / msg / data）
+    // 后台返回 {status, message, result} 时按下面配置
+    buildConfigField "String", "CODE_KEY", "\"status\""
+    buildConfigField "String", "MSG_KEY", "\"message\""
+    buildConfigField "String", "DATA_KEY", "\"result\""
+}
+```
+
+框架在 `Utils.init(app)`（应用启动）时，会仿照 `BASE_URL` 的反射方式，自动读取 `CODE_KEY` / `MSG_KEY` / `DATA_KEY` 并配置 `Configure`，无需写任何代码。三个字段均可选，缺省项保持默认值 `code` / `msg` / `data`。
+
+**方式二：在 Application.onCreate 中手动调用**
 
 ```java
 // 参数 1：业务成功码（对应 Configure.getCode()，默认 0，后台用 1 表示成功时传 1）
