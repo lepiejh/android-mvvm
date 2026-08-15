@@ -25,8 +25,12 @@ public final class BindingLayoutResolver {
 
     private static final String BINDING_SUFFIX = "Binding";
 
-    /** 缓存 layoutId，避免每次创建页面都做反射 + getIdentifier */
-    private static final Map<String, Integer> LAYOUT_ID_CACHE = new ConcurrentHashMap<>();
+    /**
+     * 缓存「宿主类 → layoutId」的完整解析结果（解析失败缓存 0），
+     * 避免每次创建页面都做反射遍历继承链 + getIdentifier。
+     * 同一宿主类的泛型与资源 id 在进程内恒定，缓存安全。
+     */
+    private static final Map<Class<?>, Integer> RESOLVED_ID_CACHE = new ConcurrentHashMap<>();
 
     /**
      * 从宿主类解析布局 id，无法解析时抛出统一异常。
@@ -57,24 +61,27 @@ public final class BindingLayoutResolver {
      * @return 布局资源 id，无法解析时返回 0
      */
     public static int resolveLayoutId(@NonNull Context context, @NonNull Class<?> hostClass) {
+        // 命中缓存：一次 Map 查询，无任何反射/资源查找开销
+        Integer cached = RESOLVED_ID_CACHE.get(hostClass);
+        if (cached != null) {
+            return cached;
+        }
+        int layoutId = doResolveLayoutId(context, hostClass);
+        // 失败也缓存（值为 0），避免解析失败的页面反复走反射
+        RESOLVED_ID_CACHE.put(hostClass, layoutId);
+        return layoutId;
+    }
+
+    private static int doResolveLayoutId(@NonNull Context context, @NonNull Class<?> hostClass) {
         Class<?> bindingClass = resolveBindingClass(hostClass);
         if (bindingClass == null) {
             return 0;
-        }
-        String cacheKey = context.getPackageName() + ":" + bindingClass.getName();
-        Integer cached = LAYOUT_ID_CACHE.get(cacheKey);
-        if (cached != null) {
-            return cached;
         }
         String layoutName = toLayoutName(bindingClass.getSimpleName());
         if (layoutName == null) {
             return 0;
         }
-        int id = context.getResources().getIdentifier(layoutName, "layout", context.getPackageName());
-        if (id != 0) {
-            LAYOUT_ID_CACHE.put(cacheKey, id);
-        }
-        return id;
+        return context.getResources().getIdentifier(layoutName, "layout", context.getPackageName());
     }
 
     /**
