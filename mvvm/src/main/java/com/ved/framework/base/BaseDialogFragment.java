@@ -95,6 +95,19 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
         return binding;
     }
 
+    /**
+     * 初始化根布局。
+     * <p>
+     * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
+     * 例如 {@code BaseDialogFragment<HistoricalDialogBinding, HistoricalViewModel>}
+     * 会解析到 {@code R.layout.historical_dialog}，因此无需覆写本方法。
+     * 仅当布局名与 Binding 类名无法按约定对应时，覆写本方法返回布局 id。
+     */
+    @Override
+    public int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        return BindingLayoutResolver.resolveLayoutIdOrThrow(requireContext(), getClass());
+    }
+
     @Override
     public FragmentActivity FragmentActivity() {
         return BaseDialogFragment.this.getActivity();
@@ -171,17 +184,6 @@ public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends B
 
     public void startContainerActivity(String canonicalName, Bundle bundle) {
         delegate.startContainerActivity(canonicalName, bundle);
-    }
-
-    /**
-     * 初始化根布局
-     * <p>
-     * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
-     * 若泛型无法推断（如直接声明 {@code ViewDataBinding}），请覆写本方法返回布局 id。
-     */
-    @Override
-    public int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return BindingLayoutResolver.resolveLayoutIdOrThrow(requireContext(), getClass());
     }
 
     public void dismissDialog() {

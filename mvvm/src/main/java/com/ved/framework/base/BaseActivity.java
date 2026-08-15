@@ -47,6 +47,20 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
         return BaseActivity.this.binding;
     }
 
+    /**
+     * 初始化根布局。
+     * <p>
+     * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
+     * 例如 {@code BaseActivity<HistoricalDetailsActivityBinding, HistoricalDetailsViewModel>}
+     * 会解析到 {@code R.layout.historical_details_activity}，因此无需覆写本方法。
+     * 仅当布局名与 Binding 类名无法按约定对应（如 {@link ContainerActivity}）时，覆写本方法返回布局 id。
+     *
+     * @return 布局layout的id
+     */
+    public int initContentView(Bundle savedInstanceState) {
+        return BindingLayoutResolver.resolveLayoutIdOrThrow(this, getClass());
+    }
+
     @Override
     public FragmentActivity FragmentActivity() {
         return BaseActivity.this;
@@ -149,22 +163,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      */
     public void startContainerActivity(String canonicalName, Bundle bundle) {
         baseView.startContainerActivity(canonicalName, bundle);
-    }
-
-    /**
-     * =====================================================================
-     **/
-
-    /**
-     * 初始化根布局
-     * <p>
-     * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
-     * 若泛型无法推断（如直接声明 {@code ViewDataBinding}），请覆写本方法返回布局 id。
-     *
-     * @return 布局layout的id
-     */
-    public int initContentView(Bundle savedInstanceState) {
-        return BindingLayoutResolver.resolveLayoutIdOrThrow(this, getClass());
     }
 
     public void requestPermission(IPermission iPermission, String... permissions) {
