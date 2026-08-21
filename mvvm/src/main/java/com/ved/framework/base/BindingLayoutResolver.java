@@ -39,7 +39,6 @@ public final class BindingLayoutResolver {
      * 默认 {@code initContentView()} 委托调用，收敛重复的解析 + 异常处理逻辑（委托模式）。
      *
      * @param context   上下文（Activity / Fragment 均可）
-     * @param hostClass 宿主类（页面 Class，如 {@code HistoricalDetailsActivity.class}）
      * @return 布局资源 id
      * @throws IllegalStateException 无法从 ViewDataBinding 泛型推断布局文件时抛出
      */
@@ -57,7 +56,6 @@ public final class BindingLayoutResolver {
      * 从宿主类解析布局 id。
      *
      * @param context   上下文（Activity / Fragment 均可）
-     * @param hostClass 宿主类（页面 Class，如 {@code HistoricalDetailsActivity.class}）
      * @return 布局资源 id，无法解析时返回 0
      */
     public static int resolveLayoutId(@NonNull Context context, @NonNull Class<?> hostClass) {
@@ -110,8 +108,6 @@ public final class BindingLayoutResolver {
 
     /**
      * 绑定类名转布局文件名：
-     * {@code HistoricalDetailsActivityBinding} -> {@code historical_details_activity}
-     * <p>
      * 规则：去掉 {@code Binding} 后缀；大写字母前（前一个字符是小写/数字）补下划线并转小写；
      * 布局名中数字前的下划线（如 {@code item_2_view} -> {@code Item_2ViewBinding}）保留原样。
      */

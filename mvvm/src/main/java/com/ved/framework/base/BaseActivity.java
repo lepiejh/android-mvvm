@@ -51,7 +51,6 @@ public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseVie
      * 初始化根布局。
      * <p>
      * 默认实现：根据 {@code V}（ViewDataBinding 泛型）自动推断布局文件，
-     * 例如 {@code BaseActivity<HistoricalDetailsActivityBinding, HistoricalDetailsViewModel>}
      * 会解析到 {@code R.layout.historical_details_activity}，因此无需覆写本方法。
      * 仅当布局名与 Binding 类名无法按约定对应（如 {@link ContainerActivity}）时，覆写本方法返回布局 id。
      *
