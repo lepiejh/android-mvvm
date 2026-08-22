@@ -1,0 +1,2 @@
+- Dependency versions are declared once in the root `config.gradle` `ext` block and referenced by name from each module's `build.gradle`, never hardcoded per module.
+- Maven repositories are registered in the root `build.gradle` `allprojects` block so every child module resolves artifacts from the same Aliyun/JitPack/Google/Nexus sources.

@@ -80,9 +80,10 @@ public final class UIChangeLiveData extends SingleLiveEvent {
 
     /**
      * 泛型注册表取值：按事件类型懒加载对应的 {@link SingleLiveEvent}。
+     * 加 synchronized 保证多线程并发首次访问时的安全性。
      */
     @SuppressWarnings("unchecked")
-    private <T> SingleLiveEvent<T> get(EventKey key) {
+    private synchronized <T> SingleLiveEvent<T> get(EventKey key) {
         SingleLiveEvent<?> event = events.get(key);
         if (event == null) {
             event = new SingleLiveEvent<>();

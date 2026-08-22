@@ -1,0 +1,2 @@
+- Module-level build configuration is centralized in `app/build.gradle` using the Android Gradle DSL with `defaultConfig`, `compileOptions`, `lintOptions`, and `buildTypes` blocks.
+- Testing scaffolding follows the standard Android layout with separate `test/` (JUnit) and `androidTest/` (Espresso + AndroidJUnitRunner) directories.

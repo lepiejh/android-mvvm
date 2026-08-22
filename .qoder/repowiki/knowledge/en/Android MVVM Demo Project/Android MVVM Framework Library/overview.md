@@ -1,0 +1,1 @@
+Reusable Android library providing an MVVM architecture with DataBinding, RxJava/Coroutines lifecycle management, Retrofit networking, event bus, and a large collection of UI widgets and utilities.

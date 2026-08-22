@@ -1,0 +1,1 @@
+Android library targeting minSdk 19 / compileSdk 33 with Java 8 and Kotlin; uses DataBinding, RxJava 3 + RxLifecycle4, Retrofit 2 + OkHttp 5, Gson, LiveData/ViewModel (lifecycle-ktx 2.4.0), EventBus 3.2.0, Glide image loading, ImmersionBar, SmartRefreshLayout, XBanner, MMKV, Coroutines 1.6.3, and several lepiejh custom components.

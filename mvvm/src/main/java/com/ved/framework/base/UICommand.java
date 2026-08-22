@@ -62,17 +62,24 @@ public class UICommand implements ICommand {
         return ActivityCommandBuilder.create().setBundle(bundle);
     }
 
+    /**
+     * 构建参数 Map（可变参数版），消除每个命令方法中重复的 Map 创建样板代码
+     */
+    private static Map<String, Object> params(Object... keyValues) {
+        Map<String, Object> map = new HashMap<>();
+        for (int i = 0; i < keyValues.length; i += 2) {
+            map.put((String) keyValues[i], keyValues[i + 1]);
+        }
+        return map;
+    }
+
     public void requestPermissions(IPermission iPermission, String... permissions) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constant.PERMISSION, iPermission);
-        params.put(Constant.PERMISSION_NAME, permissions);
-        liveData.getRequestPermissionEvent().postValue(params);
+        liveData.getRequestPermissionEvent().postValue(
+                params(Constant.PERMISSION, iPermission, Constant.PERMISSION_NAME, permissions));
     }
 
     public void callPhone(String phoneNumber) {
-        Map<String, Object> params = new HashMap<>();
-        params.put(Constant.PHONE_NUMBER, phoneNumber);
-        liveData.getRequestCallPhoneEvent().postValue(params);
+        liveData.getRequestCallPhoneEvent().postValue(params(Constant.PHONE_NUMBER, phoneNumber));
     }
 
     public void getWifiRssi(){

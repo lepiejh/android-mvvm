@@ -1,0 +1,1 @@
+The `:mvvm` library dependency is commented out in `build.gradle`; uncommenting it and building the project is required to compile the full app. Release builds apply `proguard-rules.pro` alongside the default optimize file.

@@ -294,22 +294,24 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
         eventStrategy = if (onEventSticky()) StickyEventStrategy() else DefaultEventStrategy()
     }
 
-    fun sendRxEvent(messageEvent: MessageEvent<*>?) {
-        if (onEventSticky()) {
-            RxBus.getDefault().postSticky(messageEvent)
-        } else {
-            RxBus.getDefault().post(messageEvent)
-        }
+    // region Event dispatch（策略模式 + 高阶函数）
+    private val rxBusPoster = EventPoster { event, sticky ->
+        if (sticky) RxBus.getDefault().postSticky(event) else RxBus.getDefault().post(event)
     }
 
-    fun sendEvent(messageEvent: MessageEvent<*>?) {
-        if (onEventSticky()) {
-            EventBusUtil.sendStickyEvent(messageEvent)
-        } else {
-            EventBusUtil.sendEvent(messageEvent)
-        }
+    private val eventBusPoster = EventPoster { event, sticky ->
+        if (sticky) EventBusUtil.sendStickyEvent(event) else EventBusUtil.sendEvent(event)
     }
 
+    private fun dispatchEvent(event: MessageEvent<*>?, poster: EventPoster) {
+        poster.post(event, onEventSticky())
+    }
+
+    fun sendRxEvent(messageEvent: MessageEvent<*>?) = dispatchEvent(messageEvent, rxBusPoster)
+
+    fun sendEvent(messageEvent: MessageEvent<*>?) = dispatchEvent(messageEvent, eventBusPoster)
+
+    // endregion
     private fun onStartEventSubscription() {
         eventStrategy?.setupSubscription(this)
     }

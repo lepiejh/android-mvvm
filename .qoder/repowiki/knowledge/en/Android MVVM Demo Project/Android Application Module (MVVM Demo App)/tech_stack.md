@@ -1,0 +1,1 @@
+Android Gradle plugin with Kotlin, Data Binding, and MultiDex; dependencies include androidx.appcompat, constraintlayout, material components, and junit/espresso for testing.
