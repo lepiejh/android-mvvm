@@ -1,1 +1,0 @@
-Build is driven by standard Gradle commands (`./gradlew assembleDebug`, `./gradlew :app:assembleDebug`) from the repository root; publishing artifacts uses the `android-maven-gradle-plugin` configured at the root level.

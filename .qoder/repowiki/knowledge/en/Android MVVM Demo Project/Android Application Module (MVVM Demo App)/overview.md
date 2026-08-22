@@ -1,1 +1,0 @@
-Android application module that assembles the MVVM demo app with resources, manifest, and build configuration, depending on a separate :mvvm library.

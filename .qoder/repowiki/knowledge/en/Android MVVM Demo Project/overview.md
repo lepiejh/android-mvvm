@@ -1,1 +1,0 @@
-Gradle multi-module Android project that assembles an MVVM framework library and a demo app, sharing centralized build configuration and dependency versions.

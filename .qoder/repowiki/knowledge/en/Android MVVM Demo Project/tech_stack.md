@@ -1,1 +1,0 @@
-Gradle 4.0.2 with Kotlin 1.6.21; Android compile/target SDK 33, minSdk 19; shared dependencies include RxJava 3 + RxLifecycle4, Retrofit/OkHttp/Gson, Glide, Material Dialogs, Binding Collection Adapter, and Lifecycle Extensions, all versioned centrally in `config.gradle`.

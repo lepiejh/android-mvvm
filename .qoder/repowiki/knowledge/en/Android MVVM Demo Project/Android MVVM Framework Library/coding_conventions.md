@@ -1,6 +1,0 @@
-- Base classes follow a generic contract pattern: view/model/repository/viewmodel each expose an `I*` interface plus a concrete `Base*` implementation that subclasses extend to inherit common behavior.
-- Lifecycle-aware resource cleanup is centralized in base classes using `CompositeDisposable` (for RxJava) and `viewModelScope` jobs tracked in a `ConcurrentHashMap<String, Job>` keyed by task identifiers.
-- Network requests are constructed through a singleton `RetrofitClient` with a nested `HttpClientBuilder` that chains OkHttp interceptors (headers, cache, logging, progress) before building a per-call client derived from a shared base `OkHttpClient`.
-- UI actions exposed to XML bindings use the `BindingCommand<T>` class with optional `canExecute` predicates, keeping view logic decoupled from direct method calls.
-- Event delivery is abstracted behind `IEventSubscriptionStrategy` so callers post via `sendEvent`/`sendRxEvent` without knowing whether the underlying bus delivers sticky or one-shot events.
-- Utility classes are organized as flat static-helpers under `utils/` grouped by domain (e.g., `bland/`, `glide/`, `phone/`, `constant/`) rather than deep hierarchies.
