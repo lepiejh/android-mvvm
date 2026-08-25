@@ -138,5 +138,4 @@ dependencies {
 //    api "androidx.viewpager2:viewpager2:1.0.0"
     api "androidx.lifecycle:lifecycle-runtime-ktx:2.4.0"
     api 'androidx.fragment:fragment-ktx:1.4.1'
-    api 'com.github.GrenderG:Toasty:1.5.2'
 }
