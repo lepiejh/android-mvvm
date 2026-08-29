@@ -28,7 +28,7 @@ public class ViewAdapter {
      * requireAll 是意思是是否需要绑定全部参数, false为否
      * View的onClick事件绑定
      * onClickCommand 绑定的命令,
-     * isThrottleFirst 是否开启防止过快点击
+     * isThrottleFirst 是否开启防止过快点击，默认开启
      */
     @SuppressLint("CheckResult")
     @BindingAdapter(value = {"onClickCommand", "isThrottleFirst","countThrottle","isExpand","expandSize"}, requireAll = false)
@@ -41,14 +41,13 @@ public class ViewAdapter {
             }
         }
         if (isThrottleFirst) {
-            // 修复：isThrottleFirst=true 时开启防快速点击节流（原逻辑写反，导致节流分支永不生效）
             RxView.clicks(view)
-                    .throttleFirst(StringUtils.getThrottle(countThrottle), TimeUnit.SECONDS)
                     .subscribe(unit -> {
                         if (clickCommand != null) clickCommand.execute();
                     });
         } else {
             RxView.clicks(view)
+                    .throttleFirst(StringUtils.getThrottle(countThrottle), TimeUnit.SECONDS)
                     .subscribe(unit -> {
                         if (clickCommand != null) clickCommand.execute();
                     });
