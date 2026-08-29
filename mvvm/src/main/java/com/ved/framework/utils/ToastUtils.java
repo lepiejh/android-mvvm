@@ -13,6 +13,7 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.ColorInt;
@@ -309,13 +310,58 @@ public final class ToastUtils {
     }
 
     /**
-     * 显示长时吐司
+     * 自定义吐司
      *
      * @param text 文本
      */
-    public static void showLong(CharSequence text) {
+    public static void showLongCustom(CharSequence text,@LayoutRes int layout) {
+        if (text == null || text.length() == 0) {
+            return;
+        }
+        // 确保在主线程执行
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            showCustom(text,layout);
+        } else {
+            sHandler.post(() -> show(text,layout));
+        }
+    }
+
+    private static void showCustom(CharSequence text,@LayoutRes int layout) {
         try {
-            show(text, Toast.LENGTH_LONG);
+            cancel();
+
+            Context context = Utils.getContext();
+
+            // 懒加载自定义 Toast 布局
+            View sToastView = LayoutInflater.from(context).inflate(layout, null);
+            TextView sToastTextView = sToastView.findViewById(android.R.id.message);
+
+            sToastTextView.setText(text);
+
+            sToast = new Toast(context);
+            sToast.setDuration(Toast.LENGTH_LONG);
+            sToast.setView(sToastView);
+            sToast.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // 降级：使用系统 Toast
+            fallbackShow(text);
+        }
+    }
+
+    /**
+     * 降级方案
+     */
+    private static void fallbackShow(CharSequence text) {
+        try {
+            if (sToast == null) {
+                sToast = Toast.makeText(Utils.getContext(), text, Toast.LENGTH_LONG);
+            } else {
+                sToast.setText(text);
+                sToast.setDuration(Toast.LENGTH_LONG);
+            }
+            sToast.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
