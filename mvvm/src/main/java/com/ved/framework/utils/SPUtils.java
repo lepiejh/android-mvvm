@@ -381,6 +381,8 @@ public final class SPUtils {
             return editor.putInt(key, (Integer) value).commit();
         } else if (value instanceof Long) {
             return editor.putLong(key, (Long) value).commit();
+        } else if (value instanceof Double) {
+            return editor.putLong(key, Double.doubleToRawLongBits((Double) value)).commit();
         }else if (value instanceof Collection){
             Collection<?> collection = (Collection<?>) value;
             if (!collection.isEmpty()) {
@@ -406,6 +408,8 @@ public final class SPUtils {
                 return 0;
             } else if (defaultValue instanceof Long) {
                 return 0L;
+            } else if (defaultValue instanceof Double) {
+                return 0.0d;
             }else {
                 return "";
             }
@@ -420,6 +424,8 @@ public final class SPUtils {
             return sp.getInt(key, (Integer) defaultValue);
         } else if (defaultValue instanceof Long) {
             return sp.getLong(key, (Long) defaultValue);
+        } else if (defaultValue instanceof Double) {
+            return Double.longBitsToDouble(sp.getLong(key, Double.doubleToRawLongBits((Double) defaultValue)));
         }else if (defaultValue instanceof Collection){
             Collection<?> collection = (Collection<?>) defaultValue;
             if (collection.isEmpty()) {
