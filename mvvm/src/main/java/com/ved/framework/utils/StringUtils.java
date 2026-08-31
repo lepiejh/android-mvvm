@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.res.Resources;
 import android.location.Address;
 import android.location.Geocoder;
 import android.text.SpannableStringBuilder;
@@ -11,20 +12,18 @@ import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 
-import java.io.IOException;
-import java.math.BigDecimal;
-import java.util.IllegalFormatException;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
-
 import androidx.annotation.ArrayRes;
 import androidx.annotation.ColorInt;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.internal.view.SupportMenu;
 
-import android.content.res.Resources;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.IllegalFormatException;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
 /**
  * Created by ved on 2017/5/14.
@@ -126,7 +125,7 @@ public final class StringUtils {
         if (isSpace(s)){
             return false;
         }
-        return UIUtils.equals(s,"true") || UIUtils.equals(s,"1");
+        return equals(s,"true") || equals(s,"1");
     }
 
     public static boolean parseBoolean(Object o){
@@ -210,27 +209,8 @@ public final class StringUtils {
         return (s == null || s.trim().length() == 0);
     }
 
-    /**
-     * 判断两字符串是否相等
-     *
-     * @param a 待校验字符串a
-     * @param b 待校验字符串b
-     * @return {@code true}: 相等<br>{@code false}: 不相等
-     */
-    public static boolean equals(final CharSequence a, final CharSequence b) {
-        if (a == b) return true;
-        int length;
-        if (a != null && b != null && (length = a.length()) == b.length()) {
-            if (a instanceof String && b instanceof String) {
-                return a.equals(b);
-            } else {
-                for (int i = 0; i < length; i++) {
-                    if (a.charAt(i) != b.charAt(i)) return false;
-                }
-                return true;
-            }
-        }
-        return false;
+    public static boolean equals(Object s1,Object s2){
+        return Objects.equals(s1,s2);
     }
 
     /**
@@ -708,7 +688,7 @@ public final class StringUtils {
      */
     public static String getString(@StringRes int id, Object... formatArgs) {
         try {
-            return format(Utils.getApp().getString(id), formatArgs);
+            return format(Utils.getContext().getString(id), formatArgs);
         } catch (Resources.NotFoundException e) {
             e.printStackTrace();
             return String.valueOf(id);
@@ -723,7 +703,7 @@ public final class StringUtils {
      */
     public static String[] getStringArray(@ArrayRes int id) {
         try {
-            return Utils.getApp().getResources().getStringArray(id);
+            return Utils.getContext().getResources().getStringArray(id);
         } catch (Resources.NotFoundException e) {
             e.printStackTrace();
             return new String[]{String.valueOf(id)};

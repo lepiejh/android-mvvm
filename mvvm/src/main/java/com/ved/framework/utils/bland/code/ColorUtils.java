@@ -23,7 +23,7 @@ public final class ColorUtils {
      * @return a color associated with a particular resource ID
      */
     public static int getColor(@ColorRes int id) {
-        return ContextCompat.getColor(Utils.getApp(), id);
+        return ContextCompat.getColor(Utils.getContext(), id);
     }
 
     /**

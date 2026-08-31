@@ -19,9 +19,9 @@ public final class ClipboardUtils {
      * @param text The text.
      */
     public static void copyText(final CharSequence text) {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
-        cm.setPrimaryClip(ClipData.newPlainText(Utils.getApp().getPackageName(), text));
+        cm.setPrimaryClip(ClipData.newPlainText(Utils.getContext().getPackageName(), text));
     }
 
     /**
@@ -31,7 +31,7 @@ public final class ClipboardUtils {
      * @param text  The text.
      */
     public static void copyText(final CharSequence label, final CharSequence text) {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         cm.setPrimaryClip(ClipData.newPlainText(label, text));
     }
@@ -40,7 +40,7 @@ public final class ClipboardUtils {
      * Clear the clipboard.
      */
     public static void clear() {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         cm.setPrimaryClip(ClipData.newPlainText(null, ""));
     }
@@ -51,7 +51,7 @@ public final class ClipboardUtils {
      * @return the label for clipboard
      */
     public static CharSequence getLabel() {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         ClipDescription des = cm.getPrimaryClipDescription();
         if (des == null) {
@@ -70,11 +70,11 @@ public final class ClipboardUtils {
      * @return the text for clipboard
      */
     public static CharSequence getText() {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         ClipData clip = cm.getPrimaryClip();
         if (clip != null && clip.getItemCount() > 0) {
-            CharSequence text = clip.getItemAt(0).coerceToText(Utils.getApp());
+            CharSequence text = clip.getItemAt(0).coerceToText(Utils.getContext());
             if (text != null) {
                 return text;
             }
@@ -86,7 +86,7 @@ public final class ClipboardUtils {
      * Add the clipboard changed listener.
      */
     public static void addChangedListener(final ClipboardManager.OnPrimaryClipChangedListener listener) {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         cm.addPrimaryClipChangedListener(listener);
     }
@@ -95,7 +95,7 @@ public final class ClipboardUtils {
      * Remove the clipboard changed listener.
      */
     public static void removeChangedListener(final ClipboardManager.OnPrimaryClipChangedListener listener) {
-        ClipboardManager cm = (ClipboardManager) Utils.getApp().getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipboardManager cm = (ClipboardManager) Utils.getContext().getSystemService(Context.CLIPBOARD_SERVICE);
         //noinspection ConstantConditions
         cm.removePrimaryClipChangedListener(listener);
     }

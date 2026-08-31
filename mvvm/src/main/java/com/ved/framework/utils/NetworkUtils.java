@@ -185,7 +185,7 @@ public class NetworkUtils {
      * Open the settings of wireless.
      */
     public static void openWirelessSettings() {
-        Utils.getApp().startActivity(
+        Utils.getContext().startActivity(
                 new Intent(android.provider.Settings.ACTION_WIRELESS_SETTINGS)
                         .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         );
@@ -360,7 +360,7 @@ public class NetworkUtils {
     public static boolean getMobileDataEnabled() {
         try {
             TelephonyManager tm =
-                    (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
+                    (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
             if (tm == null) return false;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 return tm.isDataEnabled();
@@ -392,7 +392,7 @@ public class NetworkUtils {
      * @return true if using VPN to conncet to the internet.
      */
     public static boolean isUsingVPN() {
-        ConnectivityManager cm = (ConnectivityManager) Utils.getApp().getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
             return false;
         }
@@ -457,7 +457,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     public static boolean getWifiEnabled() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager manager = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (manager == null) return false;
         return manager.isWifiEnabled();
     }
@@ -471,7 +471,7 @@ public class NetworkUtils {
     @RequiresPermission(CHANGE_WIFI_STATE)
     public static void setWifiEnabled(final boolean enabled) {
         @SuppressLint("WifiManagerLeak")
-        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager manager = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (manager == null) return;
         if (enabled == manager.isWifiEnabled()) return;
         manager.setWifiEnabled(enabled);
@@ -486,7 +486,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_NETWORK_STATE)
     public static boolean isWifiConnected() {
         ConnectivityManager cm =
-                (ConnectivityManager) Utils.getApp().getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
         NetworkInfo ni = cm.getActiveNetworkInfo();
         return ni != null && ni.getType() == ConnectivityManager.TYPE_WIFI;
@@ -530,7 +530,7 @@ public class NetworkUtils {
      */
     public static String getNetworkOperatorName() {
         TelephonyManager tm =
-                (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
+                (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
         if (tm == null) return "";
         return tm.getNetworkOperatorName();
     }
@@ -614,7 +614,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_NETWORK_STATE)
     private static boolean isEthernet() {
         final ConnectivityManager cm =
-                (ConnectivityManager) Utils.getApp().getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return false;
         final NetworkInfo info = cm.getNetworkInfo(ConnectivityManager.TYPE_ETHERNET);
         if (info == null) return false;
@@ -626,7 +626,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_NETWORK_STATE)
     private static NetworkInfo getActiveNetworkInfo() {
         ConnectivityManager cm =
-                (ConnectivityManager) Utils.getApp().getSystemService(Context.CONNECTIVITY_SERVICE);
+                (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) return null;
         return cm.getActiveNetworkInfo();
     }
@@ -767,7 +767,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     public static String getIpAddressByWifi() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(Context.WIFI_SERVICE);
         if (wm == null) return "";
         return Formatter.formatIpAddress(wm.getDhcpInfo().ipAddress);
     }
@@ -780,7 +780,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     public static String getGatewayByWifi() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(Context.WIFI_SERVICE);
         if (wm == null) return "";
         return Formatter.formatIpAddress(wm.getDhcpInfo().gateway);
     }
@@ -793,7 +793,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     public static String getNetMaskByWifi() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(Context.WIFI_SERVICE);
         if (wm == null) return "";
         return Formatter.formatIpAddress(wm.getDhcpInfo().netmask);
     }
@@ -806,7 +806,7 @@ public class NetworkUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     public static String getServerAddressByWifi() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(Context.WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(Context.WIFI_SERVICE);
         if (wm == null) return "";
         return Formatter.formatIpAddress(wm.getDhcpInfo().serverAddress);
     }
@@ -817,7 +817,7 @@ public class NetworkUtils {
      * @return the ssid.
      */
     public static String getSSID() {
-        WifiManager wm = (WifiManager) Utils.getApp().getApplicationContext().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (wm == null) return "";
         WifiInfo wi = wm.getConnectionInfo();
         if (wi == null) return "";
@@ -865,12 +865,12 @@ public class NetworkUtils {
         WifiScanResults result = new WifiScanResults();
         if (!getWifiEnabled()) return result;
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (wm == null) {
             return result;
         }
         // 未授权定位权限时 getScanResults() 会抛 SecurityException, 直接返回空结果
-        if (ActivityCompat.checkSelfPermission(Utils.getApp(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(Utils.getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return result;
         }
         List<ScanResult> results = wm.getScanResults();
@@ -931,7 +931,7 @@ public class NetworkUtils {
     private static void startScanWifiIfEnabled() {
         if (!getWifiEnabled()) return;
         @SuppressLint("WifiManagerLeak")
-        WifiManager wm = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager wm = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         //noinspection ConstantConditions
         wm.startScan();
     }
@@ -1003,7 +1003,7 @@ public class NetworkUtils {
                     mListeners.add(listener);
                     if (preSize == 0 && mListeners.size() == 1) {
                         mType = getNetworkType();
-                        Utils.getApp().registerReceiver(NetworkChangedReceiver.getInstance(),
+                        Utils.getContext().registerReceiver(NetworkChangedReceiver.getInstance(),
                                 new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
                     }
                 }
@@ -1023,7 +1023,7 @@ public class NetworkUtils {
                     int preSize = mListeners.size();
                     mListeners.remove(listener);
                     if (preSize == 1 && mListeners.size() == 0) {
-                        Utils.getApp().unregisterReceiver(NetworkChangedReceiver.getInstance());
+                        Utils.getContext().unregisterReceiver(NetworkChangedReceiver.getInstance());
                     }
                 }
             });

@@ -38,7 +38,7 @@ public final class UriUtils {
      * @return uri
      */
     public static Uri res2Uri(String resPath) {
-        return Uri.parse("android.resource://" + Utils.getApp().getPackageName() + "/" + resPath);
+        return Uri.parse("android.resource://" + Utils.getContext().getPackageName() + "/" + resPath);
     }
 
     /**
@@ -50,8 +50,8 @@ public final class UriUtils {
     public static Uri file2Uri(final File file) {
         if (!UtilsBridge.isFileExists(file)) return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            String authority = Utils.getApp().getPackageName() + ".utilcode.fileprovider";
-            return FileProvider.getUriForFile(Utils.getApp(), authority, file);
+            String authority = Utils.getContext().getPackageName() + ".utilcode.fileprovider";
+            return FileProvider.getUriForFile(Utils.getContext(), authority, file);
         } else {
             return Uri.fromFile(file);
         }
@@ -107,16 +107,16 @@ public final class UriUtils {
             }
             file = null;
             if (path.startsWith("/files_path/")) {
-                file = new File(Utils.getApp().getFilesDir().getAbsolutePath()
+                file = new File(Utils.getContext().getFilesDir().getAbsolutePath()
                         + path.replace("/files_path/", "/"));
             } else if (path.startsWith("/cache_path/")) {
-                file = new File(Utils.getApp().getCacheDir().getAbsolutePath()
+                file = new File(Utils.getContext().getCacheDir().getAbsolutePath()
                         + path.replace("/cache_path/", "/"));
             } else if (path.startsWith("/external_files_path/")) {
-                file = new File(Utils.getApp().getExternalFilesDir(null).getAbsolutePath()
+                file = new File(Utils.getContext().getExternalFilesDir(null).getAbsolutePath()
                         + path.replace("/external_files_path/", "/"));
             } else if (path.startsWith("/external_cache_path/")) {
-                file = new File(Utils.getApp().getExternalCacheDir().getAbsolutePath()
+                file = new File(Utils.getContext().getExternalCacheDir().getAbsolutePath()
                         + path.replace("/external_cache_path/", "/"));
             }
             if (file != null && file.exists()) {
@@ -130,7 +130,7 @@ public final class UriUtils {
             return null;
         }// end 0
         else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
-                && DocumentsContract.isDocumentUri(Utils.getApp(), uri)) {
+                && DocumentsContract.isDocumentUri(Utils.getContext(), uri)) {
             if ("com.android.externalstorage.documents".equals(authority)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
                 final String[] split = docId.split(":");
@@ -140,7 +140,7 @@ public final class UriUtils {
                 } else {
                     // Below logic is how External Storage provider build URI for documents
                     // http://stackoverflow.com/questions/28605278/android-5-sd-card-label
-                    StorageManager mStorageManager = (StorageManager) Utils.getApp().getSystemService(Context.STORAGE_SERVICE);
+                    StorageManager mStorageManager = (StorageManager) Utils.getContext().getSystemService(Context.STORAGE_SERVICE);
                     try {
                         Class<?> storageVolumeClazz = Class.forName("android.os.storage.StorageVolume");
                         Method getVolumeList = mStorageManager.getClass().getMethod("getVolumeList");
@@ -282,7 +282,7 @@ public final class UriUtils {
             }
         }
 
-        final Cursor cursor = Utils.getApp().getContentResolver().query(
+        final Cursor cursor = Utils.getContext().getContentResolver().query(
                 uri, new String[]{"_data"}, selection, selectionArgs, null);
         if (cursor == null) {
             Log.d("UriUtils", uri.toString() + " parse failed(cursor is null). -> " + code);
@@ -313,8 +313,8 @@ public final class UriUtils {
         Log.d("UriUtils", "copyUri2Cache() called");
         InputStream is = null;
         try {
-            is = Utils.getApp().getContentResolver().openInputStream(uri);
-            File file = new File(Utils.getApp().getCacheDir(), "" + System.currentTimeMillis());
+            is = Utils.getContext().getContentResolver().openInputStream(uri);
+            File file = new File(Utils.getContext().getCacheDir(), "" + System.currentTimeMillis());
             UtilsBridge.writeFileFromIS(file.getAbsolutePath(), is);
             return file;
         } catch (FileNotFoundException e) {
@@ -341,7 +341,7 @@ public final class UriUtils {
         if (uri == null) return null;
         InputStream is = null;
         try {
-            is = Utils.getApp().getContentResolver().openInputStream(uri);
+            is = Utils.getContext().getContentResolver().openInputStream(uri);
             return UtilsBridge.inputStream2Bytes(is);
         } catch (FileNotFoundException e) {
             e.printStackTrace();

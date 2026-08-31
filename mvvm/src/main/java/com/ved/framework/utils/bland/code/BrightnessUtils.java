@@ -23,7 +23,7 @@ public final class BrightnessUtils {
     public static boolean isAutoBrightnessEnabled() {
         try {
             int mode = Settings.System.getInt(
-                    Utils.getApp().getContentResolver(),
+                    Utils.getContext().getContentResolver(),
                     Settings.System.SCREEN_BRIGHTNESS_MODE
             );
             return mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
@@ -42,7 +42,7 @@ public final class BrightnessUtils {
      */
     public static boolean setAutoBrightnessEnabled(final boolean enabled) {
         return Settings.System.putInt(
-                Utils.getApp().getContentResolver(),
+                Utils.getContext().getContentResolver(),
                 Settings.System.SCREEN_BRIGHTNESS_MODE,
                 enabled ? Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
                         : Settings.System.SCREEN_BRIGHTNESS_MODE_MANUAL
@@ -57,7 +57,7 @@ public final class BrightnessUtils {
     public static int getBrightness() {
         try {
             return Settings.System.getInt(
-                    Utils.getApp().getContentResolver(),
+                    Utils.getContext().getContentResolver(),
                     Settings.System.SCREEN_BRIGHTNESS
             );
         } catch (Settings.SettingNotFoundException e) {
@@ -74,7 +74,7 @@ public final class BrightnessUtils {
      * @param brightness 亮度值
      */
     public static boolean setBrightness(@IntRange(from = 0, to = 255) final int brightness) {
-        ContentResolver resolver = Utils.getApp().getContentResolver();
+        ContentResolver resolver = Utils.getContext().getContentResolver();
         boolean b = Settings.System.putInt(resolver, Settings.System.SCREEN_BRIGHTNESS, brightness);
         resolver.notifyChange(Settings.System.getUriFor("screen_brightness"), null);
         return b;

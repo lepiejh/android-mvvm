@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 public final class ResourceUtils {
 
@@ -28,7 +29,15 @@ public final class ResourceUtils {
      * @return the drawable by identifier
      */
     public static Drawable getDrawable(@DrawableRes int id) {
-        return ContextCompat.getDrawable(Utils.getApp(), id);
+        return ContextCompat.getDrawable(Utils.getContext(), id);
+    }
+
+    public static boolean equals(Drawable drawable,@DrawableRes int id){
+        if (drawable == null) {
+            return false;
+        }
+        Drawable target = ContextCompat.getDrawable(Utils.getContext(), id);
+        return target != null && Objects.equals(drawable.getConstantState(), target.getConstantState());
     }
 
     /**
@@ -38,7 +47,7 @@ public final class ResourceUtils {
      * @return the id identifier by name
      */
     public static int getIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "id", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "id", Utils.getContext().getPackageName());
     }
 
     /**
@@ -48,7 +57,7 @@ public final class ResourceUtils {
      * @return the string identifier by name
      */
     public static int getStringIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "string", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "string", Utils.getContext().getPackageName());
     }
 
     /**
@@ -58,7 +67,7 @@ public final class ResourceUtils {
      * @return the color identifier by name
      */
     public static int getColorIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "color", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "color", Utils.getContext().getPackageName());
     }
 
     /**
@@ -68,7 +77,7 @@ public final class ResourceUtils {
      * @return the dimen identifier by name
      */
     public static int getDimenIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "dimen", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "dimen", Utils.getContext().getPackageName());
     }
 
     /**
@@ -78,7 +87,7 @@ public final class ResourceUtils {
      * @return the drawable identifier by name
      */
     public static int getDrawableIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "drawable", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "drawable", Utils.getContext().getPackageName());
     }
 
     /**
@@ -88,7 +97,7 @@ public final class ResourceUtils {
      * @return the mipmap identifier by name
      */
     public static int getMipmapIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "mipmap", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "mipmap", Utils.getContext().getPackageName());
     }
 
     /**
@@ -98,7 +107,7 @@ public final class ResourceUtils {
      * @return the layout identifier by name
      */
     public static int getLayoutIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "layout", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "layout", Utils.getContext().getPackageName());
     }
 
     /**
@@ -108,7 +117,7 @@ public final class ResourceUtils {
      * @return the style identifier by name
      */
     public static int getStyleIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "style", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "style", Utils.getContext().getPackageName());
     }
 
     /**
@@ -118,7 +127,7 @@ public final class ResourceUtils {
      * @return the anim identifier by name
      */
     public static int getAnimIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "anim", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "anim", Utils.getContext().getPackageName());
     }
 
     /**
@@ -128,7 +137,7 @@ public final class ResourceUtils {
      * @return the menu identifier by name
      */
     public static int getMenuIdByName(String name) {
-        return Utils.getApp().getResources().getIdentifier(name, "menu", Utils.getApp().getPackageName());
+        return Utils.getContext().getResources().getIdentifier(name, "menu", Utils.getContext().getPackageName());
     }
 
     /**
@@ -141,7 +150,7 @@ public final class ResourceUtils {
     public static boolean copyFileFromAssets(final String assetsFilePath, final String destFilePath) {
         boolean res = true;
         try {
-            String[] assets = Utils.getApp().getAssets().list(assetsFilePath);
+            String[] assets = Utils.getContext().getAssets().list(assetsFilePath);
             if (assets != null && assets.length > 0) {
                 for (String asset : assets) {
                     res &= copyFileFromAssets(assetsFilePath + "/" + asset, destFilePath + "/" + asset);
@@ -149,7 +158,7 @@ public final class ResourceUtils {
             } else {
                 res = UtilsBridge.writeFileFromIS(
                         destFilePath,
-                        Utils.getApp().getAssets().open(assetsFilePath)
+                        Utils.getContext().getAssets().open(assetsFilePath)
                 );
             }
         } catch (IOException e) {
@@ -178,7 +187,7 @@ public final class ResourceUtils {
      */
     public static String readAssets2String(final String assetsFilePath, final String charsetName) {
         try {
-            InputStream is = Utils.getApp().getAssets().open(assetsFilePath);
+            InputStream is = Utils.getContext().getAssets().open(assetsFilePath);
             byte[] bytes = UtilsBridge.inputStream2Bytes(is);
             if (bytes == null) return "";
             if (UtilsBridge.isSpace(charsetName)) {
@@ -217,7 +226,7 @@ public final class ResourceUtils {
     public static List<String> readAssets2List(final String assetsPath,
                                                final String charsetName) {
         try {
-            return UtilsBridge.inputStream2Lines(Utils.getApp().getResources().getAssets().open(assetsPath), charsetName);
+            return UtilsBridge.inputStream2Lines(Utils.getContext().getResources().getAssets().open(assetsPath), charsetName);
         } catch (IOException e) {
             e.printStackTrace();
             return Collections.emptyList();
@@ -235,7 +244,7 @@ public final class ResourceUtils {
     public static boolean copyFileFromRaw(@RawRes final int resId, final String destFilePath) {
         return UtilsBridge.writeFileFromIS(
                 destFilePath,
-                Utils.getApp().getResources().openRawResource(resId)
+                Utils.getContext().getResources().openRawResource(resId)
         );
     }
 
@@ -257,7 +266,7 @@ public final class ResourceUtils {
      * @return the content of resource in raw
      */
     public static String readRaw2String(@RawRes final int resId, final String charsetName) {
-        InputStream is = Utils.getApp().getResources().openRawResource(resId);
+        InputStream is = Utils.getContext().getResources().openRawResource(resId);
         byte[] bytes = UtilsBridge.inputStream2Bytes(is);
         if (bytes == null) return null;
         if (UtilsBridge.isSpace(charsetName)) {
@@ -291,6 +300,6 @@ public final class ResourceUtils {
      */
     public static List<String> readRaw2List(@RawRes final int resId,
                                             final String charsetName) {
-        return UtilsBridge.inputStream2Lines(Utils.getApp().getResources().openRawResource(resId), charsetName);
+        return UtilsBridge.inputStream2Lines(Utils.getContext().getResources().openRawResource(resId), charsetName);
     }
 }

@@ -64,7 +64,7 @@ public final class DeviceUtils {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static boolean isAdbEnabled() {
         return Settings.Secure.getInt(
-                Utils.getApp().getContentResolver(),
+                Utils.getContext().getContentResolver(),
                 Settings.Global.ADB_ENABLED, 0
         ) > 0;
     }
@@ -95,7 +95,7 @@ public final class DeviceUtils {
     @SuppressLint("HardwareIds")
     public static String getAndroidID() {
         String id = Settings.Secure.getString(
-                Utils.getApp().getContentResolver(),
+                Utils.getContext().getContentResolver(),
                 Settings.Secure.ANDROID_ID
         );
         if ("9774d56d682e549c".equals(id)) return "";
@@ -121,7 +121,7 @@ public final class DeviceUtils {
 
     private static boolean getWifiEnabled() {
         @SuppressLint("WifiManagerLeak")
-        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager manager = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (manager == null) return false;
         return manager.isWifiEnabled();
     }
@@ -135,7 +135,7 @@ public final class DeviceUtils {
     @RequiresPermission(CHANGE_WIFI_STATE)
     private static void setWifiEnabled(final boolean enabled) {
         @SuppressLint("WifiManagerLeak")
-        WifiManager manager = (WifiManager) Utils.getApp().getSystemService(WIFI_SERVICE);
+        WifiManager manager = (WifiManager) Utils.getContext().getSystemService(WIFI_SERVICE);
         if (manager == null) return;
         if (enabled == manager.isWifiEnabled()) return;
         manager.setWifiEnabled(enabled);
@@ -190,8 +190,8 @@ public final class DeviceUtils {
     @RequiresPermission(ACCESS_WIFI_STATE)
     private static String getMacAddressByWifiInfo() {
         try {
-            final WifiManager wifi = (WifiManager) Utils.getApp()
-                    .getApplicationContext().getSystemService(WIFI_SERVICE);
+            final WifiManager wifi = (WifiManager) Utils.getContext()
+                    .getSystemService(WIFI_SERVICE);
             if (wifi != null) {
                 final WifiInfo info = wifi.getConnectionInfo();
                 if (info != null) {
@@ -362,7 +362,7 @@ public final class DeviceUtils {
         if (checkProperty) return true;
 
         String operatorName = "";
-        TelephonyManager tm = (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
+        TelephonyManager tm = (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
         if (tm != null) {
             String name = tm.getNetworkOperatorName();
             if (name != null) {
@@ -376,7 +376,7 @@ public final class DeviceUtils {
         Intent intent = new Intent();
         intent.setData(Uri.parse(url));
         intent.setAction(Intent.ACTION_DIAL);
-        boolean checkDial = intent.resolveActivity(Utils.getApp().getPackageManager()) == null;
+        boolean checkDial = intent.resolveActivity(Utils.getContext().getPackageManager()) == null;
         if (checkDial) return true;
         if (isEmulatorByCpu()) return true;
 
@@ -430,7 +430,7 @@ public final class DeviceUtils {
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     public static boolean isDevelopmentSettingsEnabled() {
         return Settings.Global.getInt(
-                Utils.getApp().getContentResolver(),
+                Utils.getContext().getContentResolver(),
                 Settings.Global.DEVELOPMENT_SETTINGS_ENABLED, 0
         ) > 0;
     }

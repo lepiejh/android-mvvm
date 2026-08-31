@@ -424,9 +424,9 @@ public final class BarUtils {
      */
     public static int getActionBarHeight() {
         TypedValue tv = new TypedValue();
-        if (Utils.getApp().getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+        if (Utils.getContext().getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
             return TypedValue.complexToDimensionPixelSize(
-                    tv.data, Utils.getApp().getResources().getDisplayMetrics()
+                    tv.data, Utils.getContext().getResources().getDisplayMetrics()
             );
         }
         return 0;
@@ -456,7 +456,7 @@ public final class BarUtils {
     private static void invokePanels(final String methodName) {
         try {
             @SuppressLint("WrongConstant")
-            Object service = Utils.getApp().getSystemService("statusbar");
+            Object service = Utils.getContext().getSystemService("statusbar");
             @SuppressLint("PrivateApi")
             Class<?> statusBarManager = Class.forName("android.app.StatusBarManager");
             Method expand = statusBarManager.getMethod(methodName);
@@ -567,7 +567,7 @@ public final class BarUtils {
                     && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1
                     && Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
                 try {
-                    return Settings.Global.getInt(Utils.getApp().getContentResolver(), "navigationbar_hide_bar_enabled") == 0;
+                    return Settings.Global.getInt(Utils.getContext().getContentResolver(), "navigationbar_hide_bar_enabled") == 0;
                 } catch (Exception ignore) {
                 }
             }
@@ -581,7 +581,7 @@ public final class BarUtils {
 
     private static String getResNameById(int id) {
         try {
-            return Utils.getApp().getResources().getResourceEntryName(id);
+            return Utils.getContext().getResources().getResourceEntryName(id);
         } catch (Exception ignore) {
             return "";
         }
@@ -639,7 +639,7 @@ public final class BarUtils {
      */
     public static boolean isSupportNavBar() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+            WindowManager wm = (WindowManager) Utils.getContext().getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) return false;
             Display display = wm.getDefaultDisplay();
             Point size = new Point();
@@ -648,7 +648,7 @@ public final class BarUtils {
             display.getRealSize(realSize);
             return realSize.y != size.y || realSize.x != size.x;
         }
-        boolean menu = ViewConfiguration.get(Utils.getApp()).hasPermanentMenuKey();
+        boolean menu = ViewConfiguration.get(Utils.getContext()).hasPermanentMenuKey();
         boolean back = KeyCharacterMap.deviceHasKey(KeyEvent.KEYCODE_BACK);
         return !menu && !back;
     }

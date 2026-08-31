@@ -45,7 +45,7 @@ public class MessengerUtils {
                 Log.i("MessengerUtils", "Server service is running.");
                 return;
             }
-            startServiceCompat(new Intent(Utils.getApp(), ServerService.class));
+            startServiceCompat(new Intent(Utils.getContext(), ServerService.class));
             return;
         }
         if (sLocalClient == null) {
@@ -66,8 +66,8 @@ public class MessengerUtils {
                 Log.i("MessengerUtils", "Server service isn't running.");
                 return;
             }
-            Intent intent = new Intent(Utils.getApp(), ServerService.class);
-            Utils.getApp().stopService(intent);
+            Intent intent = new Intent(Utils.getContext(), ServerService.class);
+            Utils.getContext().stopService(intent);
         }
         if (sLocalClient != null) {
             sLocalClient.unbind();
@@ -112,7 +112,7 @@ public class MessengerUtils {
         if (sLocalClient != null) {
             sLocalClient.sendMsg2Server(data);
         } else {
-            Intent intent = new Intent(Utils.getApp(), ServerService.class);
+            Intent intent = new Intent(Utils.getContext(), ServerService.class);
             intent.putExtras(data);
             startServiceCompat(intent);
         }
@@ -125,9 +125,9 @@ public class MessengerUtils {
         try {
             intent.setFlags(Intent.FLAG_INCLUDE_STOPPED_PACKAGES);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                Utils.getApp().startForegroundService(intent);
+                Utils.getContext().startForegroundService(intent);
             } else {
-                Utils.getApp().startService(intent);
+                Utils.getContext().startService(intent);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -189,14 +189,14 @@ public class MessengerUtils {
 
         boolean bind() {
             if (TextUtils.isEmpty(mPkgName)) {
-                Intent intent = new Intent(Utils.getApp(), ServerService.class);
-                return Utils.getApp().bindService(intent, mConn, Context.BIND_AUTO_CREATE);
+                Intent intent = new Intent(Utils.getContext(), ServerService.class);
+                return Utils.getContext().bindService(intent, mConn, Context.BIND_AUTO_CREATE);
             }
             if (UtilsBridge.isAppInstalled(mPkgName)) {
                 if (UtilsBridge.isAppRunning(mPkgName)) {
                     Intent intent = new Intent(mPkgName + ".messenger");
                     intent.setPackage(mPkgName);
-                    return Utils.getApp().bindService(intent, mConn, Context.BIND_AUTO_CREATE);
+                    return Utils.getContext().bindService(intent, mConn, Context.BIND_AUTO_CREATE);
                 } else {
                     Log.e("MessengerUtils", "bind: the app is not running -> " + mPkgName);
                     return false;
@@ -217,7 +217,7 @@ public class MessengerUtils {
                 e.printStackTrace();
             }
             try {
-                Utils.getApp().unbindService(mConn);
+                Utils.getContext().unbindService(mConn);
             } catch (Exception ignore) {/*ignore*/}
         }
 

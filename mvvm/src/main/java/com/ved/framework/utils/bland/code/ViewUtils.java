@@ -72,9 +72,9 @@ public class ViewUtils {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
             Locale primaryLocale;
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                primaryLocale = Utils.getApp().getResources().getConfiguration().getLocales().get(0);
+                primaryLocale = Utils.getContext().getResources().getConfiguration().getLocales().get(0);
             } else {
-                primaryLocale = Utils.getApp().getResources().getConfiguration().locale;
+                primaryLocale = Utils.getContext().getResources().getConfiguration().locale;
             }
             return TextUtils.getLayoutDirectionFromLocale(primaryLocale) == View.LAYOUT_DIRECTION_RTL;
         }
@@ -106,7 +106,7 @@ public class ViewUtils {
 
     public static View layoutId2View(@LayoutRes final int layoutId) {
         LayoutInflater inflate =
-                (LayoutInflater) Utils.getApp().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                (LayoutInflater) Utils.getContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         return inflate.inflate(layoutId, null);
     }
 }

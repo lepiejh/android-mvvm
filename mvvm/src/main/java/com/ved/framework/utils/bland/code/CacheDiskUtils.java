@@ -94,7 +94,7 @@ public final class CacheDiskUtils implements CacheConstants {
      */
     public static CacheDiskUtils getInstance(String cacheName, final long maxSize, final int maxCount) {
         if (UtilsBridge.isSpace(cacheName)) cacheName = "cacheUtils";
-        File file = new File(Utils.getApp().getCacheDir(), cacheName);
+        File file = new File(Utils.getContext().getCacheDir(), cacheName);
         return getInstance(file, maxSize, maxCount);
     }
 

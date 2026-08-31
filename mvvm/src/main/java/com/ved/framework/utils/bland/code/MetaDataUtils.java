@@ -26,8 +26,8 @@ public final class MetaDataUtils {
      */
     public static String getMetaDataInApp(@NonNull final String key) {
         String value = "";
-        PackageManager pm = Utils.getApp().getPackageManager();
-        String packageName = Utils.getApp().getPackageName();
+        PackageManager pm = Utils.getContext().getPackageManager();
+        String packageName = Utils.getContext().getPackageName();
         try {
             ApplicationInfo ai = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
             value = String.valueOf(ai.metaData.get(key));
@@ -59,8 +59,8 @@ public final class MetaDataUtils {
     public static String getMetaDataInActivity(@NonNull final Class<? extends Activity> clz,
                                                @NonNull final String key) {
         String value = "";
-        PackageManager pm = Utils.getApp().getPackageManager();
-        ComponentName componentName = new ComponentName(Utils.getApp(), clz);
+        PackageManager pm = Utils.getContext().getPackageManager();
+        ComponentName componentName = new ComponentName(Utils.getContext(), clz);
         try {
             ActivityInfo ai = pm.getActivityInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(ai.metaData.get(key));
@@ -92,8 +92,8 @@ public final class MetaDataUtils {
     public static String getMetaDataInService(@NonNull final Class<? extends Service> clz,
                                               @NonNull final String key) {
         String value = "";
-        PackageManager pm = Utils.getApp().getPackageManager();
-        ComponentName componentName = new ComponentName(Utils.getApp(), clz);
+        PackageManager pm = Utils.getContext().getPackageManager();
+        ComponentName componentName = new ComponentName(Utils.getContext(), clz);
         try {
             ServiceInfo info = pm.getServiceInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(info.metaData.get(key));
@@ -125,8 +125,8 @@ public final class MetaDataUtils {
     public static String getMetaDataInReceiver(@NonNull final Class<? extends BroadcastReceiver> clz,
                                                @NonNull final String key) {
         String value = "";
-        PackageManager pm = Utils.getApp().getPackageManager();
-        ComponentName componentName = new ComponentName(Utils.getApp(), clz);
+        PackageManager pm = Utils.getContext().getPackageManager();
+        ComponentName componentName = new ComponentName(Utils.getContext(), clz);
         try {
             ActivityInfo info = pm.getReceiverInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(info.metaData.get(key));

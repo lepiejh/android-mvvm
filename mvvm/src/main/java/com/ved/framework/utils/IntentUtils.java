@@ -197,7 +197,7 @@ public class IntentUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isIntentAvailable(final Intent intent) {
-        return Utils.getApp()
+        return Utils.getContext()
                 .getPackageManager()
                 .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
                 .size() > 0;
@@ -229,8 +229,8 @@ public class IntentUtils {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
             uri = Uri.fromFile(file);
         } else {
-            String authority = Utils.getApp().getPackageName() + ".utilcode.fileprovider";
-            uri = FileProvider.getUriForFile(Utils.getApp(), authority, file);
+            String authority = Utils.getContext().getPackageName() + ".utilcode.fileprovider";
+            uri = FileProvider.getUriForFile(Utils.getContext(), authority, file);
         }
         return getInstallAppIntent(uri);
     }
@@ -636,15 +636,15 @@ public class IntentUtils {
         Intent intent = new Intent(Intent.ACTION_MAIN, null);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setPackage(pkgName);
-        List<ResolveInfo> lists = Utils.getApp().getPackageManager().queryIntentActivities(intent, 0);
+        List<ResolveInfo> lists = Utils.getContext().getPackageManager().queryIntentActivities(intent, 0);
         return lists.size() > 0 ? lists.get(0).activityInfo.name : "";
     }
 
     private static Uri file2Uri(final File file) {
         if (file == null) return null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            String authority = Utils.getApp().getPackageName() + ".utilcode.fileprovider";
-            return FileProvider.getUriForFile(Utils.getApp(), authority, file);
+            String authority = Utils.getContext().getPackageName() + ".utilcode.fileprovider";
+            return FileProvider.getUriForFile(Utils.getContext(), authority, file);
         } else {
             return Uri.fromFile(file);
         }

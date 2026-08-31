@@ -283,7 +283,7 @@ public final class PhoneUtils {
      * @param phoneNumber The phone number.
      */
     public static void dial(@NonNull final String phoneNumber) {
-        Utils.getApp().startActivity(UtilsBridge.getDialIntent(phoneNumber));
+        Utils.getContext().startActivity(UtilsBridge.getDialIntent(phoneNumber));
     }
 
     /**
@@ -294,7 +294,7 @@ public final class PhoneUtils {
      */
     @RequiresPermission(CALL_PHONE)
     public static void call(@NonNull final String phoneNumber) {
-        Utils.getApp().startActivity(UtilsBridge.getCallIntent(phoneNumber));
+        Utils.getContext().startActivity(UtilsBridge.getCallIntent(phoneNumber));
     }
 
     /**
@@ -304,10 +304,10 @@ public final class PhoneUtils {
      * @param content     The content.
      */
     public static void sendSms(@NonNull final String phoneNumber, final String content) {
-        Utils.getApp().startActivity(UtilsBridge.getSendSmsIntent(phoneNumber, content));
+        Utils.getContext().startActivity(UtilsBridge.getSendSmsIntent(phoneNumber, content));
     }
 
     private static TelephonyManager getTelephonyManager() {
-        return (TelephonyManager) Utils.getApp().getSystemService(Context.TELEPHONY_SERVICE);
+        return (TelephonyManager) Utils.getContext().getSystemService(Context.TELEPHONY_SERVICE);
     }
 }

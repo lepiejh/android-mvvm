@@ -14,8 +14,8 @@ import android.view.animation.TranslateAnimation;
 
 import com.ved.framework.R;
 import com.ved.framework.utils.DisplayUtil;
-import com.ved.framework.utils.UIUtils;
 import com.ved.framework.utils.Utils;
+import com.ved.framework.utils.bland.code.ResourceUtils;
 
 /**
  * Created by Cheng Bao on 2015/6/17.
@@ -47,7 +47,7 @@ public class ClearEditText extends androidx.appcompat.widget.AppCompatEditText i
         //获取EditText的DrawableRight,假如没有设置我们就使用默认的图片
         mClearDrawable = getCompoundDrawables()[2];
         if (mClearDrawable == null) {
-            mClearDrawable = UIUtils.getDrawable(R.drawable.uc);
+            mClearDrawable = ResourceUtils.getDrawable(R.drawable.uc);
         }
         mClearDrawable.setBounds(0, 0, mClearDrawable.getIntrinsicWidth(), mClearDrawable.getIntrinsicHeight());
         //默认设置隐藏图标

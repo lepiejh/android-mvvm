@@ -56,7 +56,7 @@ public final class VibrateUtils {
 
     private static Vibrator getVibrator() {
         if (vibrator == null) {
-            vibrator = (Vibrator) Utils.getApp().getSystemService(Context.VIBRATOR_SERVICE);
+            vibrator = (Vibrator) Utils.getContext().getSystemService(Context.VIBRATOR_SERVICE);
         }
         return vibrator;
     }

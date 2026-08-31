@@ -59,7 +59,7 @@ public class ScreenUtils {
      * @return the application's width of screen, in pixel
      */
     public static int getAppScreenWidth() {
-        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) Utils.getContext().getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) return -1;
         Point point = new Point();
         wm.getDefaultDisplay().getSize(point);
@@ -72,7 +72,7 @@ public class ScreenUtils {
      * @return the application's height of screen, in pixel
      */
     public static int getAppScreenHeight() {
-        WindowManager wm = (WindowManager) Utils.getApp().getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) Utils.getContext().getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) return -1;
         Point point = new Point();
         wm.getDefaultDisplay().getSize(point);
@@ -229,7 +229,7 @@ public class ScreenUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isLandscape() {
-        return Utils.getApp().getResources().getConfiguration().orientation
+        return Utils.getContext().getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_LANDSCAPE;
     }
 
@@ -239,7 +239,7 @@ public class ScreenUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isPortrait() {
-        return Utils.getApp().getResources().getConfiguration().orientation
+        return Utils.getContext().getResources().getConfiguration().orientation
                 == Configuration.ORIENTATION_PORTRAIT;
     }
 
@@ -307,7 +307,7 @@ public class ScreenUtils {
      */
     public static boolean isScreenLock() {
         KeyguardManager km =
-                (KeyguardManager) Utils.getApp().getSystemService(Context.KEYGUARD_SERVICE);
+                (KeyguardManager) Utils.getContext().getSystemService(Context.KEYGUARD_SERVICE);
         if (km == null) return false;
         return km.inKeyguardRestrictedInputMode();
     }
@@ -321,7 +321,7 @@ public class ScreenUtils {
     @RequiresPermission(WRITE_SETTINGS)
     public static void setSleepDuration(final int duration) {
         Settings.System.putInt(
-                Utils.getApp().getContentResolver(),
+                Utils.getContext().getContentResolver(),
                 Settings.System.SCREEN_OFF_TIMEOUT,
                 duration
         );
@@ -335,7 +335,7 @@ public class ScreenUtils {
     public static int getSleepDuration() {
         try {
             return Settings.System.getInt(
-                    Utils.getApp().getContentResolver(),
+                    Utils.getContext().getContentResolver(),
                     Settings.System.SCREEN_OFF_TIMEOUT
             );
         } catch (Settings.SettingNotFoundException e) {
@@ -349,7 +349,7 @@ public class ScreenUtils {
     ///////////////////////////////////////////////////////////////////////////
 
     private static int getStatusBarHeight() {
-        Resources resources = Utils.getApp().getResources();
+        Resources resources = Utils.getContext().getResources();
         int resourceId = resources.getIdentifier("status_bar_height", "dimen", "android");
         return resourceId > 0 ? resources.getDimensionPixelSize(resourceId) : 0;
     }

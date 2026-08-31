@@ -48,34 +48,18 @@ public final class Utils {
     }
 
     /**
-     * 获取ApplicationContext
-     *
-     * @return ApplicationContext
-     */
-    public static Context getContext() {
-        return getApplication().getApplicationContext();
-    }
-
-    public static Application getApplication() {
-        if (sApp != null) {
-            return sApp;
-        }
-        throw new NullPointerException("should be initialized in application");
-    }
-
-    /**
-     * Return the Application object.
+     * 获取 ApplicationContext
      * <p>Main process get app by UtilsFileProvider,
      * and other process get app by reflect.</p>
      *
-     * @return the Application object
+     * @return the Application's Context
      */
-    public static Application getApp() {
-        if (sApp != null) return sApp;
+    public static Context getContext() {
+        if (sApp != null) return sApp.getApplicationContext();
         init(UtilsBridge.getApplicationByReflect());
         if (sApp == null) throw new NullPointerException("reflect failed.");
         KLog.i("Utils", UtilsBridge.getCurrentProcessName() + " reflect app success.");
-        return sApp;
+        return sApp.getApplicationContext();
     }
 
     ///////////////////////////////////////////////////////////////////////////

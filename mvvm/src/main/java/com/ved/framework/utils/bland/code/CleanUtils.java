@@ -23,7 +23,7 @@ public final class CleanUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean cleanInternalCache() {
-        return UtilsBridge.deleteAllInDir(Utils.getApp().getCacheDir());
+        return UtilsBridge.deleteAllInDir(Utils.getContext().getCacheDir());
     }
 
     /**
@@ -33,7 +33,7 @@ public final class CleanUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean cleanInternalFiles() {
-        return UtilsBridge.deleteAllInDir(Utils.getApp().getFilesDir());
+        return UtilsBridge.deleteAllInDir(Utils.getContext().getFilesDir());
     }
 
     /**
@@ -43,7 +43,7 @@ public final class CleanUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean cleanInternalDbs() {
-        return UtilsBridge.deleteAllInDir(new File(Utils.getApp().getFilesDir().getParent(), "databases"));
+        return UtilsBridge.deleteAllInDir(new File(Utils.getContext().getFilesDir().getParent(), "databases"));
     }
 
     /**
@@ -54,7 +54,7 @@ public final class CleanUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean cleanInternalDbByName(final String dbName) {
-        return Utils.getApp().deleteDatabase(dbName);
+        return Utils.getContext().deleteDatabase(dbName);
     }
 
     /**
@@ -64,7 +64,7 @@ public final class CleanUtils {
      * @return {@code true}: success<br>{@code false}: fail
      */
     public static boolean cleanInternalSp() {
-        return UtilsBridge.deleteAllInDir(new File(Utils.getApp().getFilesDir().getParent(), "shared_prefs"));
+        return UtilsBridge.deleteAllInDir(new File(Utils.getContext().getFilesDir().getParent(), "shared_prefs"));
     }
 
     /**
@@ -75,7 +75,7 @@ public final class CleanUtils {
      */
     public static boolean cleanExternalCache() {
         return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())
-                && UtilsBridge.deleteAllInDir(Utils.getApp().getExternalCacheDir());
+                && UtilsBridge.deleteAllInDir(Utils.getContext().getExternalCacheDir());
     }
 
     /**
@@ -90,7 +90,7 @@ public final class CleanUtils {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public static void cleanAppUserData() {
-        ActivityManager am = (ActivityManager) Utils.getApp().getSystemService(Context.ACTIVITY_SERVICE);
+        ActivityManager am = (ActivityManager) Utils.getContext().getSystemService(Context.ACTIVITY_SERVICE);
         //noinspection ConstantConditions
         am.clearApplicationUserData();
     }

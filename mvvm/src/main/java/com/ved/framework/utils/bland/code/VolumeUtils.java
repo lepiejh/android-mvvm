@@ -24,7 +24,7 @@ public class VolumeUtils {
      * @return the volume
      */
     public static int getVolume(int streamType) {
-        AudioManager am = (AudioManager) Utils.getApp().getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) Utils.getContext().getSystemService(Context.AUDIO_SERVICE);
         //noinspection ConstantConditions
         return am.getStreamVolume(streamType);
     }
@@ -56,7 +56,7 @@ public class VolumeUtils {
      *                   </ul>
      */
     public static void setVolume(int streamType, int volume, int flags) {
-        AudioManager am = (AudioManager) Utils.getApp().getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) Utils.getContext().getSystemService(Context.AUDIO_SERVICE);
         try {
             //noinspection ConstantConditions
             am.setStreamVolume(streamType, volume, flags);
@@ -81,7 +81,7 @@ public class VolumeUtils {
      * @return the maximum volume
      */
     public static int getMaxVolume(int streamType) {
-        AudioManager am = (AudioManager) Utils.getApp().getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) Utils.getContext().getSystemService(Context.AUDIO_SERVICE);
         //noinspection ConstantConditions
         return am.getStreamMaxVolume(streamType);
     }
@@ -103,7 +103,7 @@ public class VolumeUtils {
      * @return the minimum volume
      */
     public static int getMinVolume(int streamType) {
-        AudioManager am = (AudioManager) Utils.getApp().getSystemService(Context.AUDIO_SERVICE);
+        AudioManager am = (AudioManager) Utils.getContext().getSystemService(Context.AUDIO_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             //noinspection ConstantConditions
             return am.getStreamMinVolume(streamType);

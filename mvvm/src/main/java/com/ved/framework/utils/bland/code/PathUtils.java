@@ -92,9 +92,9 @@ public final class PathUtils {
      */
     public static String getInternalAppDataPath() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
-            return Utils.getApp().getApplicationInfo().dataDir;
+            return Utils.getContext().getApplicationInfo().dataDir;
         }
-        return getAbsolutePath(Utils.getApp().getDataDir());
+        return getAbsolutePath(Utils.getContext().getDataDir());
     }
 
     /**
@@ -104,9 +104,9 @@ public final class PathUtils {
      */
     public static String getInternalAppCodeCacheDir() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return Utils.getApp().getApplicationInfo().dataDir + "/code_cache";
+            return Utils.getContext().getApplicationInfo().dataDir + "/code_cache";
         }
-        return getAbsolutePath(Utils.getApp().getCodeCacheDir());
+        return getAbsolutePath(Utils.getContext().getCodeCacheDir());
     }
 
     /**
@@ -115,7 +115,7 @@ public final class PathUtils {
      * @return the path of /data/data/package/cache
      */
     public static String getInternalAppCachePath() {
-        return getAbsolutePath(Utils.getApp().getCacheDir());
+        return getAbsolutePath(Utils.getContext().getCacheDir());
     }
 
     /**
@@ -124,7 +124,7 @@ public final class PathUtils {
      * @return the path of /data/data/package/databases
      */
     public static String getInternalAppDbsPath() {
-        return Utils.getApp().getApplicationInfo().dataDir + "/databases";
+        return Utils.getContext().getApplicationInfo().dataDir + "/databases";
     }
 
     /**
@@ -134,7 +134,7 @@ public final class PathUtils {
      * @return the path of /data/data/package/databases/name
      */
     public static String getInternalAppDbPath(String name) {
-        return getAbsolutePath(Utils.getApp().getDatabasePath(name));
+        return getAbsolutePath(Utils.getContext().getDatabasePath(name));
     }
 
     /**
@@ -143,7 +143,7 @@ public final class PathUtils {
      * @return the path of /data/data/package/files
      */
     public static String getInternalAppFilesPath() {
-        return getAbsolutePath(Utils.getApp().getFilesDir());
+        return getAbsolutePath(Utils.getContext().getFilesDir());
     }
 
     /**
@@ -152,7 +152,7 @@ public final class PathUtils {
      * @return the path of /data/data/package/shared_prefs
      */
     public static String getInternalAppSpPath() {
-        return Utils.getApp().getApplicationInfo().dataDir + "/shared_prefs";
+        return Utils.getContext().getApplicationInfo().dataDir + "/shared_prefs";
     }
 
     /**
@@ -160,11 +160,11 @@ public final class PathUtils {
      *
      * @return the path of /data/data/package/no_backup
      */
-    public static String getInternalAppNoBackupFilesPath() {
+    public static String getInternalAppNoBackFilesPath() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            return Utils.getApp().getApplicationInfo().dataDir + "/no_backup";
+            return Utils.getContext().getApplicationInfo().dataDir + "/no_backup";
         }
-        return getAbsolutePath(Utils.getApp().getNoBackupFilesDir());
+        return getAbsolutePath(Utils.getContext().getNoBackupFilesDir());
     }
 
     /**
@@ -287,7 +287,7 @@ public final class PathUtils {
      */
     public static String getExternalAppDataPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        File externalCacheDir = Utils.getApp().getExternalCacheDir();
+        File externalCacheDir = Utils.getContext().getExternalCacheDir();
         if (externalCacheDir == null) return "";
         return getAbsolutePath(externalCacheDir.getParentFile());
     }
@@ -299,7 +299,7 @@ public final class PathUtils {
      */
     public static String getExternalAppCachePath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalCacheDir());
+        return getAbsolutePath(Utils.getContext().getExternalCacheDir());
     }
 
     /**
@@ -309,7 +309,7 @@ public final class PathUtils {
      */
     public static String getExternalAppFilesPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(null));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(null));
     }
 
     /**
@@ -319,7 +319,7 @@ public final class PathUtils {
      */
     public static String getExternalAppMusicPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_MUSIC));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC));
     }
 
     /**
@@ -329,7 +329,7 @@ public final class PathUtils {
      */
     public static String getExternalAppPodcastsPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_PODCASTS));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_PODCASTS));
     }
 
     /**
@@ -339,7 +339,7 @@ public final class PathUtils {
      */
     public static String getExternalAppRingtonesPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_RINGTONES));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_RINGTONES));
     }
 
     /**
@@ -349,7 +349,7 @@ public final class PathUtils {
      */
     public static String getExternalAppAlarmsPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_ALARMS));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_ALARMS));
     }
 
     /**
@@ -359,7 +359,7 @@ public final class PathUtils {
      */
     public static String getExternalAppNotificationsPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_NOTIFICATIONS));
     }
 
     /**
@@ -369,7 +369,7 @@ public final class PathUtils {
      */
     public static String getExternalAppPicturesPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_PICTURES));
     }
 
     /**
@@ -379,7 +379,7 @@ public final class PathUtils {
      */
     public static String getExternalAppMoviesPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_MOVIES));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_MOVIES));
     }
 
     /**
@@ -389,7 +389,7 @@ public final class PathUtils {
      */
     public static String getExternalAppDownloadPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS));
     }
 
     /**
@@ -399,7 +399,7 @@ public final class PathUtils {
      */
     public static String getExternalAppDcimPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_DCIM));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_DCIM));
     }
 
     /**
@@ -410,9 +410,9 @@ public final class PathUtils {
     public static String getExternalAppDocumentsPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return getAbsolutePath(Utils.getApp().getExternalFilesDir(null)) + "/Documents";
+            return getAbsolutePath(Utils.getContext().getExternalFilesDir(null)) + "/Documents";
         }
-        return getAbsolutePath(Utils.getApp().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS));
+        return getAbsolutePath(Utils.getContext().getExternalFilesDir(Environment.DIRECTORY_DOCUMENTS));
     }
 
     /**
@@ -422,7 +422,7 @@ public final class PathUtils {
      */
     public static String getExternalAppObbPath() {
         if (!UtilsBridge.isSDCardEnableByEnvironment()) return "";
-        return getAbsolutePath(Utils.getApp().getObbDir());
+        return getAbsolutePath(Utils.getContext().getObbDir());
     }
 
     public static String getRootPathExternalFirst() {

@@ -74,10 +74,10 @@ public final class CrashUtils {
         String dirPath;
         if (UtilsBridge.isSpace(crashDirPath)) {
             if (UtilsBridge.isSDCardEnableByEnvironment()
-                && Utils.getApp().getExternalFilesDir(null) != null) {
-                dirPath = Utils.getApp().getExternalFilesDir(null) + FILE_SEP + "crash" + FILE_SEP;
+                && Utils.getContext().getExternalFilesDir(null) != null) {
+                dirPath = Utils.getContext().getExternalFilesDir(null) + FILE_SEP + "crash" + FILE_SEP;
             } else {
-                dirPath = Utils.getApp().getFilesDir() + FILE_SEP + "crash" + FILE_SEP;
+                dirPath = Utils.getContext().getFilesDir() + FILE_SEP + "crash" + FILE_SEP;
             }
         } else {
             dirPath = crashDirPath.endsWith(FILE_SEP) ? crashDirPath : crashDirPath + FILE_SEP;

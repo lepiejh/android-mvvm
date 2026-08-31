@@ -141,7 +141,7 @@ public class LanguageUtils {
      * @return the locale of applicationContext
      */
     public static Locale getAppContextLanguage() {
-        return getContextLanguage(Utils.getApp());
+        return getContextLanguage(Utils.getContext());
     }
 
     /**
@@ -164,13 +164,13 @@ public class LanguageUtils {
     }
 
     static void pollCheckAppContextLocal(final Locale destLocale, final int index, final Utils.Consumer<Boolean> consumer) {
-        Resources appResources = Utils.getApp().getResources();
+        Resources appResources = Utils.getContext().getResources();
         Configuration appConfig = appResources.getConfiguration();
         Locale appLocal = getLocal(appConfig);
 
         setLocal(appConfig, destLocale);
 
-        Utils.getApp().getResources().updateConfiguration(appConfig, appResources.getDisplayMetrics());
+        Utils.getContext().getResources().updateConfiguration(appConfig, appResources.getDisplayMetrics());
 
         if (consumer == null) return;
 
@@ -235,7 +235,7 @@ public class LanguageUtils {
         if (destLocal == null) return;
 
         updateConfiguration(activity, destLocal);
-        updateConfiguration(Utils.getApp(), destLocal);
+        updateConfiguration(Utils.getContext(), destLocal);
     }
 
     private static void updateConfiguration(Context context, Locale destLocal) {

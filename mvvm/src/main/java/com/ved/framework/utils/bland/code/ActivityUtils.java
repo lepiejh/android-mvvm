@@ -145,7 +145,7 @@ public final class ActivityUtils {
                                            @NonNull final String cls) {
         Intent intent = new Intent();
         intent.setClassName(pkg, cls);
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         return !(pm.resolveActivity(intent, 0) == null ||
                 intent.resolveActivity(pm) == null ||
                 pm.queryIntentActivities(intent, 0).size() == 0);
@@ -1033,7 +1033,7 @@ public final class ActivityUtils {
     public static void startActivityForResult(@NonNull final Fragment fragment,
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode) {
-        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, null, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, null);
     }
 
@@ -1050,7 +1050,7 @@ public final class ActivityUtils {
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode,
                                               @Nullable final Bundle options) {
-        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, null, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, options);
     }
 
@@ -1068,7 +1068,7 @@ public final class ActivityUtils {
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode,
                                               final View... sharedElements) {
-        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, null, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, getOptionsBundle(fragment, sharedElements));
     }
 
@@ -1089,7 +1089,7 @@ public final class ActivityUtils {
                                               final int requestCode,
                                               @AnimRes final int enterAnim,
                                               @AnimRes final int exitAnim) {
-        startActivityForResult(fragment, null, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, null, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
     }
 
@@ -1106,7 +1106,7 @@ public final class ActivityUtils {
                                               @NonNull final Fragment fragment,
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode) {
-        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, extras, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, null);
     }
 
@@ -1125,7 +1125,7 @@ public final class ActivityUtils {
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode,
                                               @Nullable final Bundle options) {
-        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, extras, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, options);
     }
 
@@ -1145,7 +1145,7 @@ public final class ActivityUtils {
                                               @NonNull final Class<? extends Activity> clz,
                                               final int requestCode,
                                               final View... sharedElements) {
-        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, extras, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, getOptionsBundle(fragment, sharedElements));
     }
 
@@ -1168,7 +1168,7 @@ public final class ActivityUtils {
                                               final int requestCode,
                                               @AnimRes final int enterAnim,
                                               @AnimRes final int exitAnim) {
-        startActivityForResult(fragment, extras, Utils.getApp().getPackageName(), clz.getName(),
+        startActivityForResult(fragment, extras, Utils.getContext().getPackageName(), clz.getName(),
                 requestCode, getOptionsBundle(fragment, enterAnim, exitAnim));
     }
 
@@ -1422,7 +1422,7 @@ public final class ActivityUtils {
      * Start the launcher activity.
      */
     public static void startLauncherActivity() {
-        startLauncherActivity(Utils.getApp().getPackageName());
+        startLauncherActivity(Utils.getContext().getPackageName());
     }
 
     /**
@@ -1451,7 +1451,7 @@ public final class ActivityUtils {
      * @return the name of launcher activity
      */
     public static String getLauncherActivity() {
-        return getLauncherActivity(Utils.getApp().getPackageName());
+        return getLauncherActivity(Utils.getContext().getPackageName());
     }
 
     /**
@@ -1465,7 +1465,7 @@ public final class ActivityUtils {
         Intent intent = new Intent(Intent.ACTION_MAIN, null);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setPackage(pkg);
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         List<ResolveInfo> info = pm.queryIntentActivities(intent, 0);
         if (info == null || info.size() == 0) {
             return "";
@@ -1479,7 +1479,7 @@ public final class ActivityUtils {
      * @return the list of main activities
      */
     public static List<String> getMainActivities() {
-        return getMainActivities(Utils.getApp().getPackageName());
+        return getMainActivities(Utils.getContext().getPackageName());
     }
 
     /**
@@ -1492,7 +1492,7 @@ public final class ActivityUtils {
         List<String> ret = new ArrayList<>();
         Intent intent = new Intent(Intent.ACTION_MAIN, null);
         intent.setPackage(pkg);
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         List<ResolveInfo> info = pm.queryIntentActivities(intent, 0);
         int size = info.size();
         if (size == 0) return ret;
@@ -1917,7 +1917,7 @@ public final class ActivityUtils {
      */
     @Nullable
     public static Drawable getActivityIcon(@NonNull final Class<? extends Activity> clz) {
-        return getActivityIcon(new ComponentName(Utils.getApp(), clz));
+        return getActivityIcon(new ComponentName(Utils.getContext(), clz));
     }
 
     /**
@@ -1928,7 +1928,7 @@ public final class ActivityUtils {
      */
     @Nullable
     public static Drawable getActivityIcon(@NonNull final ComponentName activityName) {
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         try {
             return pm.getActivityIcon(activityName);
         } catch (PackageManager.NameNotFoundException e) {
@@ -1956,7 +1956,7 @@ public final class ActivityUtils {
      */
     @Nullable
     public static Drawable getActivityLogo(@NonNull final Class<? extends Activity> clz) {
-        return getActivityLogo(new ComponentName(Utils.getApp(), clz));
+        return getActivityLogo(new ComponentName(Utils.getContext(), clz));
     }
 
     /**
@@ -1967,7 +1967,7 @@ public final class ActivityUtils {
      */
     @Nullable
     public static Drawable getActivityLogo(@NonNull final ComponentName activityName) {
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         try {
             return pm.getActivityLogo(activityName);
         } catch (PackageManager.NameNotFoundException e) {
@@ -2121,9 +2121,9 @@ public final class ActivityUtils {
     private static Context getTopActivityOrApp() {
         if (UtilsBridge.isAppForeground()) {
             Activity topActivity = getTopActivity();
-            return topActivity == null ? Utils.getApp() : topActivity;
+            return topActivity == null ? Utils.getContext() : topActivity;
         } else {
-            return Utils.getApp();
+            return Utils.getContext();
         }
     }
 }

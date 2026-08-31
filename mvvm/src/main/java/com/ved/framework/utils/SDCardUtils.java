@@ -229,7 +229,7 @@ public final class SDCardUtils {
      */
     public static List<SDCardInfo> getSDCardInfoList() {
         List<SDCardInfo> paths = new ArrayList<>();
-        StorageManager sm = (StorageManager) Utils.getApp().getSystemService(Context.STORAGE_SERVICE);
+        StorageManager sm = (StorageManager) Utils.getContext().getSystemService(Context.STORAGE_SERVICE);
         if (sm == null) return paths;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             List<StorageVolume> storageVolumes = sm.getStorageVolumes();
@@ -343,8 +343,8 @@ public final class SDCardUtils {
                     "\npath=" + path +
                     ", state=" + state +
                     ", isRemovable=" + isRemovable +
-                    ", totalSize=" + Formatter.formatFileSize(Utils.getApp(), totalSize) +
-                    ", availableSize=" + Formatter.formatFileSize(Utils.getApp(), availableSize);
+                    ", totalSize=" + Formatter.formatFileSize(Utils.getContext(), totalSize) +
+                    ", availableSize=" + Formatter.formatFileSize(Utils.getContext(), availableSize);
         }
     }
 }

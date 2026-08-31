@@ -259,7 +259,7 @@ public class NotificationUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean areNotificationsEnabled() {
-        return NotificationManagerCompat.from(Utils.getApp()).areNotificationsEnabled();
+        return NotificationManagerCompat.from(Utils.getContext()).areNotificationsEnabled();
     }
 
     /**
@@ -303,18 +303,18 @@ public class NotificationUtils {
      * @param consumer      The consumer of create the builder of notification.
      */
     public static void notify(String tag, int id, ChannelConfig channelConfig, Utils.Consumer<NotificationCompat.Builder> consumer) {
-        NotificationManagerCompat.from(Utils.getApp()).notify(tag, id, getNotification(channelConfig, consumer));
+        NotificationManagerCompat.from(Utils.getContext()).notify(tag, id, getNotification(channelConfig, consumer));
     }
 
 
     public static Notification getNotification(ChannelConfig channelConfig, Utils.Consumer<NotificationCompat.Builder> consumer) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationManager nm = (NotificationManager) Utils.getApp().getSystemService(Context.NOTIFICATION_SERVICE);
+            NotificationManager nm = (NotificationManager) Utils.getContext().getSystemService(Context.NOTIFICATION_SERVICE);
             //noinspection ConstantConditions
             nm.createNotificationChannel(channelConfig.getNotificationChannel());
         }
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(Utils.getApp());
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(Utils.getContext());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             builder.setChannelId(channelConfig.mNotificationChannel.getId());
         }
@@ -332,7 +332,7 @@ public class NotificationUtils {
      * @param id  The identifier for the notification will be cancelled.
      */
     public static void cancel(String tag, final int id) {
-        NotificationManagerCompat.from(Utils.getApp()).cancel(tag, id);
+        NotificationManagerCompat.from(Utils.getContext()).cancel(tag, id);
     }
 
     /**
@@ -341,14 +341,14 @@ public class NotificationUtils {
      * @param id The identifier for the notification will be cancelled.
      */
     public static void cancel(final int id) {
-        NotificationManagerCompat.from(Utils.getApp()).cancel(id);
+        NotificationManagerCompat.from(Utils.getContext()).cancel(id);
     }
 
     /**
      * Cancel all of the notifications.
      */
     public static void cancelAll() {
-        NotificationManagerCompat.from(Utils.getApp()).cancelAll();
+        NotificationManagerCompat.from(Utils.getContext()).cancelAll();
     }
 
     /**
@@ -371,7 +371,7 @@ public class NotificationUtils {
     private static void invokePanels(final String methodName) {
         try {
             @SuppressLint("WrongConstant")
-            Object service = Utils.getApp().getSystemService("statusbar");
+            Object service = Utils.getContext().getSystemService("statusbar");
             @SuppressLint("PrivateApi")
             Class<?> statusBarManager = Class.forName("android.app.StatusBarManager");
             Method expand = statusBarManager.getMethod(methodName);
@@ -384,7 +384,7 @@ public class NotificationUtils {
     public static class ChannelConfig {
 
         public static final ChannelConfig DEFAULT_CHANNEL_CONFIG = new ChannelConfig(
-                Utils.getApp().getPackageName(), Utils.getApp().getPackageName(), IMPORTANCE_DEFAULT
+                Utils.getContext().getPackageName(), Utils.getContext().getPackageName(), IMPORTANCE_DEFAULT
         );
 
         private NotificationChannel mNotificationChannel;

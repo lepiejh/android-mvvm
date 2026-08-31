@@ -54,7 +54,7 @@ public final class PermissionUtils {
      * @return the permissions used in application
      */
     public static List<String> getPermissions() {
-        return getPermissions(Utils.getApp().getPackageName());
+        return getPermissions(Utils.getContext().getPackageName());
     }
 
     /**
@@ -64,7 +64,7 @@ public final class PermissionUtils {
      * @return the permissions used in application
      */
     public static List<String> getPermissions(final String packageName) {
-        PackageManager pm = Utils.getApp().getPackageManager();
+        PackageManager pm = Utils.getContext().getPackageManager();
         try {
             String[] permissions = pm.getPackageInfo(packageName, PackageManager.GET_PERMISSIONS).requestedPermissions;
             if (permissions == null) return Collections.emptyList();
@@ -120,7 +120,7 @@ public final class PermissionUtils {
     private static boolean isGranted(final String permission) {
         return Build.VERSION.SDK_INT < Build.VERSION_CODES.M
                 || PackageManager.PERMISSION_GRANTED
-                == ContextCompat.checkSelfPermission(Utils.getApp(), permission);
+                == ContextCompat.checkSelfPermission(Utils.getContext(), permission);
     }
 
     /**
@@ -130,7 +130,7 @@ public final class PermissionUtils {
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static boolean isGrantedWriteSettings() {
-        return Settings.System.canWrite(Utils.getApp());
+        return Settings.System.canWrite(Utils.getContext());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -146,7 +146,7 @@ public final class PermissionUtils {
     @TargetApi(Build.VERSION_CODES.M)
     private static void startWriteSettingsActivity(final Activity activity, final int requestCode) {
         Intent intent = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-        intent.setData(Uri.parse("package:" + Utils.getApp().getPackageName()));
+        intent.setData(Uri.parse("package:" + Utils.getContext().getPackageName()));
         if (!UtilsBridge.isIntentAvailable(intent)) {
             launchAppDetailsSettings();
             return;
@@ -161,7 +161,7 @@ public final class PermissionUtils {
      */
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static boolean isGrantedDrawOverlays() {
-        return Settings.canDrawOverlays(Utils.getApp());
+        return Settings.canDrawOverlays(Utils.getContext());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.M)
@@ -177,7 +177,7 @@ public final class PermissionUtils {
     @TargetApi(Build.VERSION_CODES.M)
     private static void startOverlayPermissionActivity(final Activity activity, final int requestCode) {
         Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
-        intent.setData(Uri.parse("package:" + Utils.getApp().getPackageName()));
+        intent.setData(Uri.parse("package:" + Utils.getContext().getPackageName()));
         if (!UtilsBridge.isIntentAvailable(intent)) {
             launchAppDetailsSettings();
             return;
@@ -189,9 +189,9 @@ public final class PermissionUtils {
      * Launch the application's details settings.
      */
     public static void launchAppDetailsSettings() {
-        Intent intent = UtilsBridge.getLaunchAppDetailsSettingsIntent(Utils.getApp().getPackageName(), true);
+        Intent intent = UtilsBridge.getLaunchAppDetailsSettingsIntent(Utils.getContext().getPackageName(), true);
         if (!UtilsBridge.isIntentAvailable(intent)) return;
-        Utils.getApp().startActivity(intent);
+        Utils.getContext().startActivity(intent);
     }
 
     /**

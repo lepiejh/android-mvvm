@@ -37,7 +37,7 @@ public final class KeyboardUtils {
      */
     public static void showSoftInput() {
         InputMethodManager imm =
-            (InputMethodManager) Utils.getApp().getSystemService(Context.INPUT_METHOD_SERVICE);
+            (InputMethodManager) Utils.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm == null) {
             return;
         }
@@ -74,7 +74,7 @@ public final class KeyboardUtils {
      */
     public static void showSoftInput(@NonNull final View view, final int flags) {
         InputMethodManager imm =
-            (InputMethodManager) Utils.getApp().getSystemService(Context.INPUT_METHOD_SERVICE);
+            (InputMethodManager) Utils.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm == null) {
             return;
         }
@@ -137,7 +137,7 @@ public final class KeyboardUtils {
      */
     public static void hideSoftInput(@NonNull final View view) {
         InputMethodManager imm =
-            (InputMethodManager) Utils.getApp().getSystemService(Context.INPUT_METHOD_SERVICE);
+            (InputMethodManager) Utils.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm == null) {
             return;
         }
@@ -168,7 +168,7 @@ public final class KeyboardUtils {
      */
     public static void toggleSoftInput() {
         InputMethodManager imm =
-            (InputMethodManager) Utils.getApp().getSystemService(Context.INPUT_METHOD_SERVICE);
+            (InputMethodManager) Utils.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm == null) {
             return;
         }
@@ -332,7 +332,7 @@ public final class KeyboardUtils {
      */
     public static void fixSoftInputLeaks(@NonNull final Window window) {
         InputMethodManager imm =
-            (InputMethodManager) Utils.getApp().getSystemService(Context.INPUT_METHOD_SERVICE);
+            (InputMethodManager) Utils.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imm == null) {
             return;
         }

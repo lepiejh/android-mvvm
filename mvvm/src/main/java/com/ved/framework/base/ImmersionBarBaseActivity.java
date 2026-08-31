@@ -18,7 +18,7 @@ import com.trello.rxlifecycle4.components.support.RxAppCompatActivity;
 import com.ved.framework.R;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.ScreenUtils;
-import com.ved.framework.utils.UIUtils;
+import com.ved.framework.utils.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -32,7 +32,7 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
         if (!isTaskRoot()){
             Intent intent = getIntent();
             String intentAction = intent.getAction();
-            if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && intentAction != null && UIUtils.equals(intentAction,Intent.ACTION_MAIN)){
+            if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && intentAction != null && StringUtils.equals(intentAction,Intent.ACTION_MAIN)){
                 finish();
             }
         }
