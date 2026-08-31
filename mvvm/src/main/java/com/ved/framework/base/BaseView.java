@@ -16,9 +16,9 @@ import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
-import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
+import com.ved.framework.utils.bland.code.SizeUtils;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -260,7 +260,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         if (viewDelegate.isSwipeBack()) {
             final SwipePanel swipeLayout = new SwipePanel(viewDelegate.FragmentActivity());
             swipeLayout.setLeftDrawable(R.drawable.ca);
-            swipeLayout.setLeftEdgeSize(DpiUtils.dip2px(viewDelegate.FragmentActivity(),16));
+            swipeLayout.setLeftEdgeSize(SizeUtils.dp2px(16));
             swipeLayout.setLeftSwipeColor(viewDelegate.FragmentActivity().getResources().getColor(R.color.colorPrimary));
             swipeLayout.wrapView(viewDelegate.FragmentActivity().findViewById(android.R.id.content));
             swipeLayout.setOnFullSwipeListener(direction -> {

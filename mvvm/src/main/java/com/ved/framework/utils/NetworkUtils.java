@@ -67,20 +67,10 @@ public class NetworkUtils {
     }
 
     /**
-     * 判断是否打开网络
-     * @return
+     * 判断是否打开网络（委托 {@link #isConnected()}）
      */
     public static boolean isNetWorkAvailable(){
-        boolean isAvailable = false ;
-        ConnectivityManager cm = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (cm == null) {
-            return false;
-        }
-        NetworkInfo networkInfo = cm.getActiveNetworkInfo();
-        if(networkInfo!=null && networkInfo.isAvailable()){
-            isAvailable = true;
-        }
-        return isAvailable;
+        return isConnected();
     }
 
     /**
@@ -102,43 +92,24 @@ public class NetworkUtils {
     }
 
     /**
-     * 判断当前网络是否为wifi
-     * @return  如果为wifi返回true；否则返回false
+     * 判断当前网络是否为wifi（委托 {@link #isWifiConnected()}）
      */
-    @SuppressWarnings("static-access")
     public static boolean isWiFiConnected(){
-        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (manager == null) {
-            return false;
-        }
-        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
-        return networkInfo != null && networkInfo.getType() == manager.TYPE_WIFI;
+        return isWifiConnected();
     }
 
     /**
-     * 判断MOBILE网络是否可用
-     * @return
-     * @throws Exception
+     * 判断MOBILE网络是否可用（委托 {@link #isMobileData()}）
      */
     public static boolean isMobileDataEnable(){
-        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        boolean isMobileDataEnable = false;
-        NetworkInfo mobileInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE) : null;
-        isMobileDataEnable = mobileInfo != null && mobileInfo.isConnectedOrConnecting();
-        return isMobileDataEnable;
+        return isMobileData();
     }
 
     /**
-     * 判断wifi 是否可用
-     * @return
-     * @throws Exception
+     * 判断wifi 是否可用（委托 {@link #isWifiConnected()}）
      */
     public static boolean isWifiDataEnable(){
-        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        boolean isWifiDataEnable = false;
-        NetworkInfo wifiInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
-        isWifiDataEnable = wifiInfo != null && wifiInfo.isConnectedOrConnecting();
-        return isWifiDataEnable;
+        return isWifiConnected();
     }
 
     /**
@@ -207,7 +178,7 @@ public class NetworkUtils {
      */
     @RequiresPermission(INTERNET)
     public static Utils.Task<Boolean> isAvailableAsync(@NonNull final Utils.Consumer<Boolean> consumer) {
-        return doAsync(new Utils.Task<Boolean>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<Boolean>(consumer) {
             @RequiresPermission(INTERNET)
             @Override
             public Boolean doInBackground() {
@@ -250,7 +221,7 @@ public class NetworkUtils {
     @RequiresPermission(INTERNET)
     public static Utils.Task<Boolean> isAvailableByPingAsync(final String ip,
                                                              @NonNull final Utils.Consumer<Boolean> consumer) {
-        return doAsync(new Utils.Task<Boolean>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<Boolean>(consumer) {
             @RequiresPermission(INTERNET)
             @Override
             public Boolean doInBackground() {
@@ -307,7 +278,7 @@ public class NetworkUtils {
     @RequiresPermission(INTERNET)
     public static Utils.Task isAvailableByDnsAsync(final String domain,
                                                    @NonNull final Utils.Consumer<Boolean> consumer) {
-        return doAsync(new Utils.Task<Boolean>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<Boolean>(consumer) {
             @RequiresPermission(INTERNET)
             @Override
             public Boolean doInBackground() {
@@ -509,7 +480,7 @@ public class NetworkUtils {
      */
     @RequiresPermission(allOf = {ACCESS_WIFI_STATE, INTERNET})
     public static Utils.Task<Boolean> isWifiAvailableAsync(@NonNull final Utils.Consumer<Boolean> consumer) {
-        return doAsync(new Utils.Task<Boolean>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<Boolean>(consumer) {
             @RequiresPermission(allOf = {ACCESS_WIFI_STATE, INTERNET})
             @Override
             public Boolean doInBackground() {
@@ -636,7 +607,7 @@ public class NetworkUtils {
      */
     public static Utils.Task<String> getIPAddressAsync(final boolean useIPv4,
                                                        @NonNull final Utils.Consumer<String> consumer) {
-        return doAsync(new Utils.Task<String>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<String>(consumer) {
             @RequiresPermission(INTERNET)
             @Override
             public String doInBackground() {
@@ -726,7 +697,7 @@ public class NetworkUtils {
     @RequiresPermission(INTERNET)
     public static Utils.Task<String> getDomainAddressAsync(final String domain,
                                                            @NonNull final Utils.Consumer<String> consumer) {
-        return doAsync(new Utils.Task<String>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<String>(consumer) {
             @RequiresPermission(INTERNET)
             @Override
             public String doInBackground() {
@@ -1099,14 +1070,5 @@ public class NetworkUtils {
             return new ArrayList<>(map.values());
         }
 
-    }
-
-    ///////////////////////////////////////////////////////////////////////////
-    // 以下为合并时从 UtilsBridge 内联实现的辅助方法
-    ///////////////////////////////////////////////////////////////////////////
-
-    private static <T> Utils.Task<T> doAsync(final Utils.Task<T> task) {
-        ThreadUtils.getCachedPool().execute(task);
-        return task;
     }
 }

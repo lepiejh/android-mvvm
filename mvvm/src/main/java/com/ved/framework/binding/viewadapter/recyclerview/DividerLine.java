@@ -7,9 +7,9 @@ import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.view.View;
 
-import com.ved.framework.utils.DpiUtils;
-
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.ved.framework.utils.bland.code.SizeUtils;
 
 /**
  * Created by ved on 2017/6/16.
@@ -64,7 +64,7 @@ public class DividerLine extends RecyclerView.ItemDecoration {
      * 解析实际分隔线厚度：未显式设置时回退到默认 1dp
      */
     private int resolveDividerSize() {
-        return getDividerSize() == 0 ? DpiUtils.dip2px(mContext, DEFAULT_DIVIDER_SIZE) : getDividerSize();
+        return getDividerSize() == 0 ? SizeUtils.dp2px(DEFAULT_DIVIDER_SIZE) : getDividerSize();
     }
 
     public LineDrawMode getMode() {

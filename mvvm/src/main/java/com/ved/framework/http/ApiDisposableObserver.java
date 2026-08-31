@@ -1,8 +1,8 @@
 package com.ved.framework.http;
 
 
+import com.ved.framework.utils.NetworkUtils;
 import com.ved.framework.utils.ToastUtils;
-import com.ved.framework.utils.Utils;
 
 import io.reactivex.rxjava3.observers.DisposableObserver;
 
@@ -37,7 +37,7 @@ public abstract class ApiDisposableObserver<T> extends DisposableObserver<T> {
     public void onStart() {
         super.onStart();
         // if  NetworkAvailable no !   must to call onCompleted
-        if (!NetworkUtil.isNetworkAvailable(Utils.getContext())) {
+        if (!NetworkUtils.isConnected()) {
             onError("网络错误");
             // 主动取消订阅，避免无网络时订阅链悬挂造成资源泄漏
             dispose();

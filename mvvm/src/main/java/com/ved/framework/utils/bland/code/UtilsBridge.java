@@ -545,15 +545,6 @@ public class UtilsBridge {
         return StringUtils.format(str, args);
     }
 
-
-    ///////////////////////////////////////////////////////////////////////////
-    // ThreadUtils
-    ///////////////////////////////////////////////////////////////////////////
-    static <T> Utils.Task<T> doAsync(final Utils.Task<T> task) {
-        ThreadUtils.getCachedPool().execute(task);
-        return task;
-    }
-
     static void runOnUiThread(final Runnable runnable) {
         ThreadUtils.runOnUiThread(runnable);
     }

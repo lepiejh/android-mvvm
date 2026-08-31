@@ -8,6 +8,7 @@ import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
 import com.ved.framework.utils.bland.code.SizeUtils
+import com.ved.framework.utils.bland.code.ThreadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -276,5 +277,9 @@ object CorpseUtils {
             .replace("\\", "/")
             // 2. 将多个连续斜杠替换为单个斜杠
             .replace("//+".toRegex(), "/")
+    }
+
+    fun <T> doAsync(task: Utils.Task<T>): Utils.Task<T> = task.apply {
+        ThreadUtils.getCachedPool().execute(this)
     }
 }

@@ -1,7 +1,10 @@
 package com.ved.framework.utils.bland.code;
-import com.ved.framework.utils.Utils;
 
 import androidx.annotation.NonNull;
+
+import com.ved.framework.utils.CorpseUtils;
+import com.ved.framework.utils.Utils;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -106,7 +109,7 @@ public final class ShellUtils {
                                                          final boolean isRooted,
                                                          final boolean isNeedResultMsg,
                                                          @NonNull final Utils.Consumer<CommandResult> consumer) {
-        return UtilsBridge.doAsync(new Utils.Task<CommandResult>(consumer) {
+        return CorpseUtils.INSTANCE.doAsync(new Utils.Task<CommandResult>(consumer) {
             @Override
             public CommandResult doInBackground() {
                 return execCmd(commands, isRooted, isNeedResultMsg);

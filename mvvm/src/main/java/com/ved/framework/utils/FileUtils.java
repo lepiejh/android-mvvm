@@ -1998,12 +1998,10 @@ public class FileUtils {
     }
 
     /**
-     * SD是否可用
-     *
-     * @return
+     * SD是否可用（委托 {@link SDCardUtils#isSDCardEnable()}）
      */
     public static boolean isSdCardAvailable() {
-        return Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState());
+        return SDCardUtils.isSDCardEnable();
     }
 
     /**
@@ -2022,10 +2020,6 @@ public class FileUtils {
     }
 
     public static boolean sdCardIsAvailable() {
-        if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-            File sd = new File(Environment.getExternalStorageDirectory().getPath());
-            return sd.canWrite();
-        } else
-            return false;
+        return isSdCardAvailable() && new File(Environment.getExternalStorageDirectory().getPath()).canWrite();
     }
 }

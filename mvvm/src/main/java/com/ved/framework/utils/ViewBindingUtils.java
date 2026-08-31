@@ -7,11 +7,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.IntDef;
+
+import com.ved.framework.utils.bland.code.SizeUtils;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.text.DecimalFormat;
-
-import androidx.annotation.IntDef;
 
 /**
  * 视图绑定工具类
@@ -63,7 +65,7 @@ public final class ViewBindingUtils {
         if (view == null) return;
         ViewGroup.MarginLayoutParams lp = (ViewGroup.MarginLayoutParams) view.getLayoutParams();
         if (lp == null) return;
-        int px = DpiUtils.dip2px(view.getContext(), margin);
+        int px = SizeUtils.dp2px(margin);
         switch (direction) {
             case DIRECTION_LEFT:
             case DIRECTION_START:
@@ -97,7 +99,7 @@ public final class ViewBindingUtils {
      */
     public static void setPadding(View view, int padding, @Direction int direction) {
         if (view == null) return;
-        int px = DpiUtils.dip2px(view.getContext(), padding);
+        int px = SizeUtils.dp2px(padding);
         int left = view.getPaddingLeft();
         int top = view.getPaddingTop();
         int right = view.getPaddingRight();

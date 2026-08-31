@@ -2,7 +2,7 @@ package com.ved.framework.http.interceptor;
 
 import android.content.Context;
 
-import com.ved.framework.http.NetworkUtil;
+import com.ved.framework.utils.NetworkUtils;
 
 import java.io.IOException;
 
@@ -26,7 +26,7 @@ public class CacheInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if (NetworkUtil.isNetworkAvailable(context)) {
+        if (NetworkUtils.isConnected()) {
             Response response = chain.proceed(request);
             // read from cache for 60 s
             int maxAge = 60;

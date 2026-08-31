@@ -14,9 +14,9 @@ import com.ved.framework.utils.ViewBindingUtils;
 import com.ved.framework.listener.OnViewGlobalLayoutListener;
 import com.ved.framework.utils.CalendarUtil;
 import com.ved.framework.utils.CorpseUtils;
-import com.ved.framework.utils.DpiUtils;
 import com.ved.framework.utils.StringUtils;
 import com.ved.framework.utils.TimeUtils;
+import com.ved.framework.utils.bland.code.SizeUtils;
 
 import java.util.concurrent.TimeUnit;
 
@@ -119,7 +119,7 @@ public class ViewAdapter {
      */
     @BindingAdapter(value = {"maxHeight"}, requireAll = false)
     public static void maxHeight(View view, final int maxHeight) {
-        view.getViewTreeObserver().addOnGlobalLayoutListener(new OnViewGlobalLayoutListener(view,DpiUtils.dip2px(view.getContext(),maxHeight)));
+        view.getViewTreeObserver().addOnGlobalLayoutListener(new OnViewGlobalLayoutListener(view, SizeUtils.dp2px(maxHeight)));
     }
 
     @BindingAdapter({"onTouchCommand"})

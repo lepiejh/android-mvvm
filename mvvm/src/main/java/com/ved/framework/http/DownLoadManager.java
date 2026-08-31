@@ -69,7 +69,7 @@ public class DownLoadManager {
         retrofit = new Retrofit.Builder()
                 .client(okHttpClient)
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
-                .baseUrl(NetworkUtil.url)
+                .baseUrl("http://www.baidu.com")
                 .build();
     }
 
