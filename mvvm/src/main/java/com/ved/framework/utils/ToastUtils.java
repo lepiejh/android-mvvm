@@ -23,6 +23,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 
+import com.ved.framework.utils.bland.code.SizeUtils;
+
 import java.lang.ref.WeakReference;
 import java.util.Objects;
 
@@ -603,7 +605,7 @@ public final class ToastUtils {
 
     public static final class UtilsMaxWidthRelativeLayout extends RelativeLayout {
 
-        private static final int SPACING = ScreenUtils.dp2px(80);
+        private static final int SPACING = SizeUtils.dp2px(80);
 
         public UtilsMaxWidthRelativeLayout(Context context) {
             super(context);

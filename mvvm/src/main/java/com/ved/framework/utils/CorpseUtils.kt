@@ -7,6 +7,7 @@ import android.os.Looper
 import android.view.TouchDelegate
 import android.view.View
 import androidx.lifecycle.LifecycleCoroutineScope
+import com.ved.framework.utils.bland.code.SizeUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -16,7 +17,7 @@ import java.lang.reflect.Proxy
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.SecureRandom
-import java.util.*
+import java.util.Locale
 
 object CorpseUtils {
 
@@ -197,7 +198,7 @@ object CorpseUtils {
      */
     fun View.expandTouchView(expandSize: Float = 10f) {
         val parentView = (parent as? View)
-        val size = DisplayUtil.dip2px(Utils.getContext(),expandSize)
+        val size = SizeUtils.dp2px(expandSize)
         parentView?.post {
             val rect = Rect()
             getHitRect(rect) //getHitRect(rect)将视图在父容器中所占据的区域存储到rect中。

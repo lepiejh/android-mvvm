@@ -1,5 +1,4 @@
 package com.ved.framework.utils.bland.code;
-import com.ved.framework.utils.Utils;
 
 import android.content.res.Resources;
 import android.util.DisplayMetrics;

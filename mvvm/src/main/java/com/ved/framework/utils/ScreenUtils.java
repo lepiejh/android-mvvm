@@ -14,7 +14,6 @@ import android.graphics.Point;
 import android.os.Build;
 import android.provider.Settings;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
 import android.view.Surface;
 import android.view.View;
 import android.view.Window;
@@ -35,10 +34,6 @@ public class ScreenUtils {
      */
     public static int getScreenWidth() {
         return Utils.getContext().getResources().getDisplayMetrics().widthPixels;
-    }
-
-    public static int dp2px(float dp) {
-        return (int) (TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, Utils.getContext().getResources().getDisplayMetrics()) + 0.5f);
     }
 
     /**
