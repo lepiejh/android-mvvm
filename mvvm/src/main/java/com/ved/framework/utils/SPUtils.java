@@ -511,11 +511,11 @@ public final class SPUtils {
         if (RegexUtils.isNumber(value)){
             return value;
         }
-        String encryptDes = DES.encrypt(value);
+        String encryptDes = ThreeDesCbcUtil.encrypt(value);
         if (StringUtils.isNotEmpty(encryptDes)) {
             return encryptDes;
         } else {
-            String encrypt = AesEncryptUtil.encrypt(value);
+            String encrypt = AesCbcUtil.encrypt(value);
             if (StringUtils.isNotEmpty(encrypt)) {
                 return encrypt;
             } else {
@@ -527,15 +527,7 @@ public final class SPUtils {
                     return "";
                 }
                 try {
-                    // 2. 标准化字符编码
-                    byte[] bytes;
-                    bytes = value.getBytes(StandardCharsets.UTF_8);
-
-                    // 3. 编码为URL安全的Base64（无填充）
-                    return Base64.encodeToString(bytes, Base64.NO_WRAP)
-                            .replace('+', '-')
-                            .replace('/', '_')
-                            .replace("=", "");
+                    return CryptoHelper.urlSafeBase64Encode(value.getBytes(StandardCharsets.UTF_8));
                 } catch (Exception e) {
                     KLog.e(e.getMessage());
                     return value; // 返回原始值或根据需求返回null
@@ -597,29 +589,21 @@ public final class SPUtils {
         if (RegexUtils.isNumber(value)){
             return value;
         }
-        String decryptDES = DES.desEncrypt(value);
+        String decryptDES = ThreeDesCbcUtil.decrypt(value);
         if (StringUtils.isNotEmpty(decryptDES)){
             return decryptDES;
         }else {
-            String desEncrypt = AesEncryptUtil.desEncrypt(value);
+            String desEncrypt = AesCbcUtil.decrypt(value);
             if (StringUtils.isNotEmpty(desEncrypt)){
                 return desEncrypt;
             }else {
                 String base64 = null;
                 try {
-                    // 2. Base64预处理
-                    String processedBase64 = StringUtils.trim(value)
-                            .replaceAll("[^A-Za-z0-9+/=_-]", "")
-                            .replace('-', '+')
-                            .replace('_', '/');
-
-                    // 3. 补全padding
-                    switch (processedBase64.length() % 4) {
-                        case 2: processedBase64 += "=="; break;
-                        case 3: processedBase64 += "="; break;
+                    String processedBase64 = CryptoHelper.preprocessBase64(value);
+                    if (processedBase64 == null) {
+                        KLog.e("Invalid Base64: " + value);
+                        return value;
                     }
-
-                    // 4. 解码
                     byte[] decodedBytes = Base64.decode(processedBase64, Base64.NO_WRAP);
                     base64 = new String(decodedBytes, StandardCharsets.UTF_8);
                 } catch (IllegalArgumentException e) {

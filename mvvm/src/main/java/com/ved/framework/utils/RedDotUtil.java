@@ -1,6 +1,5 @@
 package com.ved.framework.utils;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -39,22 +38,21 @@ public class RedDotUtil {
     /**
      * 生成有数字的图片(没有边框)
      *
-     * @param context   上下文
      * @param icon      图片
      * @param isShowNum 是否要绘制数字
      * @param num       数字字符串：整型数字 超过99，显示为"99+"
      * @return 重新生成带数字的图片
      */
-    public static Bitmap generatorNumIcon2(Context context, Bitmap icon,
+    public static Bitmap generatorNumIcon2(Bitmap icon,
                                            boolean isShowNum, String num) {
 
-        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        DisplayMetrics dm = Utils.getContext().getResources().getDisplayMetrics();
         // 基准屏幕密度
         float baseDensity = 2.3f;
         float factor = dm.density / baseDensity;
 
         // 初始化画布
-        int iconSize = (int) context.getResources().getDimension(
+        int iconSize = (int) Utils.getContext().getResources().getDimension(
                 android.R.dimen.app_icon_size);
         Bitmap numIcon = Bitmap.createBitmap(iconSize, iconSize,
                 Bitmap.Config.ARGB_8888);
@@ -101,7 +99,7 @@ public class RedDotUtil {
 
             canvas.save();// 保存状态
 
-            ShapeDrawable drawable = getDefaultBackground(context);
+            ShapeDrawable drawable = getDefaultBackground();
             drawable.setIntrinsicHeight(backgroundHeight);
             drawable.setIntrinsicWidth(backgroundWidth);
             drawable.setBounds(0, 0, backgroundWidth, backgroundHeight);
@@ -121,22 +119,21 @@ public class RedDotUtil {
     /**
      * 生成有数字的图片(有边框的)
      *
-     * @param context   上下文
      * @param icon      图片
      * @param isShowNum 是否要绘制数字
      * @param num       数字字符串：整型数字 超过99，显示为"99+"
      * @return 重新生成带数字的图片
      */
-    public static Bitmap generatorNumIcon3(Context context, Bitmap icon,
+    public static Bitmap generatorNumIcon3(Bitmap icon,
                                            boolean isShowNum, String num) {
 
-        DisplayMetrics dm = context.getResources().getDisplayMetrics();
+        DisplayMetrics dm = Utils.getContext().getResources().getDisplayMetrics();
         // 基准屏幕密度
         float baseDensity = 2.2f;
         float factor = dm.density / baseDensity;
 
         // 初始化画布
-        int iconSize = (int) context.getResources().getDimension(
+        int iconSize = (int) Utils.getContext().getResources().getDimension(
                 android.R.dimen.app_icon_size);
 
         Bitmap numIcon = Bitmap.createBitmap(iconSize, iconSize,
@@ -190,7 +187,7 @@ public class RedDotUtil {
             int strokeHeight = backgroundHeight + strokeThickness * 2;
             int strokeWidth = textWidth > strokeHeight ? (int) (textWidth + 10
                     * factor + 2 * strokeThickness) : strokeHeight;
-            ShapeDrawable outStroke = getDefaultStrokeDrawable(context);
+            ShapeDrawable outStroke = getDefaultStrokeDrawable();
             outStroke.setIntrinsicHeight(strokeHeight);
             outStroke.setIntrinsicWidth(strokeWidth);
             outStroke.setBounds(0, 0, strokeWidth, strokeHeight);
@@ -202,7 +199,7 @@ public class RedDotUtil {
 
             canvas.save();// 保存状态
 
-            ShapeDrawable drawable = getDefaultBackground(context);
+            ShapeDrawable drawable = getDefaultBackground();
             drawable.setIntrinsicHeight((int) (backgroundHeight + 2 * factor));
             drawable.setIntrinsicWidth((int) (backgroundWidth + 2 * factor));
             drawable.setBounds(0, 0, backgroundWidth, backgroundHeight);
@@ -226,13 +223,12 @@ public class RedDotUtil {
     /**
      * 圆角矩形，相当于用<shape>的xml的背景
      *
-     * @param context 上下文
      * @return
      */
-    private static ShapeDrawable getDefaultBackground(Context context) {
+    private static ShapeDrawable getDefaultBackground() {
 
         // 这个是为了应对不同分辨率的手机，屏幕兼容性
-        int r = dipToPixels(context, DEFAULT_CORNER_RADIUS_DIP);
+        int r = dipToPixels(DEFAULT_CORNER_RADIUS_DIP);
         float[] outerR = new float[]{r, r, r, r, r, r, r, r};
 
         // 圆角矩形
@@ -246,13 +242,12 @@ public class RedDotUtil {
     /**
      * 圆角矩形，相当于用<shape>的xml的背景
      *
-     * @param context 上下文
      * @return
      */
-    private static ShapeDrawable getDefaultStrokeDrawable(Context context) {
+    private static ShapeDrawable getDefaultStrokeDrawable() {
         // 这个是为了应对不同分辨率的手机，屏幕兼容性
-        int r = dipToPixels(context, DEFAULT_CORNER_RADIUS_DIP);
-        int distance = dipToPixels(context, DEFAULT_STROKE_WIDTH_DIP);
+        int r = dipToPixels(DEFAULT_CORNER_RADIUS_DIP);
+        int distance = dipToPixels(DEFAULT_STROKE_WIDTH_DIP);
         float[] outerR = new float[]{r, r, r, r, r, r, r, r};
 
         // 圆角矩形
@@ -278,12 +273,11 @@ public class RedDotUtil {
     /**
      * dp to px
      *
-     * @param context 上下文
      * @param dip
      * @return
      */
-    public static int dipToPixels(Context context, int dip) {
-        Resources r = context.getResources();
+    public static int dipToPixels(int dip) {
+        Resources r = Utils.getContext().getResources();
         float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip,
                 r.getDisplayMetrics());
         return (int) px;

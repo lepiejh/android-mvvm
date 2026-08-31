@@ -2,7 +2,6 @@ package com.ved.framework.utils;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.database.Cursor;
@@ -45,15 +44,14 @@ public class FileUtils {
     /**
      * 拷贝Asset文件夹到sd卡
      *
-     * @param context
      * @param fromDir 如果拷贝assets ，则传入 ""
      * @param destDir 目的地
      * @throws IOException
      */
-    public static void copyAssetsDir(Context context, String fromDir, String destDir) throws IOException {
-        String[] files = context.getAssets().list(fromDir);
+    public static void copyAssetsDir(String fromDir, String destDir) throws IOException {
+        String[] files = Utils.getContext().getAssets().list(fromDir);
         for (String f : files) {
-            copyFile(context.getAssets().open(fromDir + File.separator + f), destDir + File.separator + f);
+            copyFile(Utils.getContext().getAssets().open(fromDir + File.separator + f), destDir + File.separator + f);
         }
     }
 
@@ -1507,9 +1505,9 @@ public class FileUtils {
      * 判断公有目录文件是否存在，自Android Q开始，公有目录File API都失效，
      * 不能直接通过new File(path).exists();判断公有目录文件是否存在
      */
-    public static boolean isAndroidQFileExists(Context context, String path) {
+    public static boolean isAndroidQFileExists(String path) {
         AssetFileDescriptor afd = null;
-        ContentResolver cr = context.getContentResolver();
+        ContentResolver cr = Utils.getContext().getContentResolver();
         try {
             Uri uri = Uri.parse(path);
             afd = cr.openAssetFileDescriptor(uri, "r");
@@ -1538,7 +1536,7 @@ public class FileUtils {
 
     //从私有目录copy到公有目录
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public static void copyToDownloadAndroidQ(Context context, String sourcePath, String fileName, String saveDirName) {
+    public static void copyToDownloadAndroidQ(String sourcePath, String fileName, String saveDirName) {
         ContentValues values = new ContentValues();
         values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
         values.put(MediaStore.Downloads.MIME_TYPE, "application/vnd.android.package-archive");
@@ -1546,7 +1544,7 @@ public class FileUtils {
 
         Uri external = null;
         external = MediaStore.Downloads.EXTERNAL_CONTENT_URI;
-        ContentResolver resolver = context.getContentResolver();
+        ContentResolver resolver = Utils.getContext().getContentResolver();
 
         Uri insertUri = resolver.insert(external, values);
         if (insertUri == null) {
@@ -1595,15 +1593,13 @@ public class FileUtils {
     /**
      * 通过MediaStore保存，兼容AndroidQ，保存成功自动添加到相册数据库，无需再发送广播告诉系统插入相册
      *
-     * @param context      context
      * @param sourceFile   源文件
      * @param saveFileName 保存的文件名
      * @param saveDirName  picture子目录
      * @return 成功或者失败
      */
     @RequiresApi(api = Build.VERSION_CODES.Q)
-    public static boolean saveImageWithAndroidQ(Context context,
-                                                File sourceFile,
+    public static boolean saveImageWithAndroidQ(File sourceFile,
                                                 String saveFileName,
                                                 String saveDirName) {
 
@@ -1615,7 +1611,7 @@ public class FileUtils {
         values.put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/" + saveDirName);
 
         Uri external = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        ContentResolver resolver = context.getContentResolver();
+        ContentResolver resolver = Utils.getContext().getContentResolver();
 
         Uri insertUri = resolver.insert(external, values);
         BufferedInputStream inputStream = null;
@@ -1903,12 +1899,12 @@ public class FileUtils {
      *
      * @return
      */
-    public static String createRootPath(Context context) {
+    public static String createRootPath() {
         String cacheRootPath = "";
         if (isSdCardAvailable()) {
-            cacheRootPath = context.getExternalCacheDir().getPath();
+            cacheRootPath = Utils.getContext().getExternalCacheDir().getPath();
         } else {
-            cacheRootPath = context.getCacheDir().getPath();
+            cacheRootPath = Utils.getContext().getCacheDir().getPath();
         }
         return cacheRootPath;
     }
@@ -1934,14 +1930,13 @@ public class FileUtils {
     /**
      * 根据uri获取文件路径
      *
-     * @param context
      * @param uri
      * @return
      */
-    public static String getFileName(Context context, Uri uri) {
+    public static String getFileName(Uri uri) {
         String result = null;
         if (uri.getScheme().equals("content")) {
-            Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
+            Cursor cursor = Utils.getContext().getContentResolver().query(uri, null, null, null, null);
             try {
                 if (cursor != null && cursor.moveToFirst()) {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
@@ -1967,12 +1962,11 @@ public class FileUtils {
     /**
      * 根据uri获取真文件路径
      *
-     * @param context
      * @param contentUri
      * @return
      */
-    public static String getRealPathFromURI(Context context, Uri contentUri) {
-        Cursor cursor = context.getContentResolver().query(contentUri, null, null, null, null);
+    public static String getRealPathFromURI(Uri contentUri) {
+        Cursor cursor = Utils.getContext().getContentResolver().query(contentUri, null, null, null, null);
         if (cursor == null) {
             return contentUri.getPath();
         } else {
@@ -2015,15 +2009,15 @@ public class FileUtils {
     /**
      * 将字节数据转化为B,KB,MB
      */
-    public static void formatSize(Context context, long number) {
-        Formatter.formatFileSize(context, number);
+    public static void formatSize(long number) {
+        Formatter.formatFileSize(Utils.getContext(), number);
     }
 
-    public static File getRootPath(Context context) {
+    public static File getRootPath() {
         if (sdCardIsAvailable()) {
             return Environment.getExternalStorageDirectory();
         } else {
-            return context.getFilesDir();
+            return Utils.getContext().getFilesDir();
         }
     }
 

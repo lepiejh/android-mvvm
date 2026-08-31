@@ -1,7 +1,5 @@
 package com.ved.framework.utils;
 
-import android.content.Context;
-
 import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
@@ -142,11 +140,10 @@ public class TransitionTime {
      * 三.一周内，显示（星期四 16：30）
      * 四：一周外显示（2016-09-01 16：30）
      *
-     * @param context
      * @param time
      * @return
      */
-    public static String getDisplayTimeAndDesc(Context context, long time) {
+    public static String getDisplayTimeAndDesc(long time) {
         long currentTimeMillis = System.currentTimeMillis();
         if (currentTimeMillis - time < (60 * 1000 * 60 * 24)) {//一天
             SimpleDateFormat format = new SimpleDateFormat("HH:mm");

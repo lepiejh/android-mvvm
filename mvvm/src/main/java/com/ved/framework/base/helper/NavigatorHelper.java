@@ -43,7 +43,7 @@ public class NavigatorHelper<V extends ViewDataBinding, VM extends BaseViewModel
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        // 修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
+        // getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
         // 需用 viewDelegate.isFragment()/getFragment()/FragmentActivity() 判断宿主类型
         if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
             viewDelegate.getFragment().startActivityForResult(intent, requestCode);

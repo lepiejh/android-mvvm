@@ -20,7 +20,7 @@ public class OnViewGlobalLayoutListener implements ViewTreeObserver.OnGlobalLayo
             view.requestLayout();
         }
         if (height > 0) {
-            // 修复：完成首次测量后移除监听，避免布局循环导致无限回调
+            // 完成首次测量后移除监听，避免布局循环导致无限回调
             view.getViewTreeObserver().removeOnGlobalLayoutListener(this);
         }
     }

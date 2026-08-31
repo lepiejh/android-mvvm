@@ -27,7 +27,7 @@ public class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewMode
 
     /** 申请运行时权限 */
     public void requestPermission(IPermission iPermission, String... permissions) {
-        // 修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
+        // getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
         // 导致 Fragment 内请求权限静默失效，需用 viewDelegate 判断宿主类型
         if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
             RxPermission.requestPermission(viewDelegate.getFragment(), iPermission, permissions);

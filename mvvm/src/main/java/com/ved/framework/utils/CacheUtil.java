@@ -72,7 +72,7 @@ public class CacheUtil {
     }
 
     public static CacheUtil get(File cacheDir, long max_size, int max_count) {
-        // 修复：get 与 put 必须使用同一把 key，否则缓存永不命中，每次都会 new 实例并无限累积
+        // get 与 put 必须使用同一把 key，否则缓存永不命中，每次都会 new 实例并无限累积
         String key = cacheDir.getAbsolutePath() + cacheName();
         CacheUtil manager = mInstanceMap.get(key);
         if (manager == null) {
@@ -96,7 +96,7 @@ public class CacheUtil {
 //    }
 
     private static String cacheName() {
-        // 修复：原实现 mCacheName 为空时拼出 "-null"，非空时又错误地忽略缓存名
+        // 原实现 mCacheName 为空时拼出 "-null"，非空时又错误地忽略缓存名
         if (TextUtils.isEmpty(mCacheName)) {
             // 未设置缓存名：用进程号区分，避免多进程共用同一 key
             return "_" + android.os.Process.myPid();

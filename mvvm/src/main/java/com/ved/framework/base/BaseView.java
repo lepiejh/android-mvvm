@@ -121,7 +121,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
         // 广播相关
         viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
 
-        // Fragment Resume事件（修复：getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
+        // Fragment Resume事件（getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
         // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
         if (viewModel.getUC().getOnResumeEvent() != null && owner != null) {
             if (viewDelegate.isFragment()){

@@ -538,18 +538,18 @@ public class TimeUtils {
         return "";
     }
 
-    public static String sk_time_long_to_chat_time_str(Context mContext,long time) {
+    public static String sk_time_long_to_chat_time_str(long time) {
         String date1 = sk_time_s_long_2_str(time);
         String date2 = sk_time_s_long_2_str(System.currentTimeMillis() / 1000);
         if (date1.compareToIgnoreCase(date2) == 0) {// 是同一天
-            if(is24Hh(mContext)){
+            if(is24Hh()){
                 return sk_time_long_to_hm_str(time);
             }else{
                 return sk_time_long_to_hm_str12(time);
             }
 
         } else {
-            if(is24Hh(mContext)){
+            if(is24Hh()){
                 return long_to_yMdHm_str(time * 1000);
             }else{
                 return long_to_yMdHm_st12r(time * 1000);
@@ -564,8 +564,8 @@ public class TimeUtils {
      * @return
      * @since 是否24小时制 true  是
      */
-    public static Boolean is24Hh(Context mContext){
-        ContentResolver cv = mContext.getContentResolver();
+    public static Boolean is24Hh(){
+        ContentResolver cv = Utils.getContext().getContentResolver();
         String strTimeFormat = android.provider.Settings.System.getString(cv,
                 android.provider.Settings.System.TIME_12_24);
         if(strTimeFormat !=null && strTimeFormat.equals("24")){
@@ -762,20 +762,20 @@ public class TimeUtils {
     }
 
     @SuppressLint("SimpleDateFormat")
-    public static String timeToStr(Context context,long time){
+    public static String timeToStr(long time){
         String callDate = TransitionTime.getDate(time);
         String todayData = TransitionTime.getTodayData();
         SimpleDateFormat f = null;
         long currentTimeMillis = System.currentTimeMillis();
         if (TextUtils.equals(todayData, callDate)) {//今天
-            if (android.text.format.DateFormat.is24HourFormat(context)){
+            if (android.text.format.DateFormat.is24HourFormat(Utils.getContext())){
                 f = new SimpleDateFormat("HH:mm");
             }else {
                 f = new SimpleDateFormat("a hh:mm");
             }
             return f.format(time);
         }else {
-            if (android.text.format.DateFormat.is24HourFormat(context)){
+            if (android.text.format.DateFormat.is24HourFormat(Utils.getContext())){
                 f = new SimpleDateFormat("yyyy-MM-dd HH:mm");
             }else {
                 f = new SimpleDateFormat("yyyy-MM-dd a hh:mm");

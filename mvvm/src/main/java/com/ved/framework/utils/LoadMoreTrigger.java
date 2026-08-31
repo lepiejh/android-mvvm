@@ -25,7 +25,7 @@ public final class LoadMoreTrigger {
 
     public LoadMoreTrigger(BindingCommand<Integer> onLoadMoreCommand) {
         this.onLoadMoreCommand = onLoadMoreCommand;
-        // 修复：持有订阅，避免未管理导致无法释放
+        // 持有订阅，避免未管理导致无法释放
         disposable = methodInvoke.throttleFirst(THROTTLE_SECONDS, TimeUnit.SECONDS)
                 .subscribe(integer -> {
                     if (onLoadMoreCommand != null) {

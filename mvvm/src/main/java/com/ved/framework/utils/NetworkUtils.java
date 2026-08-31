@@ -68,12 +68,11 @@ public class NetworkUtils {
 
     /**
      * 判断是否打开网络
-     * @param context
      * @return
      */
-    public static boolean isNetWorkAvailable(Context context){
+    public static boolean isNetWorkAvailable(){
         boolean isAvailable = false ;
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (cm == null) {
             return false;
         }
@@ -86,14 +85,13 @@ public class NetworkUtils {
 
     /**
      * 获取网络类型
-     * @param context
      * @return
      */
-    public static int getNetWorkType(Context context) {
-        if (!isNetWorkAvailable(context)) {
+    public static int getNetWorkType() {
+        if (!isNetWorkAvailable()) {
             return NetworkUtils.NO_NET_WORK;
         }
-        ConnectivityManager cm = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager cm = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         // cm.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
         // 注意: getNetworkInfo(int) 在 API 29+ 已废弃且可能返回 null, 需判空
         NetworkInfo wifiInfo = cm != null ? cm.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
@@ -105,12 +103,11 @@ public class NetworkUtils {
 
     /**
      * 判断当前网络是否为wifi
-     * @param context
      * @return  如果为wifi返回true；否则返回false
      */
     @SuppressWarnings("static-access")
-    public static boolean isWiFiConnected(Context context){
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isWiFiConnected(){
+        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         if (manager == null) {
             return false;
         }
@@ -120,12 +117,11 @@ public class NetworkUtils {
 
     /**
      * 判断MOBILE网络是否可用
-     * @param context
      * @return
      * @throws Exception
      */
-    public static boolean isMobileDataEnable(Context context){
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isMobileDataEnable(){
+        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         boolean isMobileDataEnable = false;
         NetworkInfo mobileInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE) : null;
         isMobileDataEnable = mobileInfo != null && mobileInfo.isConnectedOrConnecting();
@@ -134,12 +130,11 @@ public class NetworkUtils {
 
     /**
      * 判断wifi 是否可用
-     * @param context
      * @return
      * @throws Exception
      */
-    public static boolean isWifiDataEnable(Context context){
-        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+    public static boolean isWifiDataEnable(){
+        ConnectivityManager manager = (ConnectivityManager) Utils.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         boolean isWifiDataEnable = false;
         NetworkInfo wifiInfo = manager != null ? manager.getNetworkInfo(ConnectivityManager.TYPE_WIFI) : null;
         isWifiDataEnable = wifiInfo != null && wifiInfo.isConnectedOrConnecting();

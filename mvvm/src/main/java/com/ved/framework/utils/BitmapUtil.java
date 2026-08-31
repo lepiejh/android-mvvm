@@ -235,7 +235,7 @@ public final class BitmapUtil {
      * Bitmap对象保存为图片文件
      */
     public static String saveBitmapFile(Bitmap bitmap) {
-        String fileName = EncryptUtil.Md5Util.encodeStringByMD5((System
+        String fileName = Md5Util.encodeStringByMD5((System
                 .currentTimeMillis() + new Random().nextLong() * 500) + "") + ".png";
         if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             String filePath = PathUtil.getCacheDir() + "/img";

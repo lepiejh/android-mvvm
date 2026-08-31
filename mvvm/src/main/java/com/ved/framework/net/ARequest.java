@@ -130,7 +130,7 @@ public abstract class ARequest<T, K> {
                         }
                     },viewModel,iResponse));
                     if (viewModel != null && viewModel.getLifecycleProvider() != null) {
-                        // 修复：接收 compose 返回值，请求才能真正绑定 View 生命周期（页面销毁时自动取消订阅）
+                        // 接收 compose 返回值，请求才能真正绑定 View 生命周期（页面销毁时自动取消订阅）
                         o = o.compose(RxUtils.bindToLifecycle(viewModel.getLifecycleProvider()));
                     }
                     Disposable disposable = o.compose(RxUtils.schedulersTransformer())
