@@ -9,7 +9,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.jakewharton.rxbinding4.view.RxView;
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.utils.ViewBindingUtils;
 import com.ved.framework.listener.OnViewGlobalLayoutListener;
 import com.ved.framework.utils.CalendarUtil;

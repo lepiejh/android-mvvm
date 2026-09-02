@@ -1,6 +1,6 @@
 package com.ved.framework.binding.viewadapter.recyclerview;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.utils.RecyclerViewLoadMoreScrollListener;
 import com.ved.framework.entity.ScrollDataWrapper;
 

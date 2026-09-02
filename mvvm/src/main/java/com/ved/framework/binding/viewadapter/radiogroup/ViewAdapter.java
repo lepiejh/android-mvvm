@@ -3,9 +3,8 @@ package com.ved.framework.binding.viewadapter.radiogroup;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 
-import androidx.annotation.IdRes;
 import androidx.databinding.BindingAdapter;
 
 /**

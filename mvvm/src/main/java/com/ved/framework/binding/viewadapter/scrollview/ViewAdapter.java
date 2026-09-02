@@ -1,6 +1,6 @@
 package com.ved.framework.binding.viewadapter.scrollview;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.entity.NestScrollDataWrapper;
 
 import androidx.core.widget.NestedScrollView;

@@ -1,4 +1,4 @@
-package com.ved.framework.binding.command;
+package com.ved.framework.command;
 
 
 /**

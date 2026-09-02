@@ -1,9 +1,8 @@
 package com.ved.framework.binding.viewadapter.checkbox;
 
 import android.widget.CheckBox;
-import android.widget.CompoundButton;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 
 import androidx.databinding.BindingAdapter;
 

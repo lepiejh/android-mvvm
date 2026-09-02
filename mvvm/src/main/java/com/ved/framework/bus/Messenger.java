@@ -1,8 +1,8 @@
 package com.ved.framework.bus;
 
 
-import com.ved.framework.binding.command.BindingAction;
-import com.ved.framework.binding.command.BindingConsumer;
+import com.ved.framework.command.BindingAction;
+import com.ved.framework.command.BindingConsumer;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

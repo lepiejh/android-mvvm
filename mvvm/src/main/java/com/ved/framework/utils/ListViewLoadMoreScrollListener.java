@@ -3,7 +3,7 @@ package com.ved.framework.utils;
 import android.widget.AbsListView;
 import android.widget.ListView;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 
 /**
  * ListView 加载更多滚动监听器

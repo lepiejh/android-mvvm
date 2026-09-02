@@ -3,7 +3,7 @@ package com.ved.framework.binding.viewadapter.listview;
 import android.widget.AbsListView;
 import android.widget.ListView;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.utils.ListViewLoadMoreScrollListener;
 import com.ved.framework.utils.ListViewScrollListeners;
 import com.ved.framework.entity.ListViewScrollDataWrapper;

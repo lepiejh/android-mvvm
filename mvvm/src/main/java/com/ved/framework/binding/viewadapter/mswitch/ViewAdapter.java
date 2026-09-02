@@ -1,6 +1,6 @@
 package com.ved.framework.binding.viewadapter.mswitch;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.suke.widget.SwitchButton;
 
 import androidx.databinding.BindingAdapter;

@@ -5,14 +5,11 @@ import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
 import android.text.method.DigitsKeyListener;
-import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.TextView;
 
-import com.ved.framework.binding.command.BindingCommand;
-import com.ved.framework.utils.Constant;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.utils.StringUtils;
 
 import java.util.HashMap;

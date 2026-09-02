@@ -2,7 +2,7 @@ package com.ved.framework.binding.viewadapter.seekbar;
 
 import android.widget.SeekBar;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 
 import androidx.databinding.BindingAdapter;
 

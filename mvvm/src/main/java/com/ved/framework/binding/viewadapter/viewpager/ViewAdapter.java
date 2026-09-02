@@ -1,6 +1,6 @@
 package com.ved.framework.binding.viewadapter.viewpager;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.entity.ViewPagerDataWrapper;
 
 import androidx.databinding.BindingAdapter;

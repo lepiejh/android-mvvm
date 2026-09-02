@@ -2,7 +2,7 @@ package com.ved.framework.binding.viewadapter.banner;
 
 import com.stx.xhb.xbanner.XBanner;
 import com.stx.xhb.xbanner.entity.LocalImageInfo;
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 import com.ved.framework.entity.OnPageScrolled;
 import com.ved.framework.entity.XBannerDataWrapper;
 import com.ved.framework.entity.XBannerInfo;

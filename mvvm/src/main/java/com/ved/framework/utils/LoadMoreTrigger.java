@@ -1,6 +1,6 @@
 package com.ved.framework.utils;
 
-import com.ved.framework.binding.command.BindingCommand;
+import com.ved.framework.command.BindingCommand;
 
 import java.util.concurrent.TimeUnit;
 
