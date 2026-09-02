@@ -32,6 +32,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresPermission;
 import androidx.core.app.ActivityCompat;
 
+import com.ved.framework.utils.bland.code.ObjectUtils;
 import com.ved.framework.utils.bland.code.ShellUtils;
 import com.ved.framework.utils.bland.code.ThreadUtils;
 
@@ -943,9 +944,9 @@ public class NetworkUtils {
     }
 
     private static boolean isSameScanResultContent(ScanResult r1, ScanResult r2) {
-        return r1 != null && r2 != null && StringUtils.equals(r1.BSSID, r2.BSSID)
-                && StringUtils.equals(r1.SSID, r2.SSID)
-                && StringUtils.equals(r1.capabilities, r2.capabilities)
+        return r1 != null && r2 != null && ObjectUtils.equals(r1.BSSID, r2.BSSID)
+                && ObjectUtils.equals(r1.SSID, r2.SSID)
+                && ObjectUtils.equals(r1.capabilities, r2.capabilities)
                 && r1.level == r2.level;
     }
 

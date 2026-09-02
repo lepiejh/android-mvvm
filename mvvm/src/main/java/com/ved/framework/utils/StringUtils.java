@@ -18,6 +18,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.core.internal.view.SupportMenu;
 
+import com.ved.framework.utils.bland.code.ObjectUtils;
+
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.IllegalFormatException;
@@ -125,7 +127,7 @@ public final class StringUtils {
         if (isSpace(s)){
             return false;
         }
-        return equals(s,"true") || equals(s,"1");
+        return ObjectUtils.equals(s,"true") || ObjectUtils.equals(s,"1");
     }
 
     public static boolean parseBoolean(Object o){
@@ -207,10 +209,6 @@ public final class StringUtils {
      */
     public static boolean isTrimEmpty(final String s) {
         return (s == null || s.trim().length() == 0);
-    }
-
-    public static boolean equals(Object s1,Object s2){
-        return Objects.equals(s1,s2);
     }
 
     /**

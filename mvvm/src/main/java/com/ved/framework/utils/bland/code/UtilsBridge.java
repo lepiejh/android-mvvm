@@ -1,15 +1,6 @@
 package com.ved.framework.utils.bland.code;
-import com.ved.framework.utils.ConvertUtils;
-import com.ved.framework.utils.FileUtils;
-import com.ved.framework.utils.IntentUtils;
-import com.ved.framework.utils.NotificationUtils;
-import com.ved.framework.utils.ScreenUtils;
-import com.ved.framework.utils.SDCardUtils;
-import com.ved.framework.utils.SPUtils;
-import com.ved.framework.utils.StringUtils;
-import com.ved.framework.utils.TimeUtils;
-import com.ved.framework.utils.ToastUtils;
-import com.ved.framework.utils.Utils;
+
+import static android.Manifest.permission.CALL_PHONE;
 
 import android.app.Activity;
 import android.app.Application;
@@ -24,8 +15,27 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import android.view.View;
 
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
+import androidx.annotation.StringRes;
+import androidx.core.app.NotificationCompat;
+
 import com.google.gson.Gson;
+import com.ved.framework.utils.ConvertUtils;
+import com.ved.framework.utils.FileUtils;
+import com.ved.framework.utils.IntentUtils;
+import com.ved.framework.utils.NotificationUtils;
 import com.ved.framework.utils.RomUtils;
+import com.ved.framework.utils.SDCardUtils;
+import com.ved.framework.utils.SPUtils;
+import com.ved.framework.utils.ScreenUtils;
+import com.ved.framework.utils.StringUtils;
+import com.ved.framework.utils.TimeUtils;
+import com.ved.framework.utils.ToastUtils;
+import com.ved.framework.utils.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -38,16 +48,6 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RequiresPermission;
-import androidx.annotation.StringRes;
-import androidx.core.app.NotificationCompat;
-
-import static android.Manifest.permission.CALL_PHONE;
 
 public class UtilsBridge {
 
@@ -530,7 +530,7 @@ public class UtilsBridge {
     }
 
     static boolean equals(final CharSequence s1, final CharSequence s2) {
-        return StringUtils.equals(s1, s2);
+        return ObjectUtils.equals(s1, s2);
     }
 
     static String getString(@StringRes int id) {
