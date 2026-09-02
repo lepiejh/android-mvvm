@@ -1,4 +1,4 @@
-package com.ved.framework.binding.viewadapter.recyclerview;
+package com.ved.framework.utils.recyclerview;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

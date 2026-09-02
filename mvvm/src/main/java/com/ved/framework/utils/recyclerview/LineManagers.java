@@ -1,4 +1,4 @@
-package com.ved.framework.binding.viewadapter.recyclerview;
+package com.ved.framework.utils.recyclerview;
 
 
 import androidx.recyclerview.widget.RecyclerView;
