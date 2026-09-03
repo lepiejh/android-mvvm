@@ -68,7 +68,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
         MMKV.initialize(app);
 //        Toaster.init(app);
         AutoSizeConfig.getInstance().setCustomFragment(true);
-        UpdateAppUtils.init(app);
+//        UpdateAppUtils.init(app);
         if (RxJavaPlugins.getErrorHandler() != null || RxJavaPlugins.isLockdown()) {
             return;
         }
