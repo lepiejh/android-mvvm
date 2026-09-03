@@ -9,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.annotation.IntDef;
 
+import com.ved.framework.utils.bland.code.NumberUtils;
 import com.ved.framework.utils.bland.code.SizeUtils;
 
 import java.lang.annotation.Retention;
@@ -17,7 +18,6 @@ import java.text.DecimalFormat;
 
 /**
  * 视图绑定工具类
- * 提取 ViewAdapter 中重复的 margin / padding / drawable / 格式化逻辑
  */
 public final class ViewBindingUtils {
 
@@ -41,14 +41,6 @@ public final class ViewBindingUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface Direction {
     }
-
-    /** 享元模式：复用 DecimalFormat，避免每次格式化都 new */
-    private static final ThreadLocal<DecimalFormat> DECIMAL_FORMAT = new ThreadLocal<DecimalFormat>() {
-        @Override
-        protected DecimalFormat initialValue() {
-            return new DecimalFormat("######0.00");
-        }
-    };
 
     private ViewBindingUtils() {
         throw new UnsupportedOperationException("u can't instantiate me...");
@@ -180,7 +172,9 @@ public final class ViewBindingUtils {
     public static String formatDecimal(String text) {
         if (TextUtils.isEmpty(text)) return "0.00";
         try {
-            return DECIMAL_FORMAT.get().format(StringUtils.parseDouble(text));
+            double value = StringUtils.parseDouble(text);
+            // 等同于 "######0.00" 格式
+            return NumberUtils.format(value, false, 1, 2, true);
         } catch (Exception e) {
             return "0.00";
         }
