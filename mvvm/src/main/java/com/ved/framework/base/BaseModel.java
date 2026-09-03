@@ -1,7 +1,6 @@
 package com.ved.framework.base;
 
 import io.reactivex.rxjava3.disposables.CompositeDisposable;
-import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Model 层基类：
@@ -11,28 +10,6 @@ public class BaseModel implements IModel {
     private CompositeDisposable mCompositeDisposable;
 
     public BaseModel() {
-    }
-
-    /**
-     * 添加 RxJava 订阅，随 Model 生命周期自动清理
-     */
-    protected void addSubscribe(Disposable disposable) {
-        if (disposable == null) {
-            return;
-        }
-        if (mCompositeDisposable == null) {
-            mCompositeDisposable = new CompositeDisposable();
-        }
-        mCompositeDisposable.add(disposable);
-    }
-
-    /**
-     * 移除指定订阅
-     */
-    protected void removeSubscribe(Disposable disposable) {
-        if (mCompositeDisposable != null && disposable != null) {
-            mCompositeDisposable.remove(disposable);
-        }
     }
 
     /**
