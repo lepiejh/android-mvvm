@@ -3,6 +3,7 @@ package com.ved.framework.base;
 import android.os.Bundle;
 
 import com.ved.framework.bus.event.SingleLiveEvent;
+import com.ved.framework.bus.event.eventbus.MessageEvent;
 
 import java.util.EnumMap;
 import java.util.Map;
@@ -21,10 +22,24 @@ public final class UIChangeLiveData extends SingleLiveEvent {
         SHOW_DIALOG, DISMISS_DIALOG,
         START_ACTIVITY, START_ACTIVITY_FOR_RESULT, START_CONTAINER_ACTIVITY,
         REQUEST_PERMISSION, REQUEST_CALL_PHONE, REQUEST_WIFI_RSSI,
-        SEND_RECEIVER, FINISH, ON_BACK_PRESSED, ON_LOAD, ON_RESUME
+        SEND_RECEIVER, FINISH, ON_BACK_PRESSED, ON_LOAD, ON_RESUME,VIEW_EVENT
     }
 
     private final Map<EventKey, SingleLiveEvent<?>> events = new EnumMap<>(EventKey.class);
+
+    /**
+     * 获取通用事件 LiveData
+     */
+    public SingleLiveEvent<MessageEvent<?>> getViewEvent() {
+        return get(EventKey.VIEW_EVENT);
+    }
+
+    /**
+     * 发送通用事件
+     */
+    public void setViewEvent(MessageEvent<?> event) {
+        getViewEvent().setValue(event);
+    }
 
     public SingleLiveEvent<Map<String, Object>> getRequestCallPhoneEvent() {
         return get(EventKey.REQUEST_CALL_PHONE);

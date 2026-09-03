@@ -2,6 +2,8 @@ package com.ved.framework.base;
 
 import android.os.Bundle;
 
+import com.ved.framework.bus.event.SingleLiveEvent;
+import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 
 /**
@@ -62,4 +64,10 @@ public interface ICommand {
 
     /** 获取 UI 事件载体 */
     UIChangeLiveData getLiveData();
+
+    /** 发送通用事件 */
+    void setViewEvent(MessageEvent<?> event);
+
+    /** 获取通用事件 LiveData */
+    SingleLiveEvent<MessageEvent<?>> getViewEvent();
 }

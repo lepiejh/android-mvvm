@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.trello.rxlifecycle4.LifecycleProvider
 import com.ved.framework.bus.ISubscription
 import com.ved.framework.bus.RxBus
+import com.ved.framework.bus.event.SingleLiveEvent
 import com.ved.framework.bus.event.eventbus.EventBusUtil
 import com.ved.framework.bus.event.eventbus.MessageEvent
 import com.ved.framework.permission.IPermission
@@ -196,6 +197,20 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
      */
     fun onBackPressed() {
         command.onBackPressed()
+    }
+
+    /**
+     * 发送通用事件
+     */
+    protected fun setViewEvent(event: MessageEvent<*>) {
+        command.setViewEvent(event)
+    }
+
+    /**
+     * 获取通用事件 LiveData（供 View 层观察）
+     */
+    fun getViewEvent(): SingleLiveEvent<MessageEvent<*>> {
+        return command.getViewEvent()
     }
 
     /**

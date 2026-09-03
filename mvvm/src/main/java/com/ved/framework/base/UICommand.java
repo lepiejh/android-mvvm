@@ -3,6 +3,8 @@ package com.ved.framework.base;
 import android.os.Bundle;
 
 import com.orhanobut.dialog.navigation.ActivityCommandBuilder;
+import com.ved.framework.bus.event.SingleLiveEvent;
+import com.ved.framework.bus.event.eventbus.MessageEvent;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
 
@@ -104,5 +106,19 @@ public class UICommand implements ICommand {
 
     public UIChangeLiveData getLiveData() {
         return liveData;
+    }
+
+    /**
+     * 发送通用事件
+     */
+    public void setViewEvent(MessageEvent<?> event) {
+        liveData.setViewEvent(event);
+    }
+
+    /**
+     * 获取通用事件 LiveData
+     */
+    public SingleLiveEvent<MessageEvent<?>> getViewEvent() {
+        return liveData.getViewEvent();
     }
 }
