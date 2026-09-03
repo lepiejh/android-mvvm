@@ -18,11 +18,13 @@ package com.ved.framework.bus.event;
 
 import com.ved.framework.utils.KLog;
 
+import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
@@ -39,27 +41,36 @@ import androidx.lifecycle.Observer;
  */
 public class SingleLiveEvent<T> extends MutableLiveData<T> {
 
-    private static final String TAG = "SingleLiveEvent";
-
     private final AtomicBoolean mPending = new AtomicBoolean(false);
+    private WeakReference<Observer<? super T>> mObserverRef;
+    private WeakReference<LifecycleOwner> mOwnerRef;
 
     @MainThread
     public void observe(@NonNull LifecycleOwner owner, @NonNull final Observer<? super T> observer) {
 
         if (hasActiveObservers()) {
-            KLog.w(TAG, "Multiple observers registered but only one will be notified of changes.");
+            KLog.w("Multiple observers registered but only one will be notified of changes.");
+            clearObserver();
         }
 
-        // Observe the internal MutableLiveData
-        super.observe(owner, new Observer<T>() {
-            @Override
-            public void onChanged(@Nullable T t) {
-                if (mPending.compareAndSet(true, false)) {
+        // 保存引用
+        mObserverRef = new WeakReference<>(observer);
+        mOwnerRef = new WeakReference<>(owner);
+
+        super.observe(owner, t -> {
+            if (mPending.compareAndSet(true, false)) {
+                Observer<? super T> realObserver = mObserverRef != null ? mObserverRef.get() : null;
+                if (realObserver != null) {
                     try {
-                        observer.onChanged(t);
+                        realObserver.onChanged(t);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
+                } else {
+                    // Observer 已被回收，清理资源并重置状态
+                    KLog.w("Observer has been garbage collected, clearing pending state");
+                    clearObserver();
+                    // 注意：事件已经丢失
                 }
             }
         });
@@ -67,15 +78,52 @@ public class SingleLiveEvent<T> extends MutableLiveData<T> {
 
     @MainThread
     public void setValue(@Nullable T t) {
+        // 检查 Observer 是否存活
+        if (!isObserverAlive()) {
+            KLog.w("Observer is not alive, event will be dropped: " + t);
+            // 可以选择记录事件到日志，但不发送
+            return;
+        }
         mPending.set(true);
         super.setValue(t);
     }
 
     /**
-     * Used for cases where T is Void, to make calls cleaner.
+     * 检查 Observer 是否还存活
      */
-    @MainThread
-    public void call() {
-        setValue(null);
+    private boolean isObserverAlive() {
+        if (mObserverRef == null) {
+            return false;
+        }
+        Observer<? super T> observer = mObserverRef.get();
+        if (observer == null) {
+            return false;
+        }
+        // 检查 LifecycleOwner 是否还存活
+        if (mOwnerRef != null) {
+            LifecycleOwner owner = mOwnerRef.get();
+            if (owner == null) {
+                return false;
+            }
+            // 检查生命周期状态
+            return owner.getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED;
+        }
+        return true;
+    }
+
+    public void clearObserver() {
+        if (mObserverRef != null) {
+            Observer<? super T> oldObserver = mObserverRef.get();
+            if (oldObserver != null) {
+                super.removeObserver(oldObserver);
+            }
+            mObserverRef.clear();
+            mObserverRef = null;
+        }
+        if (mOwnerRef != null) {
+            mOwnerRef.clear();
+            mOwnerRef = null;
+        }
+        mPending.set(false);
     }
 }
