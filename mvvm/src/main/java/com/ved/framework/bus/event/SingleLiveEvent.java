@@ -89,6 +89,14 @@ public class SingleLiveEvent<T> extends MutableLiveData<T> {
     }
 
     /**
+     * Used for cases where T is Void, to make calls cleaner.
+     */
+    @MainThread
+    public void call() {
+        setValue(null);
+    }
+
+    /**
      * 检查 Observer 是否还存活
      */
     private boolean isObserverAlive() {
