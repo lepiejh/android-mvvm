@@ -1,33 +1,61 @@
 package com.ved.framework.base;
 
-import java.util.ArrayList;
-import java.util.List;
+import io.reactivex.rxjava3.disposables.CompositeDisposable;
+import io.reactivex.rxjava3.disposables.Disposable;
 
 /**
  * Model 层基类：
- * 按仓库模式组织数据源，持有并级联管理多个 {@link IRepository}，
- * 在 onCleared 时统一释放所有仓库资源。
+ * 内置订阅容器，统一管理数据层 RxJava 订阅，避免内存泄漏。
  */
 public class BaseModel implements IModel {
-    private final List<IRepository> mRepositories = new ArrayList<>();
+    private CompositeDisposable mCompositeDisposable;
 
     public BaseModel() {
     }
 
     /**
-     * 注册数据仓库，随 Model 生命周期统一释放
+     * 添加 RxJava 订阅，随 Model 生命周期自动清理
      */
-    public void addRepository(IRepository repository) {
-        if (repository != null) {
-            mRepositories.add(repository);
+    protected void addSubscribe(Disposable disposable) {
+        if (disposable == null) {
+            return;
         }
+        if (mCompositeDisposable == null) {
+            mCompositeDisposable = new CompositeDisposable();
+        }
+        mCompositeDisposable.add(disposable);
+    }
+
+    /**
+     * 移除指定订阅
+     */
+    protected void removeSubscribe(Disposable disposable) {
+        if (mCompositeDisposable != null && disposable != null) {
+            mCompositeDisposable.remove(disposable);
+        }
+    }
+
+    /**
+     * 清除所有订阅
+     */
+    protected void clearSubscriptions() {
+        if (mCompositeDisposable != null) {
+            mCompositeDisposable.clear();
+        }
+    }
+
+    /**
+     * 获取 CompositeDisposable（供 ViewModel 使用）
+     */
+    public CompositeDisposable getCompositeDisposable() {
+        if (mCompositeDisposable == null) {
+            mCompositeDisposable = new CompositeDisposable();
+        }
+        return mCompositeDisposable;
     }
 
     @Override
     public void onCleared() {
-        for (IRepository repository : mRepositories) {
-            repository.onCleared();
-        }
-        mRepositories.clear();
+        clearSubscriptions();
     }
 }

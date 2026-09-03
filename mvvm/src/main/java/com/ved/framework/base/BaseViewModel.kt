@@ -11,7 +11,6 @@ import com.ved.framework.bus.event.eventbus.EventBusUtil
 import com.ved.framework.bus.event.eventbus.MessageEvent
 import com.ved.framework.permission.IPermission
 import com.ved.framework.utils.KLog
-import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.functions.Consumer
 import kotlinx.coroutines.CancellationException
@@ -37,44 +36,39 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     //弱引用持有
     private var lifecycle: WeakReference<LifecycleProvider<*>>? = null
 
-    //管理RxJava，主要针对RxJava异步操作造成的内存泄漏
-    private var mCompositeDisposable: CompositeDisposable?
     // UI 命令门面（门面模式）：面向 ICommand 接口编程，解耦命令发起与执行
-    private val command: ICommand
+    private val command: ICommand = UICommand()
     private var eventStrategy: IEventSubscriptionStrategy? = null
     private val backgroundJobs = ConcurrentHashMap<String, Job>()
 
     init {
-        mCompositeDisposable = CompositeDisposable()
-        command = UICommand()
         initEventStrategy()
     }
 
-    private fun addSubscribe(disposable: Disposable) {
-        if (mCompositeDisposable == null) {
-            mCompositeDisposable = CompositeDisposable()
-        }
-        mCompositeDisposable?.add(disposable)
-    }
-
-    // region ISubscription 实现：ViewModel 级订阅容器，onCleared 时随 mCompositeDisposable 一并清理
+    // region ISubscription 实现：委托给 Model 管理订阅
 
     override fun add(s: Disposable) {
-        addSubscribe(s)
+        model?.addSubscribe(s) ?: run {
+            // 如果 Model 为空，理论上不应该发生，但为了安全做兜底
+            KLog.w("BaseViewModel: Model is null, cannot add subscription")
+        }
     }
 
     override fun remove(s: Disposable) {
-        mCompositeDisposable?.remove(s)
+        model?.removeSubscribe(s)
     }
 
-    override fun isDisposed(): Boolean = mCompositeDisposable?.isDisposed ?: true
+    override fun isDisposed(): Boolean {
+        // 如果 Model 为空，返回 true（已释放）
+        return model?.getCompositeDisposable()?.isDisposed ?: true
+    }
 
     override fun clear() {
-        mCompositeDisposable?.clear()
+        model?.clearSubscriptions()
     }
 
     override fun dispose() {
-        mCompositeDisposable?.dispose()
+        model?.getCompositeDisposable()?.dispose()
     }
 
     // endregion
@@ -339,8 +333,8 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     override fun onCleared() {
         super.onCleared()
         try {
+            // Model 的 onCleared() 会清理 CompositeDisposable
             model?.onCleared()
-            mCompositeDisposable?.clear()
             cancelJob()
             viewModelScope.cancel()
         } catch (e: Exception) {
@@ -350,6 +344,6 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
 
     @Throws(Exception::class)
     override fun accept(disposable: Disposable) {
-        addSubscribe(disposable)
+        add(disposable)
     }
 }
