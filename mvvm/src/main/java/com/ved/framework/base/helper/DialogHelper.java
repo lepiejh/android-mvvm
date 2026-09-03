@@ -16,11 +16,9 @@ public class DialogHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private static final String DEFAULT_TITLE = "加载中...";
 
-    private final IBaseView<V, VM> viewDelegate;
     private final IDialogStrategy dialogStrategy;
 
     public DialogHelper(IBaseView<V, VM> viewDelegate) {
-        this.viewDelegate = viewDelegate;
         this.dialogStrategy = DialogStrategyFactory.createStrategy(viewDelegate);
     }
 
