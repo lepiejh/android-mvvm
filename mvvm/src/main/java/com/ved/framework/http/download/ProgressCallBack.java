@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.ved.framework.bus.RxBus;
 import com.ved.framework.bus.RxSubscriptions;
+import com.ved.framework.utils.KLog;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -65,7 +66,7 @@ public abstract class ProgressCallBack<T> {
             //onCompleted();
         } catch (IOException e) {
             // 保存失败需通知调用方，避免异常被静默吞掉
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             onError(e);
         } finally {
             try {

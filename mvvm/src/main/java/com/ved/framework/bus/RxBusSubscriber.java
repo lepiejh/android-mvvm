@@ -1,6 +1,8 @@
 package com.ved.framework.bus;
 
 
+import com.ved.framework.utils.KLog;
+
 import io.reactivex.rxjava3.observers.DisposableObserver;
 
 /**
@@ -13,7 +15,7 @@ public abstract class RxBusSubscriber<T> extends DisposableObserver<T> {
         try {
             onEvent(t);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -23,7 +25,7 @@ public abstract class RxBusSubscriber<T> extends DisposableObserver<T> {
 
     @Override
     public void onError(Throwable e) {
-        e.printStackTrace();
+        KLog.e(e.getMessage());
     }
 
     protected abstract void onEvent(T t);

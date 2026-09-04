@@ -17,7 +17,7 @@ public class AppInfoUtil {
                     .getPackageInfo(ctx.getPackageName(), 0);
             localVersion = packageInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return localVersion;
     }
@@ -33,7 +33,7 @@ public class AppInfoUtil {
                     .getPackageInfo(ctx.getPackageName(), 0);
             localVersion = packageInfo.versionName;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return localVersion;
     }

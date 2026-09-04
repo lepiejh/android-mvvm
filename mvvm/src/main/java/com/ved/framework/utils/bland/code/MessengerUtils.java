@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NotificationUtils;
 import com.ved.framework.utils.Utils;
 
@@ -130,7 +131,7 @@ public class MessengerUtils {
                 Utils.getContext().startService(intent);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -168,7 +169,7 @@ public class MessengerUtils {
                 try {
                     mServer.send(msg);
                 } catch (RemoteException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
                 sendCachedMsg2Server();
             }
@@ -214,7 +215,7 @@ public class MessengerUtils {
             try {
                 mServer.send(msg);
             } catch (RemoteException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 Utils.getContext().unbindService(mConn);
@@ -251,7 +252,7 @@ public class MessengerUtils {
                 mServer.send(msg);
                 return true;
             } catch (RemoteException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return false;
             }
         }
@@ -319,7 +320,7 @@ public class MessengerUtils {
                         client.send(Message.obtain(obtain));
                     }
                 } catch (RemoteException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             obtain.recycle(); //Recycled copy

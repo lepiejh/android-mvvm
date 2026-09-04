@@ -90,7 +90,7 @@ public final class Base64Util {
         try {
             bytes = data.getBytes("utf-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return Base64.encodeToString(bytes, Base64.DEFAULT);
     }
@@ -115,7 +115,7 @@ public final class Base64Util {
             byte[] decodeBytes = Base64.decode(encodeStr, Base64.DEFAULT);
             result = new String(decodeBytes, "utf-8");
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return result;
     }

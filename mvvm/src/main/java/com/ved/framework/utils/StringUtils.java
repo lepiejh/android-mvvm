@@ -688,7 +688,7 @@ public final class StringUtils {
         try {
             return format(Utils.getContext().getString(id), formatArgs);
         } catch (Resources.NotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return String.valueOf(id);
         }
     }
@@ -703,7 +703,7 @@ public final class StringUtils {
         try {
             return Utils.getContext().getResources().getStringArray(id);
         } catch (Resources.NotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return new String[]{String.valueOf(id)};
         }
     }
@@ -722,7 +722,7 @@ public final class StringUtils {
                 try {
                     text = String.format(str, args);
                 } catch (IllegalFormatException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }

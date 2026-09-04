@@ -51,7 +51,7 @@ public class JsonPraise {
         try {
             tmp = gson.toJson(obj);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return tmp;
     }
@@ -60,7 +60,7 @@ public class JsonPraise {
         try {
             return gson.fromJson(json, clazz);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -108,7 +108,7 @@ public class JsonPraise {
         try {
             code = new JSONObject(jsonStr).opt(key).toString();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return code;
     }

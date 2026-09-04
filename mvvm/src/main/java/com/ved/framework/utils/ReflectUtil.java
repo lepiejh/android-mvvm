@@ -46,7 +46,7 @@ public class ReflectUtil {
         try {
             field.set(obj, value);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.annotation.TargetApi;
@@ -70,7 +71,7 @@ public final class PermissionUtils {
             if (permissions == null) return Collections.emptyList();
             return Arrays.asList(permissions);
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return Collections.emptyList();
         }
     }

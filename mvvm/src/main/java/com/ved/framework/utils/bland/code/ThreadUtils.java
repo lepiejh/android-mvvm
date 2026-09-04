@@ -8,6 +8,8 @@ import androidx.annotation.CallSuper;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
+import com.ved.framework.utils.KLog;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1350,7 +1352,7 @@ public final class ThreadUtils {
                 try {
                     mLatch.await();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             return mValue;
@@ -1361,7 +1363,7 @@ public final class ThreadUtils {
                 try {
                     mLatch.await(timeout, unit);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                     return defaultValue;
                 }
             }

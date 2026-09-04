@@ -282,7 +282,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             if (app == null) return null;
             return (Application) app;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }
@@ -545,9 +545,9 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
                 KLog.i("UtilsActivityLifecycle", "setAnimatorsEnabled: Animators are enabled now!");
             }
         } catch (NoSuchFieldException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 }

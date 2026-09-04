@@ -41,7 +41,7 @@ class CopyUtils {
                         tMethod.invoke(target, sFieldValue);
                         break;
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                     }
                 }
             }
@@ -78,7 +78,7 @@ class CopyUtils {
         try {
             return copyTo(source, tClass);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -102,7 +102,7 @@ class CopyUtils {
             try {
                 targetList.add(copyTo(t, tClass));
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 throw new Exception("目标对象创建失败");
             }
         }

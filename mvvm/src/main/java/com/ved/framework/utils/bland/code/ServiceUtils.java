@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.app.ActivityManager;
@@ -45,7 +46,7 @@ public final class ServiceUtils {
         try {
             startService(Class.forName(className));
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -72,7 +73,7 @@ public final class ServiceUtils {
                 Utils.getContext().startService(intent);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -86,7 +87,7 @@ public final class ServiceUtils {
         try {
             return stopService(Class.forName(className));
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -111,7 +112,7 @@ public final class ServiceUtils {
         try {
             return Utils.getContext().stopService(intent);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -138,7 +139,7 @@ public final class ServiceUtils {
         try {
             bindService(Class.forName(className), conn, flags);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -186,7 +187,7 @@ public final class ServiceUtils {
         try {
             Utils.getContext().bindService(intent, conn, flags);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.content.ContentUris;
@@ -127,7 +128,7 @@ public class Uri2PathUtil {
                 return cursor.getString(column_index);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             if (cursor != null)
                 cursor.close();

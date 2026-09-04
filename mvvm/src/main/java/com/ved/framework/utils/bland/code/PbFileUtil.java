@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.annotation.SuppressLint;
@@ -182,7 +183,7 @@ public class PbFileUtil {
         try {
             out = new FileOutputStream(tempFile);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         if (inputStream != null) {
             copy(inputStream, out);
@@ -227,7 +228,7 @@ public class PbFileUtil {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } finally {
                 if (cursor != null) {
                     cursor.close();

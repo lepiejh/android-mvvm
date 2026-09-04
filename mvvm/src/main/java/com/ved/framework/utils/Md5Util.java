@@ -29,7 +29,7 @@ public final class Md5Util {
             byte[] bytes = data.getBytes("utf-8");
             resultBytes = md.digest(bytes);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return resultBytes;
     }
@@ -48,7 +48,7 @@ public final class Md5Util {
             }
             return hexString.toString().toLowerCase();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -75,7 +75,7 @@ public final class Md5Util {
             }
             return sb.toString().toLowerCase();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }
@@ -89,7 +89,7 @@ public final class Md5Util {
         try {
             buff = new String(bytes, "utf-8");
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         String result = Base64Util.encryptBASE64(buff);
         return result;

@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.app.Activity;
@@ -143,7 +144,7 @@ public final class AppUtils {
             ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
             return (ai.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -170,7 +171,7 @@ public final class AppUtils {
             ApplicationInfo ai = pm.getApplicationInfo(packageName, 0);
             return (ai.flags & ApplicationInfo.FLAG_SYSTEM) != 0;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -346,7 +347,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? null : pi.applicationInfo.loadIcon(pm);
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -373,7 +374,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? 0 : pi.applicationInfo.icon;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return 0;
         }
     }
@@ -444,7 +445,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? "" : pi.applicationInfo.loadLabel(pm).toString();
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -473,7 +474,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? "" : pi.applicationInfo.sourceDir;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -502,7 +503,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? "" : pi.versionName;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -529,7 +530,7 @@ public final class AppUtils {
             PackageInfo pi = pm.getPackageInfo(packageName, 0);
             return pi == null ? -1 : pi.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return -1;
         }
     }
@@ -559,7 +560,7 @@ public final class AppUtils {
             ApplicationInfo ai = pi.applicationInfo;
             return null == ai ? -1 : ai.minSdkVersion;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return -1;
         }
     }
@@ -588,7 +589,7 @@ public final class AppUtils {
             ApplicationInfo ai = pi.applicationInfo;
             return null == ai ? -1 : ai.targetSdkVersion;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return -1;
         }
     }
@@ -631,7 +632,7 @@ public final class AppUtils {
                 return pi.signatures;
             }
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -746,7 +747,7 @@ public final class AppUtils {
         try {
             return Utils.getContext().getPackageManager().getApplicationInfo(pkgName, 0).uid;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return -1;
         }
     }
@@ -809,7 +810,7 @@ public final class AppUtils {
             if (pm == null) return null;
             return getBean(pm, pm.getPackageInfo(packageName, 0));
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -873,7 +874,7 @@ public final class AppUtils {
             PackageInfo pi = Utils.getContext().getPackageManager().getPackageInfo(Utils.getContext().getPackageName(), 0);
             return pi.firstInstallTime == pi.lastUpdateTime;
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return true;
         }
     }

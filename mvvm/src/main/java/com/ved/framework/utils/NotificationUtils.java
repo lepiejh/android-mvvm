@@ -377,7 +377,7 @@ public class NotificationUtils {
             Method expand = statusBarManager.getMethod(methodName);
             expand.invoke(service);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

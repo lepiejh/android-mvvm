@@ -314,7 +314,7 @@ public class NetworkUtils {
             inetAddress = InetAddress.getByName(realDomain);
             return inetAddress != null;
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -339,7 +339,7 @@ public class NetworkUtils {
                 return (boolean) getMobileDataEnabledMethod.invoke(tm);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return false;
     }
@@ -655,7 +655,7 @@ public class NetworkUtils {
                 }
             }
         } catch (SocketException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -682,7 +682,7 @@ public class NetworkUtils {
                 }
             }
         } catch (SocketException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -721,7 +721,7 @@ public class NetworkUtils {
             inetAddress = InetAddress.getByName(domain);
             return inetAddress.getHostAddress();
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }

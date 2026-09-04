@@ -68,7 +68,7 @@ public class FileUtils {
                 fs.flush();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -250,7 +250,7 @@ public class FileUtils {
         try {
             return file.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -279,7 +279,7 @@ public class FileUtils {
         try {
             return file.createNewFile();
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -729,14 +729,14 @@ public class FileUtils {
             is = new BufferedInputStream(new FileInputStream(file));
             p = (is.read() << 8) + is.read();
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         switch (p) {
@@ -780,14 +780,14 @@ public class FileUtils {
                 return false;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return false;
@@ -899,14 +899,14 @@ public class FileUtils {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return count;
@@ -981,7 +981,7 @@ public class FileUtils {
                 }
                 return -1;
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return getFileLength(getFileByPath(filePath));
@@ -1028,14 +1028,14 @@ public class FileUtils {
             md = dis.getMessageDigest();
             return md.digest();
         } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (dis != null) {
                     dis.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return null;
@@ -1421,7 +1421,7 @@ public class FileUtils {
             return FileIOUtils.writeFileFromIS(new File(destFile.getAbsolutePath()), new FileInputStream(srcFile))
                     && !(isMove && !deleteFile(srcFile));
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -1517,7 +1517,7 @@ public class FileUtils {
                 try {
                     afd.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         } catch (FileNotFoundException e) {
@@ -1528,7 +1528,7 @@ public class FileUtils {
                     afd.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return true;
@@ -1570,21 +1570,21 @@ public class FileUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 if (os != null) {
                     os.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
 
@@ -1639,14 +1639,14 @@ public class FileUtils {
                     os.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 if (inputStream != null) {
                     inputStream.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return result;
@@ -1765,7 +1765,7 @@ public class FileUtils {
             return false;
 
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
 
             return false;
 
@@ -1782,7 +1782,7 @@ public class FileUtils {
                 }
 
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
 
             }
 
@@ -1812,7 +1812,7 @@ public class FileUtils {
                 return true;
 
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
 
                 return false;
 
@@ -1823,7 +1823,7 @@ public class FileUtils {
                     is.close();
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
 
                 }
 
@@ -1868,7 +1868,7 @@ public class FileUtils {
                 file.mkdir();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dirPath;
     }
@@ -1889,7 +1889,7 @@ public class FileUtils {
                 file.createNewFile();
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -1942,7 +1942,7 @@ public class FileUtils {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
                 }
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } finally {
                 if (cursor != null) {
                     cursor.close();

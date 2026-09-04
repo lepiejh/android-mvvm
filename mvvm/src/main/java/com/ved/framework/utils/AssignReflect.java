@@ -43,12 +43,12 @@ public class AssignReflect {
                     try {
                         m.invoke(t, map.get(getString(m.getName().substring(3))));
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return t;
     }
@@ -87,7 +87,7 @@ public class AssignReflect {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return des;
     }
@@ -116,7 +116,7 @@ public class AssignReflect {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return map;
     }

@@ -13,6 +13,7 @@ import android.telephony.SubscriptionInfo;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SDCardUtils;
 import com.ved.framework.utils.ToastUtils;
 import com.ved.framework.utils.Utils;
@@ -96,7 +97,7 @@ public class PhoneUtils {
                 callPhone(telNum);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             callPhone(telNum);
         }
     }
@@ -160,7 +161,7 @@ public class PhoneUtils {
                 isSimCardExist = true;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
 
         return isSimCardExist;

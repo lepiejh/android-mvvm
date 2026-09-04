@@ -119,7 +119,7 @@ public class CalendarUtil {
                 Date date = getFormat(1).parse(datee);
                 time = date.getTime() / 1000 + "";
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return time;

@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import java.lang.reflect.Type;
@@ -21,7 +22,7 @@ public final class CloneUtils {
         try {
             return UtilsBridge.fromJson(UtilsBridge.toJson(data), type);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }

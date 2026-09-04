@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.content.ContentResolver;
@@ -28,7 +29,7 @@ public final class BrightnessUtils {
             );
             return mode == Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC;
         } catch (Settings.SettingNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         }
     }
@@ -61,7 +62,7 @@ public final class BrightnessUtils {
                     Settings.System.SCREEN_BRIGHTNESS
             );
         } catch (Settings.SettingNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return 0;
         }
     }

@@ -84,7 +84,7 @@ public class TimeUtils {
             Date d = s_format.parse(dateString);
             return d.getTime();
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -167,7 +167,7 @@ public class TimeUtils {
             Date d = f_format.parse(dateString);
             return d.getTime() / 1000;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -180,7 +180,7 @@ public class TimeUtils {
             Date d = f_format.parse(dateString);
             return d.getTime() / 1000;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -270,7 +270,7 @@ public class TimeUtils {
             Date d = s_format.parse(dateString);
             return d.getYear() + 1900;// 年份是基于格林威治时间，所以加上1900
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -287,7 +287,7 @@ public class TimeUtils {
             return d.getMonth();// 月份从0-11
         } catch (ParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -304,7 +304,7 @@ public class TimeUtils {
             return d.getDate();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -316,7 +316,7 @@ public class TimeUtils {
             return date.getHours();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -328,7 +328,7 @@ public class TimeUtils {
             return date.getMinutes();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -340,7 +340,7 @@ public class TimeUtils {
             return date.getSeconds();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -385,7 +385,7 @@ public class TimeUtils {
             date = f_format.parse(time);
             return formater.format(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -401,7 +401,7 @@ public class TimeUtils {
             date = f_format.parse(time);
             return formater.format(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -413,7 +413,7 @@ public class TimeUtils {
             date = f_format.parse(time);
             return formater.format(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -425,7 +425,7 @@ public class TimeUtils {
             date = f_format.parse(time);
             return formater.format(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -437,7 +437,7 @@ public class TimeUtils {
             date = f_format.parse(time);
             return formater.format(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -520,7 +520,7 @@ public class TimeUtils {
                 return hm_formater.format(new Date(time * 1000L));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -533,7 +533,7 @@ public class TimeUtils {
                 return hm_formater12.format(new Date(time * 1000L));
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "";
     }
@@ -606,7 +606,7 @@ public class TimeUtils {
             }
             return sk_format_1.parse(time).getTime() / 1000;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -616,7 +616,7 @@ public class TimeUtils {
             Date d = sk_format_1.parse(dateString);
             return d.getYear() + 1900;// 年份是基于格林威治时间，所以加上1900
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -626,7 +626,7 @@ public class TimeUtils {
             Date d = sk_format_1.parse(dateString);
             return d.getMonth();// 月份从0-11
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -636,7 +636,7 @@ public class TimeUtils {
             Date d = sk_format_1.parse(dateString);
             return d.getDate();
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -646,7 +646,7 @@ public class TimeUtils {
             Date date = sk_format_1.parse(timeString);
             return date.getHours();
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -656,7 +656,7 @@ public class TimeUtils {
             Date date = sk_format_1.parse(timeString);
             return date.getMinutes();
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return 0;
     }
@@ -961,7 +961,7 @@ public class TimeUtils {
         try {
             return simpleDateFormat.parse(date);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return new Date(0);
     }
@@ -973,7 +973,7 @@ public class TimeUtils {
             d1 = new SimpleDateFormat(patternFrom).parse(date);
             dateTo = new SimpleDateFormat(pattrtnTo).format(d1);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateTo;
     }
@@ -1067,7 +1067,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1078,7 +1078,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1135,7 +1135,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1146,7 +1146,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1163,7 +1163,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1174,7 +1174,7 @@ public class TimeUtils {
             try {
                 date = simpleDateFormat.parse(time);
             } catch (ParseException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
             c.setTime(date);
@@ -1345,7 +1345,7 @@ public class TimeUtils {
         try {
             return format.parse(time).getTime();
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return -1;
     }
@@ -1372,7 +1372,7 @@ public class TimeUtils {
         try {
             return format.parse(time);
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

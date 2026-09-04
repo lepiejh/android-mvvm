@@ -57,7 +57,7 @@ public class TransitionTime {
             String str = sdf.format(date);
             return str;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateStr;
     }
@@ -70,7 +70,7 @@ public class TransitionTime {
             String str = sdfm.format(date);
             return str;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateStr;
     }
@@ -83,7 +83,7 @@ public class TransitionTime {
             String str = sdfm.format(date);
             return str;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateStr;
     }
@@ -95,7 +95,7 @@ public class TransitionTime {
             String str = sdf.format(date);
             return str;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateStr;
     }
@@ -108,7 +108,7 @@ public class TransitionTime {
             String str = sdfT.format(date);
             return str;
         } catch (ParseException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return dateStr;
     }
@@ -126,7 +126,7 @@ public class TransitionTime {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             strs = sdf.format(date);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return strs;
     }

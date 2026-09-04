@@ -3,6 +3,8 @@ package com.ved.framework.utils.phone;
 import android.content.Context;
 import android.text.TextUtils;
 
+import com.ved.framework.utils.KLog;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +37,7 @@ public class PhoneNumberGeo {
           byteData.write(buffer, 0, readBytesLength);
         }
       } catch (IOException e) {
-        e.printStackTrace();
+        KLog.e(e.getMessage());
         throw new RuntimeException(e);
       }
 

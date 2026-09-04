@@ -64,7 +64,7 @@ public class SingleLiveEvent<T> extends MutableLiveData<T> {
                     try {
                         realObserver.onChanged(t);
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                     }
                 } else {
                     // Observer 已被回收，清理资源并重置状态

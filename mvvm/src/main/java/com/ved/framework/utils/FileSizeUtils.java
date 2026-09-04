@@ -27,7 +27,7 @@ public class FileSizeUtils {
                 blockSize = getFileSize(file);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             KLog.e("获取文件大小", "获取失败!");
         }
         return formatFileSize(blockSize, sizeType);
@@ -49,7 +49,7 @@ public class FileSizeUtils {
                 blockSize = getFileSize(file);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             KLog.e("获取文件大小", "获取失败!");
         }
         return FormetFileSize(blockSize);

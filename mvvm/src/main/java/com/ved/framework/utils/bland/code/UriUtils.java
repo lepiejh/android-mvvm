@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.content.ContentResolver;
@@ -318,14 +319,14 @@ public final class UriUtils {
             UtilsBridge.writeFileFromIS(file.getAbsolutePath(), is);
             return file;
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             if (is != null) {
                 try {
                     is.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }
@@ -344,7 +345,7 @@ public final class UriUtils {
             is = Utils.getContext().getContentResolver().openInputStream(uri);
             return UtilsBridge.inputStream2Bytes(is);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             Log.d("UriUtils", "uri to bytes failed.");
             return null;
         } finally {
@@ -352,7 +353,7 @@ public final class UriUtils {
                 try {
                     is.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }

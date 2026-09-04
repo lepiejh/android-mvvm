@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.app.Activity;
@@ -32,7 +33,7 @@ public final class MetaDataUtils {
             ApplicationInfo ai = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
             value = String.valueOf(ai.metaData.get(key));
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return value;
     }
@@ -65,7 +66,7 @@ public final class MetaDataUtils {
             ActivityInfo ai = pm.getActivityInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(ai.metaData.get(key));
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return value;
     }
@@ -98,7 +99,7 @@ public final class MetaDataUtils {
             ServiceInfo info = pm.getServiceInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(info.metaData.get(key));
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return value;
     }
@@ -131,7 +132,7 @@ public final class MetaDataUtils {
             ActivityInfo info = pm.getReceiverInfo(componentName, PackageManager.GET_META_DATA);
             value = String.valueOf(info.metaData.get(key));
         } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return value;
     }

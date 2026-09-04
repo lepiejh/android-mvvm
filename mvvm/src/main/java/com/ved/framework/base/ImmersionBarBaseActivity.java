@@ -72,7 +72,7 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
             isTranslucentOrFloating = (boolean) m.invoke(null, ta);
             m.setAccessible(false);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return isTranslucentOrFloating;
     }
@@ -89,7 +89,7 @@ public class ImmersionBarBaseActivity extends RxAppCompatActivity implements Vie
             field.setAccessible(false);
             return true;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return false;
     }

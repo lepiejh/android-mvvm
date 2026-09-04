@@ -184,7 +184,7 @@ public final class AESUtil {
             byte[] result = cipher.doFinal(byteContent);
             return result; // 加密
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

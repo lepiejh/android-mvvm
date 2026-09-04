@@ -334,7 +334,7 @@ public class ScreenUtils {
                     Settings.System.SCREEN_OFF_TIMEOUT
             );
         } catch (Settings.SettingNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return -123;
         }
     }

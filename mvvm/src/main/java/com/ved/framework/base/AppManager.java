@@ -7,6 +7,8 @@ import java.util.Stack;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.ved.framework.utils.KLog;
+
 /**
  * Created by ved on 2017/6/15.
  * activity堆栈式管理
@@ -215,7 +217,7 @@ public class AppManager {
             //System.exit(0);
         } catch (Exception e) {
             activityStack.clear();
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 }

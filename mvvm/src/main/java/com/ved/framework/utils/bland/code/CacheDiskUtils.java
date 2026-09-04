@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.graphics.Bitmap;
@@ -705,7 +706,7 @@ public final class CacheDiskUtils implements CacheConstants {
             try {
                 mThread.join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
 

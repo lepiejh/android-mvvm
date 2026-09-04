@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.util.Log;
@@ -174,20 +175,20 @@ public final class FileIOUtils {
             }
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         } finally {
             try {
                 is.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 if (os != null) {
                     os.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -389,7 +390,7 @@ public final class FileIOUtils {
             if (isForce) fc.force(true);
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         } finally {
             try {
@@ -397,7 +398,7 @@ public final class FileIOUtils {
                     fc.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -475,7 +476,7 @@ public final class FileIOUtils {
             if (isForce) mbb.force();
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         } finally {
             try {
@@ -483,7 +484,7 @@ public final class FileIOUtils {
                     fc.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -546,7 +547,7 @@ public final class FileIOUtils {
             bw.write(content);
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return false;
         } finally {
             try {
@@ -554,7 +555,7 @@ public final class FileIOUtils {
                     bw.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -679,7 +680,7 @@ public final class FileIOUtils {
             }
             return list;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -687,7 +688,7 @@ public final class FileIOUtils {
                     reader.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -739,7 +740,7 @@ public final class FileIOUtils {
             try {
                 return new String(bytes, charsetName);
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return "";
             }
         }
@@ -818,24 +819,24 @@ public final class FileIOUtils {
                 }
                 return os.toByteArray();
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return null;
             } finally {
                 try {
                     is.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
                 try {
                     if (os != null) {
                         os.close();
                     }
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -871,7 +872,7 @@ public final class FileIOUtils {
             }
             return byteBuffer.array();
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -879,7 +880,7 @@ public final class FileIOUtils {
                     fc.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -915,7 +916,7 @@ public final class FileIOUtils {
             mbb.get(result, 0, size);
             return result;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -923,7 +924,7 @@ public final class FileIOUtils {
                     fc.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }

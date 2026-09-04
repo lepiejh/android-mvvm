@@ -3,6 +3,7 @@ package com.ved.framework.utils.phone;
 import android.telephony.PhoneStateListener;
 import android.telephony.SignalStrength;
 
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.ReflectUtil;
 
 import java.lang.reflect.Method;
@@ -26,7 +27,7 @@ public class Sim1SignalStrengthsListener extends PhoneStateListener {
             Method levelMethod = SignalStrength.class.getDeclaredMethod("getLevel");
             level = (int) levelMethod.invoke(signalStrength);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return level;
     }

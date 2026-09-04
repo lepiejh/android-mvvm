@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.util.Log;
@@ -138,7 +139,7 @@ public final class BusUtils {
                                     busInfo.subClassNames.add(className);
                                 }
                             } catch (ClassNotFoundException e) {
-                                e.printStackTrace();
+                                KLog.e(e.getMessage());
                             }
                         }
                     }
@@ -236,9 +237,9 @@ public final class BusUtils {
                 return Class.forName(busInfo.className).getDeclaredMethod(busInfo.funName, getClassName(busInfo.paramType));
             }
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (NoSuchMethodException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }
@@ -331,9 +332,9 @@ public final class BusUtils {
                 }
             }
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (InvocationTargetException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

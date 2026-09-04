@@ -166,7 +166,7 @@ public final class ToastUtils {
                 try {
                     show(resId, Toast.LENGTH_SHORT, args);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -185,7 +185,7 @@ public final class ToastUtils {
                 try {
                     show(format, Toast.LENGTH_SHORT, args);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -232,7 +232,7 @@ public final class ToastUtils {
                 try {
                     show(resId, Toast.LENGTH_LONG, args);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -251,7 +251,7 @@ public final class ToastUtils {
                 try {
                     show(format, Toast.LENGTH_LONG, args);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -266,7 +266,7 @@ public final class ToastUtils {
         try {
             show(text, Toast.LENGTH_SHORT);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -279,7 +279,7 @@ public final class ToastUtils {
         try {
             show(resId, Toast.LENGTH_SHORT);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -293,7 +293,7 @@ public final class ToastUtils {
         try {
             show(resId, Toast.LENGTH_SHORT, args);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -307,7 +307,7 @@ public final class ToastUtils {
         try {
             show(format, Toast.LENGTH_SHORT, args);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -346,7 +346,7 @@ public final class ToastUtils {
             sToast.show();
 
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             // 降级：使用系统 Toast
             fallbackShow(text);
         }
@@ -365,7 +365,7 @@ public final class ToastUtils {
             }
             sToast.show();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -378,7 +378,7 @@ public final class ToastUtils {
         try {
             show(resId, Toast.LENGTH_LONG);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -392,7 +392,7 @@ public final class ToastUtils {
         try {
             show(resId, Toast.LENGTH_LONG, args);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -411,7 +411,7 @@ public final class ToastUtils {
             try {
                 show(format, Toast.LENGTH_LONG, args);
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -426,7 +426,7 @@ public final class ToastUtils {
                 try {
                     show("", Toast.LENGTH_SHORT);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -442,7 +442,7 @@ public final class ToastUtils {
                 try {
                     show("", Toast.LENGTH_LONG);
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         });
@@ -455,7 +455,7 @@ public final class ToastUtils {
         try {
             show("", Toast.LENGTH_SHORT);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -466,7 +466,7 @@ public final class ToastUtils {
         try {
             show("", Toast.LENGTH_LONG);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -480,7 +480,7 @@ public final class ToastUtils {
         try {
             show(Utils.getContext().getResources().getText(resId).toString(), duration);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -495,7 +495,7 @@ public final class ToastUtils {
         try {
             show(String.format(Utils.getContext().getResources().getString(resId), args), duration);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -510,7 +510,7 @@ public final class ToastUtils {
         try {
             show(String.format(format, args), duration);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 
@@ -584,7 +584,7 @@ public final class ToastUtils {
             }
             sToast.show();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

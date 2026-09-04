@@ -172,7 +172,7 @@ public final class BitmapUtil {
             }
 
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
 
         return tempBitmap;
@@ -248,13 +248,13 @@ public final class BitmapUtil {
                 bos.flush();
                 return file.getAbsolutePath();
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } finally {
                 if (bos != null) {
                     try {
                         bos.close();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                     }
                 }
             }

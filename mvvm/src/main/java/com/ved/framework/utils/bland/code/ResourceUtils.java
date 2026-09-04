@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.graphics.drawable.Drawable;
@@ -162,7 +163,7 @@ public final class ResourceUtils {
                 );
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             res = false;
         }
         return res;
@@ -196,12 +197,12 @@ public final class ResourceUtils {
                 try {
                     return new String(bytes, charsetName);
                 } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                     return "";
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -228,7 +229,7 @@ public final class ResourceUtils {
         try {
             return UtilsBridge.inputStream2Lines(Utils.getContext().getResources().getAssets().open(assetsPath), charsetName);
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return Collections.emptyList();
         }
     }
@@ -275,7 +276,7 @@ public final class ResourceUtils {
             try {
                 return new String(bytes, charsetName);
             } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return "";
             }
         }

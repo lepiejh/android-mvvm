@@ -172,9 +172,9 @@ public class ImageUtils {
             fis = context.openFileInput(fileName);
             bitmap = BitmapFactory.decodeStream(fis);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (OutOfMemoryError e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 fis.close();
@@ -203,9 +203,9 @@ public class ImageUtils {
             fis = new FileInputStream(file);
             bitmap = BitmapFactory.decodeStream(fis, null, opts);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (OutOfMemoryError e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 fis.close();
@@ -228,9 +228,9 @@ public class ImageUtils {
             fis = new FileInputStream(file);
             bitmap = BitmapFactory.decodeStream(fis);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (OutOfMemoryError e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 fis.close();
@@ -753,9 +753,9 @@ public class ImageUtils {
                             .getBitmap(context.getContentResolver(),
                                     uri);
                 } catch (FileNotFoundException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }
@@ -925,7 +925,7 @@ public class ImageUtils {
                 .doOnError(new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        throwable.printStackTrace();
+                        KLog.e(throwable.getMessage());
                     }
                 })
                 .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends File>>() {
@@ -952,7 +952,7 @@ public class ImageUtils {
                 .doOnError(new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        throwable.printStackTrace();
+                        KLog.e(throwable.getMessage());
                     }
                 })
                 .onErrorResumeNext(new Function<Throwable, ObservableSource<? extends File>>() {
@@ -975,7 +975,7 @@ public class ImageUtils {
                 .doOnError(new Consumer<Throwable>() {
                     @Override
                     public void accept(Throwable throwable) throws Exception {
-                        throwable.printStackTrace();
+                        KLog.e(throwable.getMessage());
                         iThrowable.accept(throwable);
                     }
                 })

@@ -1,6 +1,7 @@
 package com.ved.framework.http;
 
 
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.NetworkUtils;
 import com.ved.framework.utils.ToastUtils;
 
@@ -21,7 +22,7 @@ public abstract class ApiDisposableObserver<T> extends DisposableObserver<T> {
 
     @Override
     public void onError(Throwable e) {
-        e.printStackTrace();
+        KLog.e(e.getMessage());
         // e.getMessage() 可能为 null，兜底避免把 null 传给业务回调
         onError(e.getMessage() == null ? "未知错误" : e.getMessage());
         if (e instanceof ResponseThrowable) {

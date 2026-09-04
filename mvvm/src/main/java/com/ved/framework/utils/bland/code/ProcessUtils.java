@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import static android.Manifest.permission.KILL_BACKGROUND_PROCESSES;
@@ -105,7 +106,7 @@ public final class ProcessUtils {
                 }
                 return recentStats == null ? null : recentStats.getPackageName();
             } catch (PackageManager.NameNotFoundException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return "";
@@ -218,7 +219,7 @@ public final class ProcessUtils {
             mBufferedReader.close();
             return processName;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return "";
         }
     }
@@ -258,7 +259,7 @@ public final class ProcessUtils {
             Method getProcessName = activityThread.getClass().getDeclaredMethod("getProcessName");
             processName = (String) getProcessName.invoke(activityThread);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return processName;
     }

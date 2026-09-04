@@ -128,14 +128,14 @@ public class CacheUtil {
             out = new BufferedWriter(new FileWriter(file), 1024);
             out.write(value);
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             if (out != null) {
                 try {
                     out.flush();
                     out.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             mCache.put(file);
@@ -182,14 +182,14 @@ public class CacheUtil {
                 return null;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             if (in != null) {
                 try {
                     in.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             if (removeFile)
@@ -234,7 +234,7 @@ public class CacheUtil {
             JSONObject obj = new JSONObject(JSONString);
             return obj;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -276,7 +276,7 @@ public class CacheUtil {
             JSONArray obj = new JSONArray(JSONString);
             return obj;
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -298,14 +298,14 @@ public class CacheUtil {
             out = new FileOutputStream(file);
             out.write(value);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             if (out != null) {
                 try {
                     out.flush();
                     out.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             mCache.put(file);
@@ -346,14 +346,14 @@ public class CacheUtil {
                 return null;
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             if (RAFile != null) {
                 try {
                     RAFile.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             if (removeFile)
@@ -396,7 +396,7 @@ public class CacheUtil {
                 put(key, data);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (oos != null) {
@@ -424,20 +424,20 @@ public class CacheUtil {
                 Object reObject = ois.readObject();
                 return reObject;
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return null;
             } finally {
                 try {
                     if (bais != null)
                         bais.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
                 try {
                     if (ois != null)
                         ois.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }

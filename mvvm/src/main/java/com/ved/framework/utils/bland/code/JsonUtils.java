@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import org.json.JSONArray;
@@ -203,7 +204,7 @@ public final class JsonUtils {
             //noinspection unchecked
             return (T) ret;
         } catch (JSONException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return defaultValue;
         }
     }
@@ -219,7 +220,7 @@ public final class JsonUtils {
         try {
             return getValueByType(new JSONObject(json), key, defaultValue, type);
         } catch (JSONException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return defaultValue;
         }
     }
@@ -241,7 +242,7 @@ public final class JsonUtils {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return json;
     }

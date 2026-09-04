@@ -1,5 +1,6 @@
 package com.ved.framework.utils.bland.code;
 import com.ved.framework.utils.Base64Util;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.os.Build;
@@ -221,7 +222,7 @@ public final class EncryptUtils {
             md = digestInputStream.getMessageDigest();
             return md.digest();
         } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -229,7 +230,7 @@ public final class EncryptUtils {
                     fis.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -403,7 +404,7 @@ public final class EncryptUtils {
             md.update(data);
             return md.digest();
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -634,7 +635,7 @@ public final class EncryptUtils {
             mac.init(secretKey);
             return mac.doFinal(data);
         } catch (InvalidKeyException | NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -992,7 +993,7 @@ public final class EncryptUtils {
             }
             return cipher.doFinal(data);
         } catch (Throwable e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -1162,7 +1163,7 @@ public final class EncryptUtils {
                 return cipher.doFinal(data);
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

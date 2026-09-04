@@ -10,6 +10,7 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 import com.ved.framework.utils.bland.code.Uri2PathUtil;
 
@@ -277,7 +278,7 @@ public class Luban {
                         }
                     } catch (Exception e) {
                         // 单张图片压缩失败不能中断整个流程
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                         return null;
                     }
                 }
@@ -307,7 +308,7 @@ public class Luban {
                         }
                     } catch (Exception e) {
                         // 单张图片压缩失败不能中断整个流程
-                        e.printStackTrace();
+                        KLog.e(e.getMessage());
                         return null;
                     }
                 }
@@ -515,7 +516,7 @@ public class Luban {
                     break;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return degree;
     }
@@ -593,7 +594,7 @@ public class Luban {
             fos.flush();
             fos.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             // 写文件失败时返回 null，避免调用方拿到损坏的图片文件
             return null;
         }

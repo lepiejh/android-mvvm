@@ -3,6 +3,7 @@ package com.ved.framework.utils.bland.code;
 import androidx.annotation.NonNull;
 
 import com.ved.framework.utils.CorpseUtils;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import java.io.BufferedReader;
@@ -323,28 +324,28 @@ public final class ShellUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             try {
                 if (os != null) {
                     os.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 if (successResult != null) {
                     successResult.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             try {
                 if (errorResult != null) {
                     errorResult.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             if (process != null) {
                 process.destroy();

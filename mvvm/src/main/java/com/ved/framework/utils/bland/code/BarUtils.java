@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import static android.Manifest.permission.EXPAND_STATUS_BAR;
@@ -462,7 +463,7 @@ public final class BarUtils {
             Method expand = statusBarManager.getMethod(methodName);
             expand.invoke(service);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
     }
 

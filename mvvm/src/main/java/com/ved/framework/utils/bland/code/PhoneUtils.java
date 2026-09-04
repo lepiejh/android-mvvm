@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import static android.Manifest.permission.CALL_PHONE;
@@ -68,7 +69,7 @@ public final class PhoneUtils {
             try {
                 return Build.getSerial();
             } catch (SecurityException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return "";
             }
         }
@@ -131,11 +132,11 @@ public final class PhoneUtils {
                         isImei ? TelephonyManager.PHONE_TYPE_GSM
                                 : TelephonyManager.PHONE_TYPE_CDMA);
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
             if (isImei) {
                 if (id0 != null && id0.length() < 15) {
@@ -206,7 +207,7 @@ public final class PhoneUtils {
             try {
                 getTelephonyManager().getSubscriberId();
             } catch (SecurityException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
                 return "";
             }
         }

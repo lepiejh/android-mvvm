@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import static android.Manifest.permission.ACCESS_WIFI_STATE;
@@ -203,7 +204,7 @@ public final class DeviceUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "02:00:00:00:00:00";
     }
@@ -224,7 +225,7 @@ public final class DeviceUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "02:00:00:00:00:00";
     }
@@ -246,7 +247,7 @@ public final class DeviceUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return "02:00:00:00:00:00";
     }
@@ -268,7 +269,7 @@ public final class DeviceUtils {
                 }
             }
         } catch (SocketException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

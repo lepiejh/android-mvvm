@@ -3,6 +3,8 @@ package com.ved.framework.net;
 
 import android.annotation.SuppressLint;
 
+import com.ved.framework.utils.KLog;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyManagementException;
@@ -92,7 +94,7 @@ class HttpsUtils {
             kmf.init(clientKeyStore, password.toCharArray());
             return kmf.getKeyManagers();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }
@@ -111,14 +113,14 @@ class HttpsUtils {
                 try {
                     if (certStream != null) certStream.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
             tmf.init(keyStore);
             return tmf.getTrustManagers();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

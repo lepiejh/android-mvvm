@@ -194,9 +194,9 @@ public class MapUtils {
             });
             return transMap;
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return null;
     }

@@ -323,7 +323,7 @@ public final class ConvertUtils {
             }
             return os;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             CloseUtils.closeIO(is);
@@ -387,7 +387,7 @@ public final class ConvertUtils {
         try {
             os.write(bytes);
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return os;
     }
@@ -404,7 +404,7 @@ public final class ConvertUtils {
         try {
             return new String(inputStream2Bytes(is), charsetName);
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -421,7 +421,7 @@ public final class ConvertUtils {
         try {
             return new ByteArrayInputStream(string.getBytes(charsetName));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -438,7 +438,7 @@ public final class ConvertUtils {
         try {
             return new String(outputStream2Bytes(out), charsetName);
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -455,7 +455,7 @@ public final class ConvertUtils {
         try {
             return bytes2OutputStream(string.getBytes(charsetName));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -624,7 +624,7 @@ public final class ConvertUtils {
         try {
             return new String(bytes, getSafeCharset(charsetName));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return new String(bytes);
         }
     }
@@ -644,7 +644,7 @@ public final class ConvertUtils {
         try {
             return string.getBytes(getSafeCharset(charsetName));
         } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return string.getBytes();
         }
     }
@@ -657,7 +657,7 @@ public final class ConvertUtils {
         try {
             return new JSONObject(new String(bytes));
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -678,7 +678,7 @@ public final class ConvertUtils {
         try {
             return new JSONArray(new String(bytes));
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         }
     }
@@ -727,7 +727,7 @@ public final class ConvertUtils {
             ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
             return ois.readObject();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -735,7 +735,7 @@ public final class ConvertUtils {
                     ois.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -752,7 +752,7 @@ public final class ConvertUtils {
             oos.writeObject(serializable);
             return baos.toByteArray();
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -760,7 +760,7 @@ public final class ConvertUtils {
                     oos.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
@@ -843,7 +843,7 @@ public final class ConvertUtils {
             }
             return list;
         } catch (IOException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
             return null;
         } finally {
             try {
@@ -851,7 +851,7 @@ public final class ConvertUtils {
                     reader.close();
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }

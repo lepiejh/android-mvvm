@@ -25,7 +25,7 @@ public final class CloseUtils {
                 try {
                     closeable.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    KLog.e(e.getMessage());
                 }
             }
         }

@@ -74,7 +74,7 @@ public final class DesUtil {
             // 生成密钥
             key = factory.generateSecret(dks);
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         return key;
     }
@@ -97,7 +97,7 @@ public final class DesUtil {
             generator = KeyGenerator.getInstance(ALGORITHM);
             generator.init(random);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         }
         SecretKey key = generator.generateKey();
         byte[] encodeKey = key.getEncoded();

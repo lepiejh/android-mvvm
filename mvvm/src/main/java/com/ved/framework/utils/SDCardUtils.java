@@ -65,7 +65,7 @@ public final class SDCardUtils {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            KLog.e(e.getMessage());
         } finally {
             CloseUtils.closeIO(bufferedReader);
         }
@@ -243,11 +243,11 @@ public final class SDCardUtils {
                     paths.add(new SDCardInfo(path, state, isRemovable));
                 }
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         } else {
             try {
@@ -269,13 +269,13 @@ public final class SDCardUtils {
                     paths.add(new SDCardInfo(path, state, isRemovable));
                 }
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (InvocationTargetException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (NoSuchMethodException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
         return paths;

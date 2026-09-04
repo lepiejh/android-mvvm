@@ -1,4 +1,5 @@
 package com.ved.framework.utils.bland.code;
+import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.Utils;
 
 import android.content.res.Resources;
@@ -143,7 +144,7 @@ public final class AdaptScreenUtils {
                 DisplayMetrics dm = (DisplayMetrics) metricsField.get(resources);
                 if (dm != null) dm.xdpi = newXdpi;
             } catch (Exception e) {
-                e.printStackTrace();
+                KLog.e(e.getMessage());
             }
         }
     }
