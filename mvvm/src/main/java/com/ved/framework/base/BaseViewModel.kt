@@ -375,7 +375,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
             cancelJob()
             viewModelScope.cancel()
         } catch (e: Exception) {
-            e.printStackTrace()
+            KLog.e(e.message)
         }
     }
 
