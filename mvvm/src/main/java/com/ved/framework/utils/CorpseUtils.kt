@@ -53,15 +53,15 @@ object CorpseUtils {
         }.array()
     }
 
+    private fun getByteBuffer(bytes: List<Byte>,boType: Int) = ByteBuffer.wrap(bytes.toByteArray()).order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
+
     /**
      * 字节数值转int16_t
      * boType == 1 :  小端序 → bytes 高字节在前(ByteOrder.BIG_ENDIAN)
      * boType == 2 :  大端序 → bytes 低字节在前(ByteOrder.LITTLE_ENDIAN)
      */
     fun toInt16t(bytes: List<Byte>,boType: Int = 1) : Short{
-        return ByteBuffer.wrap(bytes.toByteArray())
-            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-            .short // 读取为有符号 short（int16_t）
+        return getByteBuffer(bytes,boType).short // 读取为有符号 short（int16_t）
     }
 
     /**
@@ -70,9 +70,7 @@ object CorpseUtils {
      * boType == 2 : 大端序 (ByteOrder.BIG_ENDIAN)
      */
     fun toInt32t(bytes: List<Byte>, boType: Int = 1): Int {
-        return ByteBuffer.wrap(bytes.toByteArray())
-            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-            .int // 读取为有符号 int（int32_t）
+        return getByteBuffer(bytes,boType).int // 读取为有符号 int（int32_t）
     }
 
     fun toUInt32t(bytes: List<Byte>, boType: Int = 1): UInt {
