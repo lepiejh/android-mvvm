@@ -366,6 +366,54 @@ public final class SPUtils {
         return getString(key,"");
     }
 
+    public void putByte(String key, byte value){
+        put(key, value);
+    }
+
+    public byte getByte(String key, byte defaultObject){
+        return (byte) get(key, defaultObject);
+    }
+
+    public byte getByte(String key){
+        return getByte(key, (byte) 0);
+    }
+
+    public void putShort(String key, short value){
+        put(key, value);
+    }
+
+    public short getShort(String key, short defaultObject){
+        return (short) get(key, defaultObject);
+    }
+
+    public short getShort(String key){
+        return getShort(key, (short) 0);
+    }
+
+    public void putChar(String key, char value){
+        put(key, value);
+    }
+
+    public char getChar(String key, char defaultObject){
+        return (char) get(key, defaultObject);
+    }
+
+    public char getChar(String key){
+        return getChar(key, (char) 0);
+    }
+
+    public void putBytes(String key, byte[] value){
+        put(key, value);
+    }
+
+    public byte[] getBytes(String key, byte[] defaultObject){
+        return (byte[]) get(key, defaultObject);
+    }
+
+    public byte[] getBytes(String key){
+        return getBytes(key, new byte[0]);
+    }
+
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
         if (null == sp) {
             return false;
@@ -375,6 +423,15 @@ public final class SPUtils {
             return editor.putString(key, encryptDES((String) value)).commit();
         } else if (value instanceof Boolean) {
             return editor.putBoolean(key, (Boolean) value).commit();
+        } else if (value instanceof Byte) {
+            // byte 无原生存储类型，借用 int 保存
+            return editor.putInt(key, (Byte) value).commit();
+        } else if (value instanceof Short) {
+            // short 无原生存储类型，借用 int 保存
+            return editor.putInt(key, (Short) value).commit();
+        } else if (value instanceof Character) {
+            // char 无原生存储类型，借用 int（Unicode 码点）保存
+            return editor.putInt(key, (Character) value).commit();
         } else if (value instanceof Float) {
             return editor.putFloat(key, (Float) value).commit();
         } else if (value instanceof Integer) {
@@ -383,6 +440,9 @@ public final class SPUtils {
             return editor.putLong(key, (Long) value).commit();
         } else if (value instanceof Double) {
             return editor.putLong(key, Double.doubleToRawLongBits((Double) value)).commit();
+        } else if (value instanceof byte[]) {
+            // 字节数组：Base64 编码后按字符串（加密）保存
+            return editor.putString(key, encryptDES(Base64.encodeToString((byte[]) value, Base64.NO_WRAP))).commit();
         }else if (value instanceof Collection){
             Collection<?> collection = (Collection<?>) value;
             if (!collection.isEmpty()) {
@@ -391,6 +451,20 @@ public final class SPUtils {
             } else {
                 return saveEntity("");
             }
+        } else if (value instanceof Map) {
+            // Map：序列化为 JSON 后按字符串（加密）保存
+            String json = JsonPraise.objToJson(value);
+            if (TextUtils.isEmpty(json)) {
+                return false;
+            }
+            return editor.putString(key, encryptDES(json)).commit();
+        } else if (value != null && value.getClass().isArray()) {
+            // 其它数组（int[]/long[]/String[]/对象数组等）：序列化为 JSON 后按字符串（加密）保存
+            String json = JsonPraise.objToJson(value);
+            if (TextUtils.isEmpty(json)) {
+                return false;
+            }
+            return editor.putString(key, encryptDES(json)).commit();
         }else {
             return saveEntity(value);
         }
@@ -402,6 +476,12 @@ public final class SPUtils {
                 return decryptDES("");
             } else if (defaultValue instanceof Boolean) {
                 return false;
+            } else if (defaultValue instanceof Byte) {
+                return (byte) 0;
+            } else if (defaultValue instanceof Short) {
+                return (short) 0;
+            } else if (defaultValue instanceof Character) {
+                return (char) 0;
             } else if (defaultValue instanceof Float) {
                 return 0f;
             } else if (defaultValue instanceof Integer) {
@@ -411,13 +491,19 @@ public final class SPUtils {
             } else if (defaultValue instanceof Double) {
                 return 0.0d;
             }else {
-                return "";
+                return defaultValue != null ? defaultValue : "";
             }
         }
         if (defaultValue instanceof String) {
             return decryptDES(sp.getString(key, (String) defaultValue));
         } else if (defaultValue instanceof Boolean) {
             return sp.getBoolean(key, (Boolean) defaultValue);
+        } else if (defaultValue instanceof Byte) {
+            return (byte) sp.getInt(key, (Byte) defaultValue);
+        } else if (defaultValue instanceof Short) {
+            return (short) sp.getInt(key, (Short) defaultValue);
+        } else if (defaultValue instanceof Character) {
+            return (char) sp.getInt(key, (Character) defaultValue);
         } else if (defaultValue instanceof Float) {
             return sp.getFloat(key, (Float) defaultValue);
         } else if (defaultValue instanceof Integer) {
@@ -426,6 +512,18 @@ public final class SPUtils {
             return sp.getLong(key, (Long) defaultValue);
         } else if (defaultValue instanceof Double) {
             return Double.longBitsToDouble(sp.getLong(key, Double.doubleToRawLongBits((Double) defaultValue)));
+        } else if (defaultValue instanceof byte[]) {
+            // 字节数组：读取字符串并解密后 Base64 解码
+            String encoded = decryptDES(sp.getString(key, ""));
+            if (TextUtils.isEmpty(encoded)) {
+                return defaultValue;
+            }
+            try {
+                return Base64.decode(encoded, Base64.NO_WRAP);
+            } catch (Exception e) {
+                KLog.e(e.getMessage());
+                return defaultValue;
+            }
         }else if (defaultValue instanceof Collection){
             Collection<?> collection = (Collection<?>) defaultValue;
             if (collection.isEmpty()) {
@@ -433,6 +531,22 @@ public final class SPUtils {
             }
             Class<?> elementType = collection.iterator().next().getClass();
             Collection<?> ret = getCollection(elementType);
+            return ret != null ? ret : defaultValue;
+        } else if (defaultValue instanceof Map) {
+            // Map：读取字符串并解密后反序列化
+            String json = decryptDES(sp.getString(key, ""));
+            if (TextUtils.isEmpty(json)) {
+                return defaultValue;
+            }
+            Object ret = JsonPraise.jsonToObj(json, defaultValue.getClass());
+            return ret != null ? ret : defaultValue;
+        } else if (defaultValue != null && defaultValue.getClass().isArray()) {
+            // 其它数组：读取字符串并解密后按数组类型反序列化
+            String json = decryptDES(sp.getString(key, ""));
+            if (TextUtils.isEmpty(json)) {
+                return defaultValue;
+            }
+            Object ret = JsonPraise.jsonToObj(json, defaultValue.getClass());
             return ret != null ? ret : defaultValue;
         }else {
             if (defaultValue != null) {
