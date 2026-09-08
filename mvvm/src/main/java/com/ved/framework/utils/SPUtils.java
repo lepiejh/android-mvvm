@@ -502,6 +502,23 @@ public final class SPUtils {
         return new SpDao<>(this, entityClass, keyMapper);
     }
 
+    /**
+     * 获取一个以自定义“表名”为存储键的类 GreenDAO DAO，用于按表名做增删改查。
+     * 与 {@link #dao(Class, KeyMapper)} 的区别：存储键使用传入的 tableName 而非
+     * entityClass.getName()，便于同一实体类型分表存储，或使用与类名解耦的稳定表名。
+     * tableName 为空时回退为 entityClass.getName()。
+     *
+     * @param tableName   表名（SharedPreferences 存储键），需保证唯一
+     * @param entityClass 实体类型
+     * @param keyMapper   主键提取器，例如 user -&gt; user.getId()
+     * @param <T>         实体类型
+     * @param <K>         主键类型
+     * @return 绑定该表名、实体类型与主键提取器的 SpDao
+     */
+    public <T, K> SpDao<T, K> dao(@NonNull String tableName, @NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
+        return new SpDao<>(this, tableName, entityClass, keyMapper);
+    }
+
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
         if (null == sp) {
             return false;
@@ -676,18 +693,21 @@ public final class SPUtils {
 
     //保存集合
     private <T> boolean saveCollection(@Nullable final Class<? extends T> clazz, @Nullable Collection<? extends T> dataList) {
+        return saveCollectionByKey(getKey(clazz), dataList);
+    }
+
+    //按表名（存储键）保存集合，供 SpDao 按自定义表名读写复用
+    private <T> boolean saveCollectionByKey(@Nullable final String key, @Nullable Collection<? extends T> dataList) {
         if (null == dataList || dataList.isEmpty()) {
             return false;
         }
-        final String innerKey = getKey(clazz);
-        if (StringUtils.isNotEmpty(innerKey)) {
+        if (StringUtils.isNotEmpty(key)) {
             String value = JsonPraise.objToJson(dataList);
             if (TextUtils.isEmpty(value)) {
                 return false;
             }
-            return saveValue(innerKey, encryptDES(value));
+            return saveValue(key, encryptDES(value));
         }
-
         return false;
     }
 
@@ -737,20 +757,24 @@ public final class SPUtils {
 
     //获取集合
     private <T> Collection<T> getCollection(@Nullable final Class<? extends T> clazz) {
-        final String innerKey = getKey(clazz);
-        if (!TextUtils.isEmpty(innerKey)) {
+        return getCollectionByKey(getKey(clazz), clazz);
+    }
+
+    //按表名（存储键）获取集合，供 SpDao 按自定义表名读写复用
+    private <T> Collection<T> getCollectionByKey(@Nullable final String key, @Nullable final Class<? extends T> clazz) {
+        if (!TextUtils.isEmpty(key)) {
             Gson gson = new Gson();
-            String json = decryptDES((String) getValue(innerKey, ""));
+            String json = decryptDES((String) getValue(key, ""));
             return gson.fromJson(json, new ParameterizedTypeImpl(clazz));
         }
         return null;
     }
 
-    private class ParameterizedTypeImpl implements ParameterizedType {
-        Class clazz;
+    private static final class ParameterizedTypeImpl implements ParameterizedType {
+        private final Class<?> clazz;
 
-        public ParameterizedTypeImpl(@Nullable Class clz) {
-            clazz = clz;
+        ParameterizedTypeImpl(@Nullable final Class<?> clz) {
+            this.clazz = clz;
         }
 
         @Override
@@ -833,28 +857,34 @@ public final class SPUtils {
     public static final class SpDao<T, K> {
 
         private final SPUtils sp;
+        private final String tableName;
         private final Class<T> entityClass;
         private final KeyMapper<T, K> keyMapper;
         private final Object lock = new Object();
 
         private SpDao(SPUtils sp, Class<T> entityClass, KeyMapper<T, K> keyMapper) {
+            this(sp, entityClass.getName(), entityClass, keyMapper);
+        }
+
+        private SpDao(SPUtils sp, @Nullable String tableName, Class<T> entityClass, KeyMapper<T, K> keyMapper) {
             this.sp = sp;
             this.entityClass = entityClass;
             this.keyMapper = keyMapper;
+            this.tableName = TextUtils.isEmpty(tableName) ? entityClass.getName() : tableName;
         }
 
         // ---------------- 内部持久化辅助（复用 SPUtils 集合存取） ----------------
 
         private List<T> readTable() {
-            Collection<T> c = sp.getCollection(entityClass);
+            Collection<T> c = sp.getCollectionByKey(tableName, entityClass);
             return c != null ? new ArrayList<>(c) : new ArrayList<T>();
         }
 
         private boolean writeTable(List<T> list) {
             if (list == null || list.isEmpty()) {
-                return sp.remove(sp.getKey(entityClass));
+                return sp.remove(tableName);
             }
-            return sp.saveCollection(entityClass, list);
+            return sp.saveCollectionByKey(tableName, list);
         }
 
         private int indexOfKey(List<T> list, K key) {
@@ -886,7 +916,7 @@ public final class SPUtils {
         }
 
         public String tableName() {
-            return entityClass.getName();
+            return tableName;
         }
 
         // ---------------- Create / Insert ----------------
@@ -1044,7 +1074,7 @@ public final class SPUtils {
         public int deleteAll() {
             synchronized (lock) {
                 int removed = readTable().size();
-                sp.remove(sp.getKey(entityClass));
+                sp.remove(tableName);
                 return removed;
             }
         }
