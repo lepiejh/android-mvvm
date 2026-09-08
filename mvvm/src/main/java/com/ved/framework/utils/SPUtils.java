@@ -635,7 +635,7 @@ public final class SPUtils {
     }
 
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
-        return saveValue(key, value, true);
+        return saveValue(key, value, false);
     }
 
     /**
@@ -918,7 +918,7 @@ public final class SPUtils {
 
     //按表名（存储键）保存集合，供 SpDao 按自定义表名读写复用
     private <T> boolean saveCollectionByKey(@Nullable final String key, @Nullable Collection<? extends T> dataList) {
-        return saveTable(key, dataList, true);
+        return saveTable(key, dataList, false);
     }
 
     /**
