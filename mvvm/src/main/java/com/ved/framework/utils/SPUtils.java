@@ -777,11 +777,13 @@ public final class SPUtils {
             this.clazz = clz;
         }
 
+        @NonNull
         @Override
         public Type[] getActualTypeArguments() {
             return new Type[]{clazz};
         }
 
+        @NonNull
         @Override
         public Type getRawType() {
             return Collection.class;
