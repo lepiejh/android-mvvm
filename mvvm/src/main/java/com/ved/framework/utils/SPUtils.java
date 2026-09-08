@@ -497,15 +497,8 @@ public final class SPUtils {
             } else {
                 return saveEntity("");
             }
-        } else if (value instanceof Map) {
-            // Map：序列化为 JSON 后按字符串（加密）保存
-            String json = JsonPraise.objToJson(value);
-            if (TextUtils.isEmpty(json)) {
-                return false;
-            }
-            return editor.putString(key, encryptDES(json)).commit();
-        } else if (value != null && value.getClass().isArray()) {
-            // 其它数组（int[]/long[]/String[]/对象数组等）：序列化为 JSON 后按字符串（加密）保存
+        } else if (value instanceof Map || (value != null && value.getClass().isArray())) {
+            // Map / 数组（int[]/long[]/String[]/对象数组等）：序列化为 JSON 后按字符串（加密）保存
             String json = JsonPraise.objToJson(value);
             if (TextUtils.isEmpty(json)) {
                 return false;
@@ -578,16 +571,9 @@ public final class SPUtils {
             Class<?> elementType = collection.iterator().next().getClass();
             Collection<?> ret = getCollection(elementType);
             return ret != null ? ret : defaultValue;
-        } else if (defaultValue instanceof Map) {
-            // Map：读取字符串并解密后反序列化
-            String json = decryptDES(sp.getString(key, ""));
-            if (TextUtils.isEmpty(json)) {
-                return defaultValue;
-            }
-            Object ret = JsonPraise.jsonToObj(json, defaultValue.getClass());
-            return ret != null ? ret : defaultValue;
-        } else if (defaultValue != null && defaultValue.getClass().isArray()) {
-            // 其它数组：读取字符串并解密后按数组类型反序列化
+        } else if (defaultValue instanceof Map
+                || (defaultValue != null && defaultValue.getClass().isArray())) {
+            // Map / 数组：读取字符串并解密后按运行时类型反序列化
             String json = decryptDES(sp.getString(key, ""));
             if (TextUtils.isEmpty(json)) {
                 return defaultValue;
