@@ -10,6 +10,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
+import com.tencent.mmkv.MMKV;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -22,22 +23,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * 不能跨进程保存、获取数据
- * 如需跨进程 使用 MMKV
- * 进程 A 写入
- * MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
- * kv.encode(XX,XX)
- * 进程 B 读取
- *  MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
- *  String xx = kv.decodeString(XX)
+ * 基于 MMKV（内存映射）的键值存储，完全替代 SharedPreferences：读写性能远高于 SP，且无 XML 全量解析开销。
+ * 默认实例为单进程模式；跨进程读写使用 {@link #getMultiProcessInstance()}（MULTI_PROCESS_MODE），
+ * 多进程对同一 spName 的读写互相可见。
+ * 升级兼容：旧版本 SharedPreferences XML 中的同名数据，在首次创建实例时自动一次性导入 MMKV。
  */
 @SuppressLint("ApplySharedPref")
 public final class SPUtils {
 
     private static final Map<String, SPUtils> sSPMap = new HashMap<>();
-    private final SharedPreferences sp;
+    private static boolean sMmkvInited;
+    /** 底层存储：MMKV（内存映射），完全替代 SharedPreferences。 */
+    private final MMKV sp;
+    /** 变更监听（SpDao 缓存失效用）：MMKV 不实现 SP 监听回调，改由本类在写路径自行派发。 */
+    private final List<SharedPreferences.OnSharedPreferenceChangeListener> changeListeners = new CopyOnWriteArrayList<>();
     /** 按表名缓存的 SpDao 实例，使内存写穿缓存与变更监听在多次 dao() 调用之间存活。 */
     private final Map<String, SpDao<?, ?>> daoCache = new HashMap<>();
 
@@ -46,13 +48,13 @@ public final class SPUtils {
     }
 
     public static SPUtils getInstance(@Nullable String spName) {
-        return getInstance(spName, Context.MODE_PRIVATE);
+        return obtainInstance(spName, false);
     }
 
     /**
      * Return the single {@link SPUtils} instance
      *
-     * @param mode Operating mode.
+     * @param mode 仅 {@link Context#MODE_MULTI_PROCESS} 创建跨进程实例，其余取值均为单进程
      * @return the single {@link SPUtils} instance
      */
     public static SPUtils getInstance(final int mode) {
@@ -63,25 +65,80 @@ public final class SPUtils {
      * Return the single {@link SPUtils} instance
      *
      * @param spName The name of sp.
-     * @param mode   Operating mode.
+     * @param mode   仅 {@link Context#MODE_MULTI_PROCESS} 创建跨进程实例，其余取值均为单进程
      * @return the single {@link SPUtils} instance
      */
     public static SPUtils getInstance(@Nullable String spName, final int mode) {
+        return obtainInstance(spName, mode == Context.MODE_MULTI_PROCESS);
+    }
+
+    /**
+     * 跨进程实例：底层 MMKV 以 {@link MMKV#MULTI_PROCESS_MODE} 打开，
+     * 多个进程对同一 spName 的读写互相可见（MMKV 自动处理进程间同步）。
+     *
+     * @return 跨进程的 {@link SPUtils} 实例
+     */
+    public static SPUtils getMultiProcessInstance() {
+        return getMultiProcessInstance("");
+    }
+
+    /**
+     * 跨进程实例，见 {@link #getMultiProcessInstance()}。
+     *
+     * @param spName The name of sp.
+     * @return 跨进程的 {@link SPUtils} 实例
+     */
+    public static SPUtils getMultiProcessInstance(@Nullable String spName) {
+        return obtainInstance(spName, true);
+    }
+
+    /**
+     * 取得（或创建并缓存）指定名称与进程模式的实例。
+     * 缓存键含进程模式，避免单进程/跨进程请求返回错误模式的实例。
+     */
+    private static SPUtils obtainInstance(@Nullable String spName, final boolean multiProcess) {
         if (isSpace(spName)) spName = "spUtils";
-        SPUtils sp = sSPMap.get(spName);
-        if (sp == null) {
-            sp = new SPUtils(spName, mode);
-            sSPMap.put(spName, sp);
+        final String cacheKey = spName + (multiProcess ? "#multi" : "#single");
+        synchronized (sSPMap) {
+            SPUtils instance = sSPMap.get(cacheKey);
+            if (instance == null) {
+                instance = new SPUtils(spName, multiProcess);
+                sSPMap.put(cacheKey, instance);
+            }
+            return instance;
         }
-        return sp;
     }
 
-    private SPUtils(@Nullable final String spName) {
-        sp = Utils.getContext().getSharedPreferences(spName, Context.MODE_PRIVATE);
+    private SPUtils(@Nullable final String spName, final boolean multiProcess) {
+        ensureMmkvInit();
+        sp = MMKV.mmkvWithID(spName, multiProcess ? MMKV.MULTI_PROCESS_MODE : MMKV.SINGLE_PROCESS_MODE);
+        migrateLegacySp(spName);
     }
 
-    private SPUtils(@Nullable final String spName, final int mode) {
-        sp = Utils.getContext().getSharedPreferences(spName, mode);
+    /** MMKV 使用前必须初始化；框架启动路径已初始化过一次，此处兜底且幂等。 */
+    private static synchronized void ensureMmkvInit() {
+        if (!sMmkvInited) {
+            MMKV.initialize(Utils.getContext());
+            sMmkvInited = true;
+        }
+    }
+
+    /**
+     * 升级兼容：旧版本以 SharedPreferences XML 存储的同名数据，在 MMKV 侧为空时一次性导入，
+     * 导入成功后清空旧 XML，避免重复迁移。仅首次创建实例时执行。
+     */
+    private void migrateLegacySp(@Nullable final String spName) {
+        try {
+            if (sp.count() > 0) {
+                return;
+            }
+            SharedPreferences legacy = Utils.getContext().getSharedPreferences(spName, Context.MODE_PRIVATE);
+            if (sp.importFromSharedPreferences(legacy) > 0) {
+                legacy.edit().clear().commit();
+            }
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
     }
 
     private static boolean isSpace(@Nullable final String s) {
@@ -277,6 +334,7 @@ public final class SPUtils {
         } else {
             sp.edit().remove(key).apply();
         }
+        notifyChanged(key);
     }
 
     /**
@@ -291,6 +349,7 @@ public final class SPUtils {
         } else {
             sp.edit().clear().apply();
         }
+        notifyChanged(null);
     }
 
     public Object get(@Nullable String key, @Nullable Object defaultObject) {
@@ -705,7 +764,11 @@ public final class SPUtils {
         }
         SharedPreferences.Editor editor = sp.edit();
         editor.remove(key);
-        return editor.commit();
+        boolean ok = editor.commit();
+        if (ok) {
+            notifyChanged(key);
+        }
+        return ok;
     }
 
     public boolean clear() {
@@ -714,14 +777,96 @@ public final class SPUtils {
         }
         SharedPreferences.Editor editor = sp.edit();
         editor.clear();
-        return editor.commit();
+        boolean ok = editor.commit();
+        if (ok) {
+            notifyChanged(null);
+        }
+        return ok;
     }
 
+    /**
+     * MMKV 因类型擦除不实现原生 getAll()（调用会抛异常），此处基于 allKeys() 逐键探测类型还原：
+     * 依次尝试 String/StringSet/byte[]/Integer/Long/Float/Double，均不命中按 Boolean 返回。
+     * 仅供遍历场景使用；已知类型时请用具体的 get 方法（更快且类型精确）。
+     */
     public Map<String, ?> getAll() {
-        if (null == sp) {
-            return null;
+        Map<String, Object> result = new HashMap<>();
+        String[] keys = sp.allKeys();
+        if (keys == null) {
+            return result;
         }
-        return sp.getAll();
+        for (String key : keys) {
+            if (key != null) {
+                result.put(key, decodeRawValue(key));
+            }
+        }
+        return result;
+    }
+
+    private Object decodeRawValue(@NonNull final String key) {
+        String str = sp.decodeString(key, null);
+        if (str != null) {
+            return str;
+        }
+        Set<String> strSet = sp.decodeStringSet(key, null);
+        if (strSet != null) {
+            return strSet;
+        }
+        byte[] bytes = sp.decodeBytes(key, null);
+        if (bytes != null) {
+            return bytes;
+        }
+        int intValue = sp.decodeInt(key, Integer.MIN_VALUE);
+        if (intValue != Integer.MIN_VALUE) {
+            return intValue;
+        }
+        long longValue = sp.decodeLong(key, Long.MIN_VALUE);
+        if (longValue != Long.MIN_VALUE) {
+            return longValue;
+        }
+        float floatValue = sp.decodeFloat(key, Float.NaN);
+        if (!Float.isNaN(floatValue)) {
+            return floatValue;
+        }
+        double doubleValue = sp.decodeDouble(key, Double.NaN);
+        if (!Double.isNaN(doubleValue)) {
+            return doubleValue;
+        }
+        return sp.decodeBool(key, false);
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+    // MMKV 原生能力（合并自已移除的 MMKVUtils）
+    ///////////////////////////////////////////////////////////////////////////
+
+    /** 返回底层 MMKV 实例供高级用法直接使用；注意绕过本类写路径的写入不会触发 SpDao 缓存失效通知。 */
+    public MMKV mmkv() {
+        return sp;
+    }
+
+    public String[] allKeys() {
+        return sp.allKeys();
+    }
+
+    public long totalSize() {
+        return sp.totalSize();
+    }
+
+    public long actualSize() {
+        return sp.actualSize();
+    }
+
+    public void removeValuesForKeys(@Nullable final String[] keys) {
+        if (keys == null || keys.length == 0) {
+            return;
+        }
+        sp.removeValuesForKeys(keys);
+        notifyChanged(null);
+    }
+
+    /** 将内存中变更同步刷盘。MMKV 默认自动刷盘，一般无需手动调用。 */
+    public void sync() {
+        sp.sync();
     }
 
     private boolean saveEntity(@Nullable final Object obj) {
@@ -768,9 +913,14 @@ public final class SPUtils {
         }
         SharedPreferences.Editor editor = sp.edit().putString(key, encryptDES(encryptDES(value)));
         if (commit) {
-            return editor.commit();
+            boolean ok = editor.commit();
+            if (ok) {
+                notifyChanged(key);
+            }
+            return ok;
         }
         editor.apply();
+        notifyChanged(key);
         return true;
     }
 
@@ -896,10 +1046,23 @@ public final class SPUtils {
         return null;
     }
 
-    /** 供 SpDao 注册底层 SharedPreferences 变更监听，用于外部写入时失效内存缓存。 */
+    /**
+     * 供 SpDao 注册变更监听，用于写入时失效内存缓存。
+     * MMKV 原生不实现 OnSharedPreferenceChangeListener（调用会抛异常），
+     * 改由本类在影响表键的写路径（saveTable/remove/clear/removeValuesForKeys）同步派发；
+     * key 为 null 表示批量变更（如 clear），监听方应无条件失效。
+     */
     private void registerSpChangeListener(@NonNull SharedPreferences.OnSharedPreferenceChangeListener listener) {
-        if (null != sp) {
-            sp.registerOnSharedPreferenceChangeListener(listener);
+        changeListeners.add(listener);
+    }
+
+    /** 派发变更事件；仅在写路径成功后调用，回调线程即写入线程（与原 SP commit 监听语义一致）。 */
+    private void notifyChanged(@Nullable final String key) {
+        if (changeListeners.isEmpty()) {
+            return;
+        }
+        for (SharedPreferences.OnSharedPreferenceChangeListener listener : changeListeners) {
+            listener.onSharedPreferenceChanged(sp, key);
         }
     }
 
@@ -959,15 +1122,16 @@ public final class SPUtils {
         }
 
         /**
-         * 底层 SP 变更回调：外部写入（如 putCollection）本表时失效内存缓存，保证进程内一致；
+         * 变更回调：本表被“外部”写入（如 putCollection）或批量变更时失效内存缓存，保证进程内一致；
          * 自身写入期间（selfWrite）不失效，保留写穿缓存。
-         * 由本实例直接实现监听器而非匿名类字段：SharedPreferences 以弱引用持有监听器，
-         * 而 SpDao 由 SPUtils.daoCache 强引用，回调不会因 GC 丢失。
+         * 事件由 SPUtils 写路径同步派发（MMKV 原生不支持 SP 监听回调）。
          */
         @Override
         public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-            // 仅当本表被“外部”改动时失效；自身写入（selfWrite）保留写穿缓存
-            if (tableName.equals(key) && !selfWrite) {
+            // key == null 表示批量变更（clear 等）：无条件失效；
+            // 否则仅当本表被“外部”改动时失效；自身写入（selfWrite）保留写穿缓存。
+            // 注意：多进程实例下其他进程的写入不会触发本回调（MMKV 限制），跨进程写后需 refresh() 主动重载。
+            if (key == null || (tableName.equals(key) && !selfWrite)) {
                 table = null;
             }
         }
