@@ -26,11 +26,9 @@ import java.util.Set;
 /**
  * 不能跨进程保存、获取数据
  * 如需跨进程 使用 MMKV
- *
  * 进程 A 写入
  * MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
  * kv.encode(XX,XX)
- *
  * 进程 B 读取
  *  MMKV kv = MMKV.mmkvWithID(XX, MMKV.MULTI_PROCESS_MODE)
  *  String xx = kv.decodeString(XX)
@@ -40,6 +38,8 @@ public final class SPUtils {
 
     private static final Map<String, SPUtils> sSPMap = new HashMap<>();
     private final SharedPreferences sp;
+    /** 按表名缓存的 SpDao 实例，使内存写穿缓存与变更监听在多次 dao() 调用之间存活。 */
+    private final Map<String, SpDao<?, ?>> daoCache = new HashMap<>();
 
     public static SPUtils getInstance() {
         return getInstance("");
@@ -499,7 +499,7 @@ public final class SPUtils {
      * @return 绑定该实体类型与主键提取器的 SpDao
      */
     public <T, K> SpDao<T, K> dao(@NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
-        return new SpDao<>(this, entityClass, keyMapper);
+        return obtainDao(entityClass.getName(), entityClass, keyMapper, false);
     }
 
     /**
@@ -516,7 +516,54 @@ public final class SPUtils {
      * @return 绑定该表名、实体类型与主键提取器的 SpDao
      */
     public <T, K> SpDao<T, K> dao(@NonNull String tableName, @NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
-        return new SpDao<>(this, tableName, entityClass, keyMapper);
+        return obtainDao(tableName, entityClass, keyMapper, false);
+    }
+
+    /**
+     * {@link #dao(Class, KeyMapper)} 的异步写版本：写操作使用 apply() 而非 commit()，
+     * 不在调用线程上阻塞等待落盘，适合主线程或频繁写入场景（规避卡顿/ANR）。
+     * 读逻辑与缓存机制与 dao(...) 完全一致。
+     *
+     * @param entityClass 实体类型（相当于“表”）
+     * @param keyMapper   主键提取器
+     * @return 使用异步写的 SpDao
+     */
+    public <T, K> SpDao<T, K> daoAsync(@NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
+        return obtainDao(entityClass.getName(), entityClass, keyMapper, true);
+    }
+
+    /**
+     * {@link #dao(String, Class, KeyMapper)} 的异步写版本：按自定义表名 + apply() 异步写。
+     *
+     * @param tableName   表名（SharedPreferences 存储键）
+     * @param entityClass 实体类型
+     * @param keyMapper   主键提取器
+     * @return 使用异步写的 SpDao
+     */
+    public <T, K> SpDao<T, K> daoAsync(@NonNull String tableName, @NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
+        return obtainDao(tableName, entityClass, keyMapper, true);
+    }
+
+    /**
+     * 取得（或创建并缓存）绑定某表名的 SpDao。相同 (表名, 读写模式) 复用同一实例，
+     * 从而让其内存写穿缓存与 SharedPreferences 变更监听在多次调用之间持续生效。
+     * 注意：同一表名以首次创建时的 entityClass/keyMapper 为准（与 GreenDAO 会话按类型缓存 DAO 一致），
+     * 因此同一表名应始终对应同一实体类型与主键提取器。
+     */
+    @SuppressWarnings("unchecked")
+    private <T, K> SpDao<T, K> obtainDao(@Nullable String tableName, @NonNull Class<T> entityClass,
+                                         @NonNull KeyMapper<T, K> keyMapper, final boolean async) {
+        final String resolved = TextUtils.isEmpty(tableName) ? entityClass.getName() : tableName;
+        final String cacheKey = resolved + (async ? "#async" : "#sync");
+        synchronized (daoCache) {
+            SpDao<?, ?> existing = daoCache.get(cacheKey);
+            if (existing != null) {
+                return (SpDao<T, K>) existing;
+            }
+            SpDao<T, K> created = new SpDao<>(this, resolved, entityClass, keyMapper, async);
+            daoCache.put(cacheKey, created);
+            return created;
+        }
     }
 
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
@@ -698,17 +745,33 @@ public final class SPUtils {
 
     //按表名（存储键）保存集合，供 SpDao 按自定义表名读写复用
     private <T> boolean saveCollectionByKey(@Nullable final String key, @Nullable Collection<? extends T> dataList) {
-        if (null == dataList || dataList.isEmpty()) {
+        return saveTable(key, dataList, true);
+    }
+
+    /**
+     * DAO 专用：按表名写入集合，可选同步 commit 或异步 apply。
+     * on-disk 格式与 saveValue 的 String 分支一致（JSON 双重加密），
+     * 因此与 putCollection/getCollection 完全互通。
+     *
+     * @param commit true 用 commit()（阻塞至落盘，返回真实结果）；false 用 apply()（异步落盘，乐观返回 true）
+     */
+    private boolean saveTable(@Nullable final String key, @Nullable final Collection<?> data, final boolean commit) {
+        if (null == sp || null == data || data.isEmpty()) {
             return false;
         }
-        if (StringUtils.isNotEmpty(key)) {
-            String value = JsonPraise.objToJson(dataList);
-            if (TextUtils.isEmpty(value)) {
-                return false;
-            }
-            return saveValue(key, encryptDES(value));
+        if (TextUtils.isEmpty(key)) {
+            return false;
         }
-        return false;
+        String value = JsonPraise.objToJson(data);
+        if (TextUtils.isEmpty(value)) {
+            return false;
+        }
+        SharedPreferences.Editor editor = sp.edit().putString(key, encryptDES(encryptDES(value)));
+        if (commit) {
+            return editor.commit();
+        }
+        editor.apply();
+        return true;
     }
 
     private String encryptDES(@Nullable String value) {
@@ -839,6 +902,13 @@ public final class SPUtils {
         return null;
     }
 
+    /** 供 SpDao 注册底层 SharedPreferences 变更监听，用于外部写入时失效内存缓存。 */
+    private void registerSpChangeListener(@NonNull SharedPreferences.OnSharedPreferenceChangeListener listener) {
+        if (null != sp) {
+            sp.registerOnSharedPreferenceChangeListener(listener);
+        }
+    }
+
     /**
      * 类 GreenDAO 的 DAO 实现，面向以 List&lt;T&gt; 形式保存在 SharedPreferences 中的实体集合。
      * <p>
@@ -863,30 +933,115 @@ public final class SPUtils {
         private final Class<T> entityClass;
         private final KeyMapper<T, K> keyMapper;
         private final Object lock = new Object();
+        /** true：写入用 apply()（异步落盘，不阻塞调用线程）；false：写入用 commit()（同步落盘）。 */
+        private final boolean async;
 
-        private SpDao(SPUtils sp, Class<T> entityClass, KeyMapper<T, K> keyMapper) {
-            this(sp, entityClass.getName(), entityClass, keyMapper);
+        // ---------------- 内存写穿缓存（copy-on-write） ----------------
+
+        /**
+         * 表快照 + 主键索引，作为整体通过单个 volatile 字段发布，
+         * 避免 list 与 index 分别 volatile 时读到不一致组合。null 表示未加载或已失效。
+         */
+        private static final class TableSnapshot<E, Key> {
+            final List<E> list;             // 发布后不再原地修改（写时复制）
+            final Map<Key, Integer> index;  // 主键 -> list 下标，供 load/existsByKey O(1) 命中
+            TableSnapshot(List<E> list, Map<Key, Integer> index) {
+                this.list = list;
+                this.index = index;
+            }
         }
 
-        private SpDao(SPUtils sp, @Nullable String tableName, Class<T> entityClass, KeyMapper<T, K> keyMapper) {
+        private volatile TableSnapshot<T, K> table;
+        /** 标记“本实例自身正在写入”，用于抑制自身写入触发的缓存失效。 */
+        private volatile boolean selfWrite;
+        /** 监听底层 SP 变化：外部写入（如 putCollection）本表时失效缓存，保证进程内一致。 */
+        private final SharedPreferences.OnSharedPreferenceChangeListener listener;
+
+        private SpDao(SPUtils sp, String tableName, Class<T> entityClass, KeyMapper<T, K> keyMapper, boolean async) {
             this.sp = sp;
+            this.tableName = tableName;
             this.entityClass = entityClass;
             this.keyMapper = keyMapper;
-            this.tableName = TextUtils.isEmpty(tableName) ? entityClass.getName() : tableName;
+            this.async = async;
+            this.listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
+                @Override
+                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+                    // 仅当本表被“外部”改动时失效；自身写入（selfWrite）保留写穿缓存
+                    if (tableName.equals(key) && !selfWrite) {
+                        table = null;
+                    }
+                }
+            };
+            sp.registerSpChangeListener(this.listener);
         }
 
         // ---------------- 内部持久化辅助（复用 SPUtils 集合存取） ----------------
 
-        private List<T> readTable() {
+        /** 从磁盘加载（解密 + Gson 解析），仅在缓存缺失时调用。 */
+        private List<T> loadFromDisk() {
             Collection<T> c = sp.getCollectionByKey(tableName, entityClass);
             return c != null ? new ArrayList<>(c) : new ArrayList<T>();
         }
 
-        private boolean writeTable(List<T> list) {
-            if (list == null || list.isEmpty()) {
-                return sp.remove(tableName);
+        private Map<K, Integer> buildIndex(List<T> list) {
+            Map<K, Integer> map = new HashMap<>();
+            for (int i = 0; i < list.size(); i++) {
+                T item = list.get(i);
+                if (item == null) {
+                    continue;
+                }
+                K k = keyMapper.mapKey(item);
+                if (k != null && !map.containsKey(k)) {
+                    map.put(k, i);   // 主键重复时保留首个，与 indexOfKey 行为一致
+                }
             }
-            return sp.saveCollectionByKey(tableName, list);
+            return map;
+        }
+
+        /** 返回当前表快照；必要时加载并建立索引。调用方不得原地修改返回的 list。 */
+        private TableSnapshot<T, K> snapshot() {
+            TableSnapshot<T, K> t = table;
+            if (t != null) {
+                return t;
+            }
+            synchronized (lock) {
+                if (table == null) {
+                    List<T> loaded = loadFromDisk();
+                    table = new TableSnapshot<>(loaded, buildIndex(loaded));
+                }
+                return table;
+            }
+        }
+
+        /** 主动失效缓存，下次读取将从磁盘重新加载（refresh 使用）。 */
+        private void invalidate() {
+            table = null;
+        }
+
+        /**
+         * 持久化新表并写穿缓存（发布新的不可变快照）。须在持有 lock 时调用；
+         * newList 将成为新快照，调用方之后不得再修改它。
+         */
+        private boolean persist(List<T> newList) {
+            final List<T> safe = (newList != null) ? newList : new ArrayList<T>();
+            boolean ok;
+            selfWrite = true;
+            try {
+                if (safe.isEmpty()) {
+                    if (async) {
+                        sp.remove(tableName, false);
+                        ok = true;
+                    } else {
+                        ok = sp.remove(tableName);
+                    }
+                } else {
+                    ok = sp.saveTable(tableName, safe, !async);
+                }
+            } finally {
+                selfWrite = false;
+            }
+            table = new TableSnapshot<>(safe, buildIndex(safe));
+            return ok;
         }
 
         private int indexOfKey(List<T> list, K key) {
@@ -928,9 +1083,9 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 list.add(entity);
-                return writeTable(list);
+                return persist(list);
             }
         }
 
@@ -939,14 +1094,14 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 int i = indexOfKey(list, keyMapper.mapKey(entity));
                 if (i >= 0) {
                     list.set(i, entity);
                 } else {
                     list.add(entity);
                 }
-                return writeTable(list);
+                return persist(list);
             }
         }
 
@@ -955,9 +1110,9 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 list.addAll(entities);
-                return writeTable(list);
+                return persist(list);
             }
         }
 
@@ -974,7 +1129,7 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 for (T entity : entities) {
                     if (entity == null) {
                         continue;
@@ -986,7 +1141,7 @@ public final class SPUtils {
                         list.add(entity);
                     }
                 }
-                return writeTable(list);
+                return persist(list);
             }
         }
 
@@ -1005,13 +1160,13 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 int i = indexOfKey(list, keyMapper.mapKey(entity));
                 if (i < 0) {
                     return false;
                 }
                 list.set(i, entity);
-                return writeTable(list);
+                return persist(list);
             }
         }
 
@@ -1020,7 +1175,7 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 boolean changed = false;
                 for (T entity : entities) {
                     if (entity == null) {
@@ -1032,7 +1187,7 @@ public final class SPUtils {
                         changed = true;
                     }
                 }
-                return changed && writeTable(list);
+                return changed && persist(list);
             }
         }
 
@@ -1051,32 +1206,42 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 int i = indexOfEntity(list, entity);
                 if (i < 0) {
                     return false;
                 }
                 list.remove(i);
-                return writeTable(list);
+                return persist(list);
             }
         }
 
         public boolean deleteByKey(K key) {
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 int i = indexOfKey(list, key);
                 if (i < 0) {
                     return false;
                 }
                 list.remove(i);
-                return writeTable(list);
+                return persist(list);
             }
         }
 
         public int deleteAll() {
             synchronized (lock) {
-                int removed = readTable().size();
-                sp.remove(tableName);
+                int removed = snapshot().list.size();
+                selfWrite = true;
+                try {
+                    if (async) {
+                        sp.remove(tableName, false);
+                    } else {
+                        sp.remove(tableName);
+                    }
+                } finally {
+                    selfWrite = false;
+                }
+                table = new TableSnapshot<>(new ArrayList<T>(), new HashMap<K, Integer>());
                 return removed;
             }
         }
@@ -1086,7 +1251,7 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 boolean changed = false;
                 for (T entity : entities) {
                     if (entity == null) {
@@ -1098,7 +1263,7 @@ public final class SPUtils {
                         changed = true;
                     }
                 }
-                return changed && writeTable(list);
+                return changed && persist(list);
             }
         }
 
@@ -1115,7 +1280,7 @@ public final class SPUtils {
                 return false;
             }
             synchronized (lock) {
-                List<T> list = readTable();
+                List<T> list = new ArrayList<>(snapshot().list);
                 boolean changed = false;
                 for (K key : keys) {
                     int i = indexOfKey(list, key);
@@ -1124,7 +1289,7 @@ public final class SPUtils {
                         changed = true;
                     }
                 }
-                return changed && writeTable(list);
+                return changed && persist(list);
             }
         }
 
@@ -1137,30 +1302,39 @@ public final class SPUtils {
         }
 
         // ---------------- Read / Query ----------------
+        // 读操作命中内存写穿缓存：无解密、无 JSON 解析、无磁盘 I/O；
+        // load/existsByKey 借助主键索引 O(1) 命中。
 
+        /** 按主键加载实体；命中缓存索引，O(1)。未找到返回 null。 */
         public T load(K key) {
-            List<T> list = readTable();
-            int i = indexOfKey(list, key);
-            return i >= 0 ? list.get(i) : null;
+            if (key == null) {
+                return null;
+            }
+            TableSnapshot<T, K> t = snapshot();
+            Integer i = t.index.get(key);
+            return (i != null && i >= 0 && i < t.list.size()) ? t.list.get(i) : null;
         }
 
+        /** 返回全部实体的快照副本（修改返回值不影响缓存）。 */
         public List<T> loadAll() {
-            return readTable();
+            return new ArrayList<>(snapshot().list);
         }
 
         public long count() {
-            return readTable().size();
+            return snapshot().list.size();
         }
 
+        /** 强制绕过缓存从磁盘重读后，返回该实体的最新持久化版本。 */
         public T refresh(T entity) {
             if (entity == null) {
                 return null;
             }
+            invalidate();
             return load(keyMapper.mapKey(entity));
         }
 
         public T loadByIndex(int index) {
-            List<T> list = readTable();
+            List<T> list = snapshot().list;
             if (index < 0 || index >= list.size()) {
                 return null;
             }
@@ -1172,7 +1346,7 @@ public final class SPUtils {
             if (filter == null) {
                 return result;
             }
-            for (T entity : readTable()) {
+            for (T entity : snapshot().list) {
                 if (entity != null && filter.accept(entity)) {
                     result.add(entity);
                 }
@@ -1184,11 +1358,15 @@ public final class SPUtils {
             if (entity == null) {
                 return false;
             }
-            return indexOfEntity(readTable(), entity) >= 0;
+            return indexOfEntity(snapshot().list, entity) >= 0;
         }
 
+        /** 按主键判断是否存在；命中缓存索引，O(1)。 */
         public boolean existsByKey(K key) {
-            return indexOfKey(readTable(), key) >= 0;
+            if (key == null) {
+                return false;
+            }
+            return snapshot().index.containsKey(key);
         }
     }
 }
