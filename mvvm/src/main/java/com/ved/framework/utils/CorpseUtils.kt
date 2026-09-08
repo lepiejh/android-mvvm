@@ -75,10 +75,8 @@ object CorpseUtils {
             .int // 读取为有符号 int（int32_t）
     }
 
-    fun toUInt32t(bytes: List<Byte>,boType: Int = 1) : UInt{
-        return ByteBuffer.wrap(bytes.toByteArray())
-            .order(if (boType == 1) ByteOrder.LITTLE_ENDIAN else ByteOrder.BIG_ENDIAN)
-            .int.toUInt()
+    fun toUInt32t(bytes: List<Byte>, boType: Int = 1): UInt {
+        return toInt32t(bytes,boType).toUInt() // ← 转换为 UInt（无符号）
     }
 
     /**
