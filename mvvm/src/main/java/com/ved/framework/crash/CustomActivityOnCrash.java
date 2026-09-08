@@ -28,7 +28,9 @@ import android.content.pm.ResolveInfo;
 import android.os.Build;
 import android.os.Bundle;
 
+import com.tencent.mmkv.MMKV;
 import com.ved.framework.utils.KLog;
+import com.ved.framework.utils.SPUtils;
 
 import java.io.PrintWriter;
 import java.io.Serializable;
@@ -651,9 +653,16 @@ public final class CustomActivityOnCrash {
      *
      * @param timestamp The current timestamp.
      */
-    @SuppressLint("ApplySharedPref") //This must be done immediately since we are killing the app
     private static void setLastCrashTimestamp(@NonNull Context context, long timestamp) {
-        context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).edit().putLong(SHARED_PREFERENCES_FIELD_TIMESTAMP, timestamp).commit();
+        //This must be done immediately since we are killing the app
+        try {
+            SPUtils.ensureMmkvInit(context);
+            MMKV kv = MMKV.mmkvWithID(SHARED_PREFERENCES_FILE);
+            kv.encode(SHARED_PREFERENCES_FIELD_TIMESTAMP, timestamp);
+            kv.sync(); //进程即将被杀死，强制刷盘
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
     }
 
     /**
@@ -662,7 +671,22 @@ public final class CustomActivityOnCrash {
      * @return The last crash timestamp, or -1 if not set.
      */
     private static long getLastCrashTimestamp(@NonNull Context context) {
-        return context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).getLong(SHARED_PREFERENCES_FIELD_TIMESTAMP, -1);
+        try {
+            SPUtils.ensureMmkvInit(context);
+            MMKV kv = MMKV.mmkvWithID(SHARED_PREFERENCES_FILE);
+            if (!kv.contains(SHARED_PREFERENCES_FIELD_TIMESTAMP)) {
+                //升级兼容：旧版 SharedPreferences 中的时间戳一次性迁移到 MMKV
+                long legacy = context.getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE).getLong(SHARED_PREFERENCES_FIELD_TIMESTAMP, -1);
+                if (legacy != -1) {
+                    kv.encode(SHARED_PREFERENCES_FIELD_TIMESTAMP, legacy);
+                }
+                return legacy;
+            }
+            return kv.decodeLong(SHARED_PREFERENCES_FIELD_TIMESTAMP, -1);
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+            return -1;
+        }
     }
 
     /**

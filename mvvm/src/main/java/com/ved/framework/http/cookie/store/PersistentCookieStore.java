@@ -4,7 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.text.TextUtils;
 
+import com.tencent.mmkv.MMKV;
 import com.ved.framework.utils.KLog;
+import com.ved.framework.utils.SPUtils;
 import com.ved.framework.utils.StringUtils;
 
 import java.io.ByteArrayInputStream;
@@ -34,30 +36,56 @@ public class PersistentCookieStore implements CookieStore {
     private static final String COOKIE_NAME_PREFIX = "cookie_";          //cookie持久化的统一前缀
 
     private final HashMap<String, ConcurrentHashMap<String, Cookie>> cookies;
-    private final SharedPreferences cookiePrefs;
+    /** 底层存储：MMKV（替代原 SharedPreferences XML） */
+    private final MMKV cookiePrefs;
 
     public PersistentCookieStore(Context context) {
-        cookiePrefs = context.getSharedPreferences(COOKIE_PREFS, Context.MODE_PRIVATE);
+        SPUtils.ensureMmkvInit(context);
+        cookiePrefs = MMKV.mmkvWithID(COOKIE_PREFS);
+        migrateLegacy(context);
         cookies = new HashMap<>();
 
         //将持久化的cookies缓存到内存中,数据结构为 Map<Url.host, Map<Cookie.name, Cookie>>
-        Map<String, ?> prefsMap = cookiePrefs.getAll();
-        for (Map.Entry<String, ?> entry : prefsMap.entrySet()) {
-            if ((entry.getValue()) != null && !entry.getKey().startsWith(COOKIE_NAME_PREFIX)) {
-                //获取url对应的所有cookie的key,用","分割
-                String[] cookieNames = TextUtils.split((String) entry.getValue(), ",");
+        //MMKV 不实现 getAll()（类型擦除），改用 allKeys() + decodeString 遍历
+        String[] keys = cookiePrefs.allKeys();
+        if (keys != null) {
+            for (String key : keys) {
+                if (key == null || key.startsWith(COOKIE_NAME_PREFIX)) {
+                    continue;
+                }
+                String value = cookiePrefs.decodeString(key, null);
+                if (value == null) {
+                    continue;
+                }
+                //获取url对应的所有cookie的 key,用","分割
+                String[] cookieNames = TextUtils.split(value, ",");
                 for (String name : cookieNames) {
-                    //根据对应cookie的Key,从xml中获取cookie的真实值
+                    //根据对应cookie的Key,从本地获取cookie的真实值
                     String encodedCookie = cookiePrefs.getString(COOKIE_NAME_PREFIX + name, null);
                     if (encodedCookie != null) {
                         Cookie decodedCookie = decodeCookie(encodedCookie);
                         if (decodedCookie != null) {
-                            if (!cookies.containsKey(entry.getKey())) cookies.put(entry.getKey(), new ConcurrentHashMap<String, Cookie>());
-                            Objects.requireNonNull(cookies.get(entry.getKey())).put(name, decodedCookie);
+                            if (!cookies.containsKey(key)) cookies.put(key, new ConcurrentHashMap<String, Cookie>());
+                            Objects.requireNonNull(cookies.get(key)).put(name, decodedCookie);
                         }
                     }
                 }
             }
+        }
+    }
+
+    /** 升级兼容：旧版 SharedPreferences XML 中的 cookie 一次性导入 MMKV，导入后清空旧 XML。 */
+    private void migrateLegacy(Context context) {
+        try {
+            if (cookiePrefs.count() > 0) {
+                return;
+            }
+            SharedPreferences legacy = context.getApplicationContext().getSharedPreferences(COOKIE_PREFS, Context.MODE_PRIVATE);
+            if (cookiePrefs.importFromSharedPreferences(legacy) > 0) {
+                legacy.edit().clear().commit();
+            }
+        } catch (Exception e) {
+            KLog.d(LOG_TAG, "migrateLegacy: " + e);
         }
     }
 
