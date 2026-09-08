@@ -130,16 +130,14 @@ object CorpseUtils {
         return list.filterNotNull().maxOrNull()
     }
 
-    fun makeTime(t:Int?) : String?{
-        t?.let {
-            if (it >= 10){
-                return StringUtils.parseStr(it)
-            }else{
-                return "0${it}"
+    fun makeTime(t: Int?): String {
+        return t?.let {
+            if (it >= 10) {
+                StringUtils.parseStr(it)
+            } else {
+                "0${it}"
             }
-        } ?: kotlin.run {
-            return ""
-        }
+        } ?: ""  // t == null 时返回空字符串
     }
 
     /**
