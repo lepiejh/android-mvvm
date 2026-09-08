@@ -116,9 +116,18 @@ public final class SPUtils {
     }
 
     /** MMKV 使用前必须初始化；框架启动路径已初始化过一次，此处兜底且幂等。 */
-    private static synchronized void ensureMmkvInit() {
+    private static void ensureMmkvInit() {
+        ensureMmkvInit(Utils.getContext());
+    }
+
+    /**
+     * 确保 MMKV 已初始化（幂等），供框架内其他组件（cookie 存储、崩溃记录等）在使用 MMKV 前调用。
+     *
+     * @param context 任意 Context，内部取 ApplicationContext
+     */
+    public static synchronized void ensureMmkvInit(@NonNull Context context) {
         if (!sMmkvInited) {
-            MMKV.initialize(Utils.getContext());
+            MMKV.initialize(context.getApplicationContext());
             sMmkvInited = true;
         }
     }
