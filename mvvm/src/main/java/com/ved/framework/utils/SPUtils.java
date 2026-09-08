@@ -414,6 +414,52 @@ public final class SPUtils {
         return getBytes(key, new byte[0]);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // Map / Collection / 数组 / 对象 的便捷存取方法
+    // 说明：Map、数组按传入的 key 存取（JSON 序列化后加密）；
+    //      Collection、Object 沿用框架既有实现（以元素/对象的类型名为内部 key）。
+    ///////////////////////////////////////////////////////////////////////////
+
+    public void putMap(String key, Map<?, ?> value){
+        put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <K, V> Map<K, V> getMap(String key, Map<K, V> defaultObject){
+        return (Map<K, V>) get(key, defaultObject);
+    }
+
+    public Map<String, Object> getMap(String key){
+        return getMap(key, new HashMap<String, Object>());
+    }
+
+    public void putCollection(String key, Collection<?> value){
+        put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> Collection<T> getCollection(String key, Collection<T> defaultObject){
+        return (Collection<T>) get(key, defaultObject);
+    }
+
+    public void putArray(String key, Object value){
+        put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getArray(String key, T defaultObject){
+        return (T) get(key, defaultObject);
+    }
+
+    public void putObject(String key, Object value){
+        put(key, value);
+    }
+
+    @SuppressWarnings("unchecked")
+    public <T> T getObject(String key, T defaultObject){
+        return (T) get(key, defaultObject);
+    }
+
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
         if (null == sp) {
             return false;
