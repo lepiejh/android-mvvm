@@ -14,7 +14,6 @@ import com.ved.framework.utils.bland.code.SizeUtils;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.text.DecimalFormat;
 
 /**
  * 视图绑定工具类
