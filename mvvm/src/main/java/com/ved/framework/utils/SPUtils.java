@@ -166,7 +166,7 @@ public final class SPUtils {
 
     ///////////////////////////////////////////////////////////////////////////
     // 以下为合并自 com.ved.framework.utils.bland.code.SPUtils 的重载方法
-    // 为保证加密/解密语义一致，put 系列统一走 saveValue（commit），isCommit 参数保留但以 commit 实现
+    // 为保证加密/解密语义一致，put 系列统一走 saveValue；带 isCommit 的重载按其值选择 commit()/apply()
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -188,7 +188,7 @@ public final class SPUtils {
      *                 false to use {@link SharedPreferences.Editor#apply()}
      */
     public void put(@NonNull final String key, final String value, final boolean isCommit) {
-        saveValue(key, value);
+        saveValue(key, value, isCommit);
     }
 
     /**
@@ -210,7 +210,7 @@ public final class SPUtils {
      *                 false to use {@link SharedPreferences.Editor#apply()}
      */
     public void put(@NonNull final String key, final int value, final boolean isCommit) {
-        saveValue(key, value);
+        saveValue(key, value, isCommit);
     }
 
     /**
@@ -232,7 +232,7 @@ public final class SPUtils {
      *                 false to use {@link SharedPreferences.Editor#apply()}
      */
     public void put(@NonNull final String key, final long value, final boolean isCommit) {
-        saveValue(key, value);
+        saveValue(key, value, isCommit);
     }
 
     /**
@@ -254,7 +254,7 @@ public final class SPUtils {
      *                 false to use {@link SharedPreferences.Editor#apply()}
      */
     public void put(@NonNull final String key, final float value, final boolean isCommit) {
-        saveValue(key, value);
+        saveValue(key, value, isCommit);
     }
 
     /**
@@ -276,7 +276,7 @@ public final class SPUtils {
      *                 false to use {@link SharedPreferences.Editor#apply()}
      */
     public void put(@NonNull final String key, final boolean value, final boolean isCommit) {
-        saveValue(key, value);
+        saveValue(key, value, isCommit);
     }
 
     /**
@@ -635,35 +635,44 @@ public final class SPUtils {
     }
 
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
+        return saveValue(key, value, true);
+    }
+
+    /**
+     * 保存任意类型值。{@code isCommit} 为 true 走同步 {@link SharedPreferences.Editor#commit()}，
+     * 为 false 走异步 {@link SharedPreferences.Editor#apply()}（MMKV 下由系统择机落盘，避免主线程强制刷盘）。
+     * Collection/Map/数组/实体等复杂类型委托各自的保存逻辑，isCommit 仅作用于基础类型的直接写入分支。
+     */
+    private boolean saveValue(@Nullable String key, @Nullable Object value, final boolean isCommit) {
         if (null == sp) {
             return false;
         }
         SharedPreferences.Editor editor = sp.edit();
         if (value instanceof String) {
-            return editor.putString(key, encryptDES((String) value)).commit();
+            editor.putString(key, encryptDES((String) value));
         } else if (value instanceof Boolean) {
-            return editor.putBoolean(key, (Boolean) value).commit();
+            editor.putBoolean(key, (Boolean) value);
         } else if (value instanceof Byte) {
             // byte 无原生存储类型，借用 int 保存
-            return editor.putInt(key, (Byte) value).commit();
+            editor.putInt(key, (Byte) value);
         } else if (value instanceof Short) {
             // short 无原生存储类型，借用 int 保存
-            return editor.putInt(key, (Short) value).commit();
+            editor.putInt(key, (Short) value);
         } else if (value instanceof Character) {
             // char 无原生存储类型，借用 int（Unicode 码点）保存
-            return editor.putInt(key, (Character) value).commit();
+            editor.putInt(key, (Character) value);
         } else if (value instanceof Float) {
-            return editor.putFloat(key, (Float) value).commit();
+            editor.putFloat(key, (Float) value);
         } else if (value instanceof Integer) {
-            return editor.putInt(key, (Integer) value).commit();
+            editor.putInt(key, (Integer) value);
         } else if (value instanceof Long) {
-            return editor.putLong(key, (Long) value).commit();
+            editor.putLong(key, (Long) value);
         } else if (value instanceof Double) {
-            return editor.putLong(key, Double.doubleToRawLongBits((Double) value)).commit();
+            editor.putLong(key, Double.doubleToRawLongBits((Double) value));
         } else if (value instanceof byte[]) {
             // 字节数组：Base64 编码后按字符串（加密）保存
-            return editor.putString(key, encryptDES(Base64.encodeToString((byte[]) value, Base64.NO_WRAP))).commit();
-        }else if (value instanceof Collection){
+            editor.putString(key, encryptDES(Base64.encodeToString((byte[]) value, Base64.NO_WRAP)));
+        } else if (value instanceof Collection) {
             Collection<?> collection = (Collection<?>) value;
             if (!collection.isEmpty()) {
                 Class<?> elementType = collection.iterator().next().getClass();
@@ -677,10 +686,20 @@ public final class SPUtils {
             if (TextUtils.isEmpty(json)) {
                 return false;
             }
-            return editor.putString(key, encryptDES(json)).commit();
-        }else {
+            editor.putString(key, encryptDES(json));
+        } else {
             return saveEntity(value);
         }
+        return commitOrApply(editor, isCommit);
+    }
+
+    /** 按 isCommit 选择同步 commit() 或异步 apply()；apply() 无返回值，视为成功返回 true。 */
+    private boolean commitOrApply(@NonNull final SharedPreferences.Editor editor, final boolean isCommit) {
+        if (isCommit) {
+            return editor.commit();
+        }
+        editor.apply();
+        return true;
     }
 
     private Object getValue(@Nullable String key, @Nullable Object defaultValue) {
