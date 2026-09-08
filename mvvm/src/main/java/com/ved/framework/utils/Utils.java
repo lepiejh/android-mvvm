@@ -31,10 +31,6 @@ public final class Utils {
      * @param app application
      */
     public static void init(@NonNull final Application app) {
-        if (app == null) {
-            KLog.e("Utils", "app is null.");
-            return;
-        }
         if (sApp == null) {
             sApp = app;
             UtilsBridge.init(sApp);
@@ -68,7 +64,7 @@ public final class Utils {
 
     public abstract static class Task<Result> extends ThreadUtils.SimpleTask<Result> {
 
-        private Consumer<Result> mConsumer;
+        private final Consumer<Result> mConsumer;
 
         public Task(final Consumer<Result> consumer) {
             mConsumer = consumer;
