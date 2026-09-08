@@ -574,10 +574,12 @@ public final class ToastUtils {
                 }
             }
             View view = sToast.getView();
-            if (bgResource != -1) {
-                view.setBackgroundResource(bgResource);
-            } else if (backgroundColor != DEFAULT_COLOR) {
-                view.setBackgroundColor(backgroundColor);
+            if (view != null) {
+                if (bgResource != -1) {
+                    view.setBackgroundResource(bgResource);
+                } else if (backgroundColor != DEFAULT_COLOR) {
+                    view.setBackgroundColor(backgroundColor);
+                }
             }
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
                 sToast.setGravity(gravity, xOffset, yOffset);
