@@ -32,7 +32,7 @@ public class ListUtil {
      * @param bList 左右顺序无所谓
      * @return 尽可能避免相同的情况
      */
-    public static boolean equals(List aList, List bList) {
+    public static boolean equals(List<?> aList, List<?> bList) {
 
         if (aList == bList) {
             return true;
