@@ -14,9 +14,12 @@ import com.google.gson.Gson;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -460,6 +463,45 @@ public final class SPUtils {
         return (T) get(key, defaultObject);
     }
 
+    ///////////////////////////////////////////////////////////////////////////
+    // 类 GreenDAO 的增删改查（CRUD）：面向以 List<T> 形式保存的实体集合
+    // 通过 dao(entityClass, keyMapper) 获取 SpDao<T, K>，实体主键由 KeyMapper 提供
+    ///////////////////////////////////////////////////////////////////////////
+
+    /**
+     * 实体主键提取器，用于 load/update/deleteByKey/insertOrReplace 等按主键操作的方法。
+     * 采用自定义函数式接口而非 java.util.function.Function，以兼容 minSdk 19。
+     *
+     * @param <T> 实体类型
+     * @param <K> 主键类型
+     */
+    public interface KeyMapper<T, K> {
+        K mapKey(T entity);
+    }
+
+    /**
+     * 查询过滤条件，替代 GreenDAO 的 QueryBuilder/queryRaw（SharedPreferences 无 SQL）。
+     *
+     * @param <T> 实体类型
+     */
+    public interface Filter<T> {
+        boolean accept(T entity);
+    }
+
+    /**
+     * 获取一个类 GreenDAO 的 DAO，对以 List&lt;T&gt; 形式保存的实体集合进行增删改查。
+     * 数据以 entityClass.getName() 为键存储，与 putCollection/getCollection 互通。
+     *
+     * @param entityClass 实体类型（相当于“表”）
+     * @param keyMapper   主键提取器，例如 user -&gt; user.getId()
+     * @param <T>         实体类型
+     * @param <K>         主键类型
+     * @return 绑定该实体类型与主键提取器的 SpDao
+     */
+    public <T, K> SpDao<T, K> dao(@NonNull Class<T> entityClass, @NonNull KeyMapper<T, K> keyMapper) {
+        return new SpDao<>(this, entityClass, keyMapper);
+    }
+
     private boolean saveValue(@Nullable String key, @Nullable Object value) {
         if (null == sp) {
             return false;
@@ -769,5 +811,352 @@ public final class SPUtils {
             return clazz.getName();
         }
         return null;
+    }
+
+    /**
+     * 类 GreenDAO 的 DAO 实现，面向以 List&lt;T&gt; 形式保存在 SharedPreferences 中的实体集合。
+     * <p>
+     * 与 GreenDAO 的差异：
+     * <ul>
+     *     <li>存储：整个 List&lt;T&gt; 序列化为 JSON 加密后存于键 entityClass.getName()，
+     *         与 putCollection/getCollection 互通；空表以“移除该键”表示。</li>
+     *     <li>无 SQLite rowId / SQL / 会话缓存，故不提供 queryBuilder、queryRaw、
+     *         loadByRowId、detach、insertWithoutSettingPk 等方法；
+     *         以 query(Filter)、loadByIndex(int) 等作为替代。</li>
+     *     <li>...InTx 批量方法采用“一次读取 + 一次写入（commit）”，即 SP 下的事务近似。</li>
+     *     <li>所有写操作对 lock 加锁，保证进程内“读-改-写”原子性。</li>
+     * </ul>
+     *
+     * @param <T> 实体类型
+     * @param <K> 主键类型
+     */
+    public static final class SpDao<T, K> {
+
+        private final SPUtils sp;
+        private final Class<T> entityClass;
+        private final KeyMapper<T, K> keyMapper;
+        private final Object lock = new Object();
+
+        private SpDao(SPUtils sp, Class<T> entityClass, KeyMapper<T, K> keyMapper) {
+            this.sp = sp;
+            this.entityClass = entityClass;
+            this.keyMapper = keyMapper;
+        }
+
+        // ---------------- 内部持久化辅助（复用 SPUtils 集合存取） ----------------
+
+        private List<T> readTable() {
+            Collection<T> c = sp.getCollection(entityClass);
+            return c != null ? new ArrayList<>(c) : new ArrayList<T>();
+        }
+
+        private boolean writeTable(List<T> list) {
+            if (list == null || list.isEmpty()) {
+                return sp.remove(sp.getKey(entityClass));
+            }
+            return sp.saveCollection(entityClass, list);
+        }
+
+        private int indexOfKey(List<T> list, K key) {
+            if (key == null) {
+                return -1;
+            }
+            for (int i = 0; i < list.size(); i++) {
+                T item = list.get(i);
+                if (item != null && key.equals(keyMapper.mapKey(item))) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private int indexOfEntity(List<T> list, T entity) {
+            int i = indexOfKey(list, keyMapper.mapKey(entity));
+            if (i >= 0) {
+                return i;
+            }
+            // 主键为 null 或未命中时，退化为 equals 匹配
+            return list.indexOf(entity);
+        }
+
+        // ---------------- 元信息 ----------------
+
+        public Class<T> entityClass() {
+            return entityClass;
+        }
+
+        public String tableName() {
+            return entityClass.getName();
+        }
+
+        // ---------------- Create / Insert ----------------
+
+        public boolean insert(T entity) {
+            if (entity == null) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                list.add(entity);
+                return writeTable(list);
+            }
+        }
+
+        public boolean insertOrReplace(T entity) {
+            if (entity == null) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                int i = indexOfKey(list, keyMapper.mapKey(entity));
+                if (i >= 0) {
+                    list.set(i, entity);
+                } else {
+                    list.add(entity);
+                }
+                return writeTable(list);
+            }
+        }
+
+        public boolean insertInTx(List<T> entities) {
+            if (entities == null || entities.isEmpty()) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                list.addAll(entities);
+                return writeTable(list);
+            }
+        }
+
+        @SafeVarargs
+        public final boolean insertInTx(T... entities) {
+            if (entities == null || entities.length == 0) {
+                return false;
+            }
+            return insertInTx(Arrays.asList(entities));
+        }
+
+        public boolean insertOrReplaceInTx(List<T> entities) {
+            if (entities == null || entities.isEmpty()) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                for (T entity : entities) {
+                    if (entity == null) {
+                        continue;
+                    }
+                    int i = indexOfKey(list, keyMapper.mapKey(entity));
+                    if (i >= 0) {
+                        list.set(i, entity);
+                    } else {
+                        list.add(entity);
+                    }
+                }
+                return writeTable(list);
+            }
+        }
+
+        @SafeVarargs
+        public final boolean insertOrReplaceInTx(T... entities) {
+            if (entities == null || entities.length == 0) {
+                return false;
+            }
+            return insertOrReplaceInTx(Arrays.asList(entities));
+        }
+
+        // ---------------- Update ----------------
+
+        public boolean update(T entity) {
+            if (entity == null) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                int i = indexOfKey(list, keyMapper.mapKey(entity));
+                if (i < 0) {
+                    return false;
+                }
+                list.set(i, entity);
+                return writeTable(list);
+            }
+        }
+
+        public boolean updateInTx(List<T> entities) {
+            if (entities == null || entities.isEmpty()) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                boolean changed = false;
+                for (T entity : entities) {
+                    if (entity == null) {
+                        continue;
+                    }
+                    int i = indexOfKey(list, keyMapper.mapKey(entity));
+                    if (i >= 0) {
+                        list.set(i, entity);
+                        changed = true;
+                    }
+                }
+                return changed && writeTable(list);
+            }
+        }
+
+        @SafeVarargs
+        public final boolean updateInTx(T... entities) {
+            if (entities == null || entities.length == 0) {
+                return false;
+            }
+            return updateInTx(Arrays.asList(entities));
+        }
+
+        // ---------------- Delete ----------------
+
+        public boolean delete(T entity) {
+            if (entity == null) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                int i = indexOfEntity(list, entity);
+                if (i < 0) {
+                    return false;
+                }
+                list.remove(i);
+                return writeTable(list);
+            }
+        }
+
+        public boolean deleteByKey(K key) {
+            synchronized (lock) {
+                List<T> list = readTable();
+                int i = indexOfKey(list, key);
+                if (i < 0) {
+                    return false;
+                }
+                list.remove(i);
+                return writeTable(list);
+            }
+        }
+
+        public int deleteAll() {
+            synchronized (lock) {
+                int removed = readTable().size();
+                sp.remove(sp.getKey(entityClass));
+                return removed;
+            }
+        }
+
+        public boolean deleteInTx(List<T> entities) {
+            if (entities == null || entities.isEmpty()) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                boolean changed = false;
+                for (T entity : entities) {
+                    if (entity == null) {
+                        continue;
+                    }
+                    int i = indexOfEntity(list, entity);
+                    if (i >= 0) {
+                        list.remove(i);
+                        changed = true;
+                    }
+                }
+                return changed && writeTable(list);
+            }
+        }
+
+        @SafeVarargs
+        public final boolean deleteInTx(T... entities) {
+            if (entities == null || entities.length == 0) {
+                return false;
+            }
+            return deleteInTx(Arrays.asList(entities));
+        }
+
+        public boolean deleteByKeyInTx(List<K> keys) {
+            if (keys == null || keys.isEmpty()) {
+                return false;
+            }
+            synchronized (lock) {
+                List<T> list = readTable();
+                boolean changed = false;
+                for (K key : keys) {
+                    int i = indexOfKey(list, key);
+                    if (i >= 0) {
+                        list.remove(i);
+                        changed = true;
+                    }
+                }
+                return changed && writeTable(list);
+            }
+        }
+
+        @SafeVarargs
+        public final boolean deleteByKeyInTx(K... keys) {
+            if (keys == null || keys.length == 0) {
+                return false;
+            }
+            return deleteByKeyInTx(Arrays.asList(keys));
+        }
+
+        // ---------------- Read / Query ----------------
+
+        public T load(K key) {
+            List<T> list = readTable();
+            int i = indexOfKey(list, key);
+            return i >= 0 ? list.get(i) : null;
+        }
+
+        public List<T> loadAll() {
+            return readTable();
+        }
+
+        public long count() {
+            return readTable().size();
+        }
+
+        public T refresh(T entity) {
+            if (entity == null) {
+                return null;
+            }
+            return load(keyMapper.mapKey(entity));
+        }
+
+        public T loadByIndex(int index) {
+            List<T> list = readTable();
+            if (index < 0 || index >= list.size()) {
+                return null;
+            }
+            return list.get(index);
+        }
+
+        public List<T> query(Filter<T> filter) {
+            List<T> result = new ArrayList<>();
+            if (filter == null) {
+                return result;
+            }
+            for (T entity : readTable()) {
+                if (entity != null && filter.accept(entity)) {
+                    result.add(entity);
+                }
+            }
+            return result;
+        }
+
+        public boolean exists(T entity) {
+            if (entity == null) {
+                return false;
+            }
+            return indexOfEntity(readTable(), entity) >= 0;
+        }
+
+        public boolean existsByKey(K key) {
+            return indexOfKey(readTable(), key) >= 0;
+        }
     }
 }
