@@ -790,13 +790,7 @@ public final class SPUtils {
             if (StringUtils.isNotEmpty(encrypt)) {
                 return encrypt;
             } else {
-                // 1. 处理null和空字符串
-                if (value == null) {
-                    return null;
-                }
-                if (value.isEmpty()) {
-                    return "";
-                }
+                // 方法入口已拦截 null/空串，此处直接做 Base64 兜底
                 try {
                     return CryptoHelper.urlSafeBase64Encode(value.getBytes(StandardCharsets.UTF_8));
                 } catch (Exception e) {
@@ -926,7 +920,7 @@ public final class SPUtils {
      * @param <T> 实体类型
      * @param <K> 主键类型
      */
-    public static final class SpDao<T, K> {
+    public static final class SpDao<T, K> implements SharedPreferences.OnSharedPreferenceChangeListener {
 
         private final SPUtils sp;
         private final String tableName;
@@ -954,8 +948,6 @@ public final class SPUtils {
         private volatile TableSnapshot<T, K> table;
         /** 标记“本实例自身正在写入”，用于抑制自身写入触发的缓存失效。 */
         private volatile boolean selfWrite;
-        /** 监听底层 SP 变化：外部写入（如 putCollection）本表时失效缓存，保证进程内一致。 */
-        private final SharedPreferences.OnSharedPreferenceChangeListener listener;
 
         private SpDao(SPUtils sp, String tableName, Class<T> entityClass, KeyMapper<T, K> keyMapper, boolean async) {
             this.sp = sp;
@@ -963,16 +955,21 @@ public final class SPUtils {
             this.entityClass = entityClass;
             this.keyMapper = keyMapper;
             this.async = async;
-            this.listener = new SharedPreferences.OnSharedPreferenceChangeListener() {
-                @Override
-                public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-                    // 仅当本表被“外部”改动时失效；自身写入（selfWrite）保留写穿缓存
-                    if (tableName.equals(key) && !selfWrite) {
-                        table = null;
-                    }
-                }
-            };
-            sp.registerSpChangeListener(this.listener);
+            sp.registerSpChangeListener(this);
+        }
+
+        /**
+         * 底层 SP 变更回调：外部写入（如 putCollection）本表时失效内存缓存，保证进程内一致；
+         * 自身写入期间（selfWrite）不失效，保留写穿缓存。
+         * 由本实例直接实现监听器而非匿名类字段：SharedPreferences 以弱引用持有监听器，
+         * 而 SpDao 由 SPUtils.daoCache 强引用，回调不会因 GC 丢失。
+         */
+        @Override
+        public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+            // 仅当本表被“外部”改动时失效；自身写入（selfWrite）保留写穿缓存
+            if (tableName.equals(key) && !selfWrite) {
+                table = null;
+            }
         }
 
         // ---------------- 内部持久化辅助（复用 SPUtils 集合存取） ----------------
