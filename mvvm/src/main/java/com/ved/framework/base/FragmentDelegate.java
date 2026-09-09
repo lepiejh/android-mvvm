@@ -24,7 +24,7 @@ import com.ved.framework.utils.KLog;
  * @param <V>  ViewDataBinding 泛型
  * @param <VM> BaseViewModel 泛型
  */
-class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel> {
+public class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     /**
      * 宿主契约：委托类执行公共流程时，从宿主 Fragment 提取差异点（模板方法）。
