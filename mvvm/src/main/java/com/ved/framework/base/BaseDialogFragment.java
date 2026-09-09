@@ -29,7 +29,7 @@ import org.greenrobot.eventbus.ThreadMode;
  * 与 {@link BaseFragment} 共享同一份委托实现，唯一差异是父类 {@link RxDialogFragment}。
  */
 public abstract class BaseDialogFragment<V extends ViewDataBinding, VM extends BaseViewModel>
-        extends RxDialogFragment implements FragmentDelegate.Host<V, VM> {
+        extends RxDialogFragment implements Host<V, VM> {
 
     private final FragmentDelegate<V, VM> delegate = new FragmentDelegate<>(this);
 

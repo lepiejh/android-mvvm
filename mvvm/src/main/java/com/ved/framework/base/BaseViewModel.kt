@@ -105,7 +105,31 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
 
     fun getLifecycleProvider() = lifecycle?.get()
 
-    fun getUC(): UIChangeLiveData = command.liveData
+    /**
+     * 框架内部管线：把包级的 UI 命令门面交给同包的 Java 代码（BaseView）。
+     *
+     * 为什么返回类型是 Any 而不是 ICommand：Kotlin 没有「包级可见性」，它把 Java 的
+     * 包级类型看作 public-package，并禁止其出现在任何非 private 的 Kotlin 声明里
+     * （internal / protected 同样报错，只有 private 例外）。所以旧的
+     * `fun getUC(): UIChangeLiveData` 必然编译失败。声明成 public 的 Any 就不触发该检查，
+     * 实际返回的仍是 ICommand，由同包的 BaseView 向下转型后取 liveData。
+     *
+     * 为什么不直接让 BaseView 读 viewModel.command：上面的 command 是 Kotlin `private val`，
+     * 编译后是真私有字段且不生成任何访问器（对已发布的 v0.1.3 AAR 做 javap 可证：
+     * `private final ICommand command;`，无 getCommand()）。Kotlin 的 private 比 Java 包级
+     * 更窄，同包也访问不了，所以必须有本方法作为唯一通道。
+     *
+     * 接入方请勿调用：需要发命令请用下面的 showDialog() / startActivity() 等门面方法。
+     */
+    fun provideCommand(): Any = command
+
+    /**
+     * UI 事件载体（即 command.liveData），供本类内部使用。
+     *
+     * 声明为 private：private 是 Kotlin 唯一可以合法引用包级 Java 类型的可见性，
+     * 与上面的 `private val command: ICommand` 同理。
+     */
+    private val uc: UIChangeLiveData get() = command.liveData
 
     fun showDialog() {
         command.showDialog()
@@ -310,7 +334,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     }
 
     override fun onCreate() {
-        getUC().onLoadEvent.call()
+        uc.onLoadEvent.call()
     }
 
     private fun initEventStrategy() {
@@ -346,7 +370,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
     override fun onError(throwable: Throwable?) { throwable?.message?.let { KLog.e(it) } }
 
     override fun onResume() {
-        getUC().onResumeEvent.call()
+        uc.onResumeEvent.call()
     }
 
     override fun registerRxBus() {
