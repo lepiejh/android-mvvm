@@ -1,4 +1,4 @@
-package com.ved.framework.base.helper;
+package com.ved.framework.base;
 
 import android.Manifest;
 import android.os.Build;
@@ -6,8 +6,6 @@ import android.os.Build;
 import androidx.databinding.ViewDataBinding;
 
 import com.orhanobut.dialog.utils.WifiSignalHelper;
-import com.ved.framework.base.BaseViewModel;
-import com.ved.framework.base.IBaseView;
 import com.ved.framework.permission.IPermission;
 import com.ved.framework.permission.RxPermission;
 import com.ved.framework.utils.phone.PhoneUtils;
@@ -17,7 +15,7 @@ import com.ved.framework.utils.phone.PhoneUtils;
  * 封装运行时权限申请、拨打电话、WiFi 信号强度监听等系统能力，
  * 使 BaseView 从系统权限细节中解耦。
  */
-public class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
+class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private final IBaseView<V, VM> viewDelegate;
 

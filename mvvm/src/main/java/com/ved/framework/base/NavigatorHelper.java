@@ -1,4 +1,4 @@
-package com.ved.framework.base.helper;
+package com.ved.framework.base;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -6,9 +6,6 @@ import android.os.Bundle;
 import androidx.databinding.ViewDataBinding;
 
 import com.orhanobut.dialog.navigation.ActivityNavigator;
-import com.ved.framework.base.BaseViewModel;
-import com.ved.framework.base.ContainerActivity;
-import com.ved.framework.base.IBaseView;
 import com.ved.framework.entity.ParameterField;
 
 /**
@@ -16,7 +13,7 @@ import com.ved.framework.entity.ParameterField;
  * 封装页面跳转、带参跳转、容器页跳转等导航能力，
  * 使 BaseView 从导航细节中解耦。
  */
-public class NavigatorHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
+class NavigatorHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private final IBaseView<V, VM> viewDelegate;
 

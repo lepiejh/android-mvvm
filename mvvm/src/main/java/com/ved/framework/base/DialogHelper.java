@@ -1,18 +1,16 @@
-package com.ved.framework.base.helper;
+package com.ved.framework.base;
 
 import androidx.databinding.ViewDataBinding;
 
 import com.orhanobut.dialog.dialog.DialogStrategyFactory;
 import com.orhanobut.dialog.dialog.IDialogStrategy;
-import com.ved.framework.base.BaseViewModel;
-import com.ved.framework.base.IBaseView;
 
 /**
  * 对话框助手（单一职责原则）：
  * 封装 MVVM 加载对话框策略的创建与显隐控制，
  * 使 BaseView 从对话框细节中解耦。
  */
-public class DialogHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
+class DialogHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     private static final String DEFAULT_TITLE = "加载中...";
 
