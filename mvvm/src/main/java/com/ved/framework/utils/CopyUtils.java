@@ -11,7 +11,7 @@ import java.util.List;
  * 单对象复制 {@link #sourceToTarget(Object, Class)} 与列表复制 {@link #copyProperties(List, Class)}
  * 共享同一个复制流程模板 {@link #copyTo(Object, Class)}，消除原先两份 100% 重复的反射遍历逻辑。
  */
-class CopyUtils {
+public class CopyUtils {
 
     /**
      * 复制流程模板方法：按「字段名 + 字段类型」匹配源对象与目标对象属性，
