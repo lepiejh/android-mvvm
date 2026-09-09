@@ -11,6 +11,10 @@ android {
         minSdkVersion 19
         targetSdkVersion 33
         multiDexEnabled true
+
+        // 随 AAR 下发给接入方的混淆规则：接入方 App 开启 minifyEnabled 时自动合并生效，
+        // 保证框架的类名与 public/protected API 不会被接入方的 R8 二次混淆或裁剪。
+        consumerProguardFiles 'consumer-rules.pro'
     }
     buildFeatures{
         //noinspection DataBindingWithoutKapt
@@ -19,12 +23,14 @@ android {
     buildTypes {
 
         debug {
-            minifyEnabled false
+            minifyEnabled true
+            // proguard-rules.pro：保留全部类名 + public/protected 成员，
+            // 仅混淆类内部的 private / 包级方法与局部实现。
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
