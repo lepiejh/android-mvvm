@@ -10,7 +10,7 @@ import com.ved.framework.bus.event.eventbus.MessageEvent;
 /**
  * Created by ved on 2017/6/15.
  */
-interface IBaseViewModel extends LifecycleObserver {
+public interface IBaseViewModel extends LifecycleObserver {
 
     @OnLifecycleEvent(Lifecycle.Event.ON_ANY)
     default void onAny(LifecycleOwner owner, Lifecycle.Event event) {
