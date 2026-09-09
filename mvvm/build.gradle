@@ -11,10 +11,6 @@ android {
         minSdkVersion 19
         targetSdkVersion 33
         multiDexEnabled true
-
-        // 随 AAR 下发给接入方的混淆规则：接入方 App 开启 minifyEnabled 时自动合并生效，
-        // 保证框架的类名与 public/protected API 不会被接入方的 R8 二次混淆或裁剪。
-        consumerProguardFiles 'consumer-rules.pro'
     }
     buildFeatures{
         //noinspection DataBindingWithoutKapt

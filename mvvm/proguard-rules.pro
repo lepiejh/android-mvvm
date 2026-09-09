@@ -5,13 +5,29 @@
 #   1. 所有类名 + public/protected 方法一律不混淆、不裁剪
 #      —— 接入方按全限定名引用，AndroidManifest / DataBinding / Glide / Lifecycle
 #         的生成代码也按名字硬引用这些类。
-#   2. 类内部的 private / 包级方法放开，允许 R8 重命名与优化（隐藏实现、缩小体积）。
-#   3. 字段一律保留原名 —— Gson、反射、DataBinding 都按字段名读写，
-#      改字段名会直接导致 JSON 解析结果为 null。
+#   2. 类内部的 private / 包级方法放开，允许 R8 重命名（隐藏实现）。
+#      实测：725 个 private + 550 个包级方法中 1011 个成员被改名，例如
+#      SPUtils.isSpace(String)->c(String)、SPUtils.saveValue(String,Object)->b(...)、
+#      BusUtils.init()->b()；而 registerBus(...) 因 @Bus 插件按名字注入调用而被第四节保住。
+#   3. 字段一律保留原名（822 个 private 字段全部不改）—— 原因见第二节末尾。
+#   4. 只做混淆，不做裁剪与优化（-dontshrink / -dontoptimize）—— 详见「零」。
 #
-# 配套文件：consumer-rules.pro（由 build.gradle 的 consumerProguardFiles 下发给接入方，
-#           保证接入方 App 自己开启混淆时同样不会破坏本框架）。
 #===============================================================================
+
+
+#------------------------------------------------------------------------------
+# 零、R8 模式开关：本库「只做混淆」，不裁剪、不优化
+#------------------------------------------------------------------------------
+# 库模块不同于 App：它没有 Manifest 声明的启动入口，R8 只能把 -keep 规则当作根。
+#   ・开启裁剪(shrink)：R8 会把「在本模块内看不到调用方」的 private 方法直接删掉；
+#   ・开启优化(optimize)：R8 还会把 private 方法内联进调用点、合并类、删参数。
+# 两者叠加的后果就是 AAR 里 private 方法凭空消失，而框架自身与接入方的反射调用
+# （@Bus 的 BusUtils.registerBus、EventBus @Subscribe、Gson、MMKV 的 JNI 回调）
+# 在运行时抛 NoSuchMethodError / NoSuchFieldError。
+# 所以这里显式关掉裁剪与优化，只保留「重命名」这一项能力。
+# 代价：AAR 不会因裁剪而变小，但 private 方法依旧被改名（这才是需求）。
+-dontshrink
+-dontoptimize
 
 
 #------------------------------------------------------------------------------
@@ -63,10 +79,31 @@
     <init>(...);
 }
 
-# 字段一律不改名（Gson / 反射 / DataBinding 按字段名访问）
+# 字段一律不改名（Gson / 反射 / DataBinding 按字段名访问）。
+# 为什么「private 变量」也不改名 —— 本框架的字段是数据载体，不是实现细节：
+#   ・SPUtils.saveEntity/getEntity、GsonUtils、JsonPraise 走 Gson，Gson 用
+#     Field.getName() 反射读写实例字段，改名后 JSON 直接解析成 null（静默错误，最难查）；
+#   ・Serializable 的默认序列化按字段名写出流，改名后旧数据反序列化失败；
+#   ・DataBinding 生成的绑定类按字段名访问 public 字段；
+#   ・第四节 RxJava 的 producerIndex/consumerIndex 靠字段名做 CAS。
+# 实测数据（javap 统计 classes.jar）：private static 389 + private 实例 433 = 822 个字段。
+# 其中只有 private static 那 389 个在理论上可安全改名（Gson 与 Java 序列化都跳过 static），
+# 但它们承载的是 sSPMap / TAG / NULL 这类内部状态，改名对「隐藏实现」几乎没有增益，
+# 却要额外承担 serialVersionUID、Kotlin companion 字段等边角风险 —— 收益远小于风险，故不做。
+# 若确实需要，可把下面两行取消注释（务必自测 Gson 与 SP 存量数据）：
+#   -keepclassmembers class com.ved.framework.** { !static <fields>; public protected static <fields>; }
+#   （即用上面这行替换下面的 <fields>; 那一行，只放行 private/包级 static 字段改名）
 -keepclassmembers class com.ved.framework.** {
     <fields>;
 }
+
+# 关于「private 内部类」：javap 实测 classes.jar 里 604 个类含 300 个嵌套类，
+# 但没有任何一个带 private 修饰 —— Java 编译产物中嵌套类的 private 标记只存在于
+# InnerClasses 属性里，class 文件自身的 access_flags 没有 ACC_PRIVATE，
+# ProGuard/R8 的类匹配读的是后者，因此不存在「只挑 private 内部类改名」的写法。
+# 而且类名必须全保留：接入方按全限定名引用（SPUtils$SpDao、XBannerDataWrapper 等），
+# DataBinding 布局、AndroidManifest、ReflectFragmentFactory 也都按名字硬引用。
+# 这些嵌套类内部的 private 方法已经按第 2 条改名了，实现细节同样被隐藏。
 
 
 #------------------------------------------------------------------------------
@@ -336,6 +373,12 @@
 -dontwarn androidx.constraintlayout.**
 -dontwarn com.kyleduo.switchbutton.**
 -dontwarn com.yanzhenjie.recyclerview.**
+# 传递依赖引用的可选类，编译期不在 classpath 上（JitPack 构建日志里 R8 实测报出）：
+#   R8: Missing class: org.graalvm.nativeimage.hosted.Feature
+#   R8: Missing class: com.liulishuo.filedownloader.FileDownloadLargeFileListener
+# 本工程源码无任何引用，仅运行期由对应库按需加载，抑制即可。
+-dontwarn org.graalvm.nativeimage.**
+-dontwarn com.liulishuo.filedownloader.**
 
 
 #------------------------------------------------------------------------------
