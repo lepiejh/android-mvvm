@@ -30,7 +30,7 @@ import androidx.lifecycle.Observer;
  * <p>新增事件时：在下面的 {@code EventKey} 里加枚举值，并补一个对应的 public getter；
  * 若 {@code BaseView} 需要观察，再在那里加一行 {@code uc.getXxxEvent().observe(...)}。
  */
-class UIChangeLiveData extends SingleLiveEvent {
+public class UIChangeLiveData extends SingleLiveEvent {
 
     /**
      * 事件类型注册表（注册表模式）：将 13 个重复字段收敛为统一的注册表，
