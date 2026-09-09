@@ -11,6 +11,8 @@
 #      BusUtils.init()->b()；而 registerBus(...) 因 @Bus 插件按名字注入调用而被第四节保住。
 #   3. 字段一律保留原名（822 个 private 字段全部不改）—— 原因见第二节末尾。
 #   4. 只做混淆，不做裁剪与优化（-dontshrink / -dontoptimize）—— 详见「零」。
+#   5. 接入方 IDE 里 private 方法「爆红」是源码与字节码不一致的显示问题，
+#      不影响编译与运行 —— 详见「零之二」。
 #
 #===============================================================================
 
@@ -28,6 +30,39 @@
 # 代价：AAR 不会因裁剪而变小，但 private 方法依旧被改名（这才是需求）。
 -dontshrink
 -dontoptimize
+
+
+#------------------------------------------------------------------------------
+# 零之二、接入方 IDE 里 private 方法「爆红」不是 bug，无需为本文件加白名单
+#------------------------------------------------------------------------------
+# 现象：接入方工程点开 SPUtils.SpDao，看到
+#         sp.getCollectionByKey(...)          // L1171
+#         sp.saveTable(...)                   // L1227
+#         sp.registerSpChangeListener(this)   // L1149
+#       三处爆红；把本库 minifyEnabled 改为 false 重新发布后就不红了。
+#
+# 原因：JitPack 除 AAR 外还会自行打一个「未混淆的 -sources.jar」（构建日志里的
+#       "Creating -sources.jar"，它直接打包仓库源码，不由 Gradle 任务产出，本文件
+#       管不到）。Android Studio 把这份原始 .java 挂到已混淆的 classes.jar 上显示：
+#       文字是原始的，符号却按字节码解析；而这三个 private 方法在字节码里已改名，
+#       自然解析不到 —— 纯属显示层的不一致，不是编译错误，也不是运行时错误。
+#
+# 实测（javac -source 8 复刻 SPUtils/SpDao 结构 → 用本规则跑 R8 → 再拿 R8 产物
+#       当 classpath 编译一段接入方代码）：
+#         ・三个 private 方法与 javac 合成的 access$000/100/200 桥接全部被改名；
+#         ・SpDao 内的调用点被 R8 同步改写并指向改名后的方法，字节码自洽；
+#         ・InnerClasses / Signature 均保留，SpDao<T,K> 仍是 SPUtils 的嵌套泛型类；
+#         ・接入方代码 javac 编译通过，R8 exit=0。
+#
+# 消除红线的办法（都在接入方侧，不必放松本库的混淆强度）：
+#   1. Android Studio → Settings → Build, Execution, Deployment → Build Tools → Gradle
+#      → 取消勾选自动下载 "Sources"，IDE 改用内置反编译器直接读 classes.jar，
+#      看到的就是混淆后的真实字节码（也才能验证混淆确实生效）；
+#   2. File → Project Structure → Libraries → 选中该库 → 移除 Sources 附件。
+#
+# 为什么不给这三个方法单独加 -keep：这种「嵌套类调用外部类 private 方法」的合成桥接
+# 在本框架里有 174 处、分布在 53 个类（javap 统计 access$NNN，且该统计取自尚不含
+# SpDao 的旧构建产物，实际更多）。逐个白名单既不可维护，也直接违背目标 2。
 
 
 #------------------------------------------------------------------------------
