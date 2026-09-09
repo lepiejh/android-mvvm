@@ -11,6 +11,13 @@ android {
         minSdkVersion 19
         targetSdkVersion 33
         multiDexEnabled true
+
+        // 【不可删除】随 AAR 下发给接入方的混淆规则：打进 AAR 的 proguard.txt，
+        // 接入方 App 开启 minifyEnabled 时自动合并生效。
+        // proguard-rules.pro 只管本库自己的构建；接入方的 R8 会把本 AAR 当普通输入
+        // 再跑一轮裁剪+优化+改名，没有这一行框架会在接入方 APK 里被大面积删掉。
+        // 实测：删掉后接入方 R8 只剩 67/604 个类，SPUtils/BaseActivity/BusUtils 全部消失。
+        consumerProguardFiles 'consumer-rules.pro'
     }
     buildFeatures{
         //noinspection DataBindingWithoutKapt
