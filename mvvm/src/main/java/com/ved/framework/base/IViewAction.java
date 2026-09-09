@@ -5,7 +5,7 @@ package com.ved.framework.base;
  * 定义页面业务生命周期回调与自定义行为，
  * 全部提供默认空实现，子类只需覆写需要的回调，减少冗余样板代码。
  */
-interface IViewAction {
+public interface IViewAction {
 
     /** 初始化界面传递参数 */
     default void initParam() {

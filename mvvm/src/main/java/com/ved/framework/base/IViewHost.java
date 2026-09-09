@@ -16,7 +16,7 @@ import com.trello.rxlifecycle4.LifecycleProvider;
  * 定义 View 与宿主（Activity / Fragment）环境之间的能力契约，
  * 供 BaseView、生命周期管理、导航等组件按需依赖。
  */
-interface IViewHost<V extends ViewDataBinding, VM extends BaseViewModel> {
+public interface IViewHost<V extends ViewDataBinding, VM extends BaseViewModel> {
 
     /** 确保 ViewModel 已创建并返回 */
     VM ensureViewModelCreated();

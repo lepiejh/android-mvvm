@@ -5,7 +5,7 @@ package com.ved.framework.base;
  * 集中定义页面可选特性的开关，默认关闭，
  * 子类按需开启，避免每个基类重复覆写返回 false 的样板方法。
  */
-interface IViewFeature {
+public interface IViewFeature {
 
     /** 是否启用滑动返回 */
     default boolean isSwipeBack() {
