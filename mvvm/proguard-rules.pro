@@ -2,17 +2,27 @@
 # mvvm 框架（com.ved.framework）库模块混淆规则
 #
 # 混淆目标（对外发布的 AAR）：
-#   1. 所有类名 + public/protected 方法一律不混淆、不裁剪
+#   1. public 类名 + public/protected 成员一律不混淆、不裁剪
 #      —— 接入方按全限定名引用，AndroidManifest / DataBinding / Glide / Lifecycle
 #         的生成代码也按名字硬引用这些类。
-#   2. 类内部的 private / 包级方法放开，允许 R8 重命名（隐藏实现）。
+#      实测：608 个类 0 丢失，391 个保住类名的类里 public/protected 成员 0 丢失
+#      （成员总量 4972 -> 4974，多出的 2 个是 R8 补的桥接方法）。
+#   2. private / 包级「方法」放开重命名。
 #      实测：725 个 private + 550 个包级方法中 1011 个成员被改名，例如
 #      SPUtils.isSpace(String)->c(String)、SPUtils.saveValue(String,Object)->b(...)、
 #      BusUtils.init()->b()；而 registerBus(...) 因 @Bus 插件按名字注入调用而被第四节保住。
-#   3. 字段一律保留原名（822 个 private 字段全部不改）—— 原因见第二节末尾。
-#   4. 只做混淆，不做裁剪与优化（-dontshrink / -dontoptimize）—— 详见「零」。
-#   5. 接入方 IDE 里 private 方法「爆红」是源码与字节码不一致的显示问题，
-#      不影响编译与运行 —— 详见「零之二」。
+#   3. private / 包级「字段」放开重命名 —— 实测 1016 个字段被改名：
+#      SPUtils.sMmkvInited->e、sSPMap->d、sp->a、changeListeners->b、daoCache->c，
+#      SpDao.tableName->b / entityClass->c / keyMapper->d / lock->e / async->f，
+#      SpDao$TableSnapshot.list->a / index->b，ParameterizedTypeImpl.clazz->a。
+#      数据载体（entity.** / net.** / Serializable / @SerializedName）豁免，见第二节。
+#   4. private / 包级「内部类」放开重命名 —— 实测 608 个类中 217 个非 public 类被改名：
+#      SPUtils$ParameterizedTypeImpl->SPUtils$b、SpDao$TableSnapshot->SpDao$a、
+#      Messenger$WeakActionAndToken->Messenger$a、BaseView->base.a、
+#      RetrofitClient->net.f、PinchImageView$FlingAnimator->PinchImageView$a。
+#      public API 类 0 丢失，Manifest / DataBinding / Glide / Lifecycle 全部原名保留。
+#   5. 「局部变量 / 方法参数名」：DEX 里根本不存在这种东西，无需也无法混淆 —— 见第一节。
+#   6. 只做混淆，不做裁剪与优化（-dontshrink / -dontoptimize）—— 详见「零」。
 #
 #===============================================================================
 
@@ -33,39 +43,6 @@
 
 
 #------------------------------------------------------------------------------
-# 零之二、接入方 IDE 里 private 方法「爆红」不是 bug，无需为本文件加白名单
-#------------------------------------------------------------------------------
-# 现象：接入方工程点开 SPUtils.SpDao，看到
-#         sp.getCollectionByKey(...)          // L1171
-#         sp.saveTable(...)                   // L1227
-#         sp.registerSpChangeListener(this)   // L1149
-#       三处爆红；把本库 minifyEnabled 改为 false 重新发布后就不红了。
-#
-# 原因：JitPack 除 AAR 外还会自行打一个「未混淆的 -sources.jar」（构建日志里的
-#       "Creating -sources.jar"，它直接打包仓库源码，不由 Gradle 任务产出，本文件
-#       管不到）。Android Studio 把这份原始 .java 挂到已混淆的 classes.jar 上显示：
-#       文字是原始的，符号却按字节码解析；而这三个 private 方法在字节码里已改名，
-#       自然解析不到 —— 纯属显示层的不一致，不是编译错误，也不是运行时错误。
-#
-# 实测（javac -source 8 复刻 SPUtils/SpDao 结构 → 用本规则跑 R8 → 再拿 R8 产物
-#       当 classpath 编译一段接入方代码）：
-#         ・三个 private 方法与 javac 合成的 access$000/100/200 桥接全部被改名；
-#         ・SpDao 内的调用点被 R8 同步改写并指向改名后的方法，字节码自洽；
-#         ・InnerClasses / Signature 均保留，SpDao<T,K> 仍是 SPUtils 的嵌套泛型类；
-#         ・接入方代码 javac 编译通过，R8 exit=0。
-#
-# 消除红线的办法（都在接入方侧，不必放松本库的混淆强度）：
-#   1. Android Studio → Settings → Build, Execution, Deployment → Build Tools → Gradle
-#      → 取消勾选自动下载 "Sources"，IDE 改用内置反编译器直接读 classes.jar，
-#      看到的就是混淆后的真实字节码（也才能验证混淆确实生效）；
-#   2. File → Project Structure → Libraries → 选中该库 → 移除 Sources 附件。
-#
-# 为什么不给这三个方法单独加 -keep：这种「嵌套类调用外部类 private 方法」的合成桥接
-# 在本框架里有 174 处、分布在 53 个类（javap 统计 access$NNN，且该统计取自尚不含
-# SpDao 的旧构建产物，实际更多）。逐个白名单既不可维护，也直接违背目标 2。
-
-
-#------------------------------------------------------------------------------
 # 一、全局属性：反射 / 泛型 / 注解依赖的字节码属性必须保留
 #------------------------------------------------------------------------------
 # Signature                     : 泛型签名。SPUtils 的 ParameterizedTypeImpl、
@@ -82,24 +59,91 @@
 -keepattributes Signature
 -keepattributes InnerClasses,EnclosingMethod
 -keepattributes Exceptions
--keepattributes *Annotation*,AnnotationDefault,MethodParameters
+# MethodParameters 已移除：它是唯一能把「方法参数名」带进 DEX 的属性
+# （DEX 的 debug_info_item 开头就存了各参数的名字，反编译器据此还原）。
+# 实测本库产出的 classes.jar 里该属性出现 0 次 —— javac 不加 -parameters 就不生成它，
+# 所以它此前是空操作；移除是为了防止将来有人往 compileOptions 里加 -parameters，
+# 把 key / value / tableName 这类参数名原样泄漏进 APK。
+#
+# 另：LocalVariableTable（局部变量名）从来没被保留过。更重要的是 —— DEX 字节码里
+# 压根没有「局部变量」这个概念，方法体只有编号寄存器 v0..vN，局部变量名在 javac
+# 编译完成的那一刻就已经彻底消失，不存在「混淆」的对象。
+# 反编译看到的 str / obj / z / cls / list / map / tArr / bArr 全是 JADX 按变量类型
+# 现场编出来的显示名（String->str、Object->obj、boolean->z、Class->cls、int->i），
+# 拿源码一对就能证实它们不是残留的真名：
+#   源码 saveValue(String key, Object value)          -> 反编译 m484b(String str, Object obj)
+#   源码 SpDao(SPUtils sp, String tableName,
+#             Class<T> entityClass, KeyMapper<T,K> keyMapper, boolean async)
+#                                                     -> 反编译 SpDao(SPUtils sPUtils, String str,
+#                                                          Class<T> cls, KeyMapper<T,K> keyMapper, boolean z)
+#   源码 ParameterizedTypeImpl(Class<?> clz)          -> 反编译 ParameterizedTypeImpl(Class<?> cls)
+-keepattributes *Annotation*,AnnotationDefault
 # 保留行号，配合 AGP 自动产出的 mapping.txt 可还原被重命名的 private 方法堆栈：
 # mvvm/build/outputs/mapping/<variant>/mapping.txt
 -keepattributes SourceFile,LineNumberTable
 
 
 #------------------------------------------------------------------------------
-# 二、框架自身：类名 + 公开 API 全量保留，private 成员放开混淆
+# 二、框架自身：public API 全量保留，非 public 的类 / 字段 / 方法放开混淆
 #------------------------------------------------------------------------------
-# -keep class 只锁定「类名 + 花括号里列出的成员」；
-# 未列出的 private / 包级方法仍可被 R8 重命名或直接裁剪 —— 这正是本次的目标。
-# 类名通配 ** 同时覆盖内部类、嵌套类与匿名类（如 BusUtils$Bus、SPUtils$SpDao）。
--keep class com.ved.framework.** {
+# 关键在 `public` 这个「类」访问修饰符：R8 拿它去匹配 class 文件自身的 access_flags。
+#   ・源码里 public 的类（含 public 嵌套类：SPUtils$SpDao、SPUtils$Filter、
+#     SPUtils$KeyMapper、ToastUtils$UtilsMaxWidthRelativeLayout）→ 命中
+#     → 类名 + public/protected 方法保留；
+#   ・源码里 private / 包级的类（内部类、匿名类、lambda 类）→ 不命中 → 类名放开改名。
+#
+# 为什么不能正面写 `-keep private class ...`：R8 的类选择器不接受 private，实测直接解析失败
+#     Error in ...proguard-rules.pro at line N, column 7:
+#     Expected [!]interface|@interface|class|enum
+# 根因是 JVMS 规定 class 文件的 access_flags 里不允许出现 ACC_PRIVATE —— 嵌套类的
+# private/static 标记只记录在 InnerClasses 属性中（javap 打印
+# SPUtils$ParameterizedTypeImpl 得到的是 `final class`，而不是源码里的
+# `private static final class`，就是这个原因），而 R8 的类匹配读的是前者。
+# 所以只能反向写：保住 public 的，剩下的 private + 包级自然全部放开。
+# 效果与「只挑 private 内部类改名」完全等价，而且不需要维护任何类名清单。
+#
+# 实测（以已发布的 v0.1.3 AAR classes.jar 为输入跑独立 R8，608 个类）：
+#   ・217 个非 public 类被改名，输出仍是 608 个类，public API 0 丢失；
+#   ・Manifest 声明的 ContainerActivity / DefaultErrorActivity / CaocInitProvider /
+#     UtilsTransActivity / UtilsTransActivity4MainProcess / UtilsFileProvider /
+#     MessengerUtils$ServerService 全部原名保留；
+#   ・DataBinderMapperImpl、MyAppGlideModule、IBaseViewModel_LifecycleAdapter 原名保留；
+#   ・res/layout/ac.xml 里 LayoutInflater 按名字反射的
+#     ToastUtils$UtilsMaxWidthRelativeLayout 原名保留（它是 public static final class）；
+#   ・binding.**（@BindingAdapter 宿主）与 databinding.** 下 0 个类被改名；
+#   ・全库 grep Class.forName / getDeclaredField / newInstance，命中的字符串字面量全是
+#     android.app.ActivityThread、android.os.SystemProperties、android.app.StatusBarManager
+#     这类系统类，其余都是运行期传入的 className 参数，没有一处按名字反查本库的类。
+-keep public class com.ved.framework.** {
     public protected <methods>;
 }
 
-# 接口的成员全部是 public（含 default 方法与常量），整体保留，避免被裁剪
--keep interface com.ved.framework.** { *; }
+# 接口的成员全部是 public（含 default 方法与常量），整体保留，避免被裁剪。
+# 同样只保 public 接口：包级接口（net.IResult、DownLoadManager$ApiService）放开改名，
+# Retrofit 靠方法上的 @GET/@POST 注解建代理，不依赖任何名字。
+-keep public interface com.ved.framework.** { *; }
+
+# 兜底：无论「声明类」本身是不是 public，它的 public / protected 成员一律不改名。
+# 上面那条 -keep public class 只保护 ACC_PUBLIC 类的成员，但第四节还有
+#     -keepnames class * implements java.io.Serializable
+# 它会把一批「非 public、但传递实现了 Serializable」的类的「类名」保住 —— 类名保住了，
+# 成员却不在 -keep public class 的覆盖范围内，于是被改名。实测踩到 4 个类共 11 个成员：
+#   net.ResultException extends IOException                       (class 声明，包级)
+#     getErrMsg()/setErrMsg(String)/getErrCode()/setErrCode(int) -> b()/a(String)/a()/a(int)
+#   utils.bland.code.ThreadUtils$LinkedBlockingQueue4Util         (private static final class)
+#     extends LinkedBlockingQueue<Runnable>
+#     public boolean offer(Runnable) -> public boolean a(Runnable)
+#     ★ 这条是真 bug 不是观感问题：协变覆写被改名后就不再覆写父类方法，
+#       父类 offer(Object) 的桥接方法会转调一个已不存在的实现。
+#   utils.bland.code.PermissionUtils$PermissionActivityImpl       (static final class)
+#     extends UtilsTransActivity$TransActivityDelegate
+#     public static void start(int) -> public static void a(int)
+#   net.HttpsUtils (class 声明，包级) getSslSocketFactory(...) 5 个重载
+# 加上下面这条后，「所有类和公开的方法都不混淆」这个约束对全部 608 个类都成立，
+# 与声明类是否 public 无关；代价仅是这 11 个成员保住原名。
+-keepclassmembers class com.ved.framework.** {
+    public protected <methods>;
+}
 
 # 枚举：values()/valueOf() 由编译器与反射调用，枚举常量名即序列化值
 -keepclassmembers enum com.ved.framework.** {
@@ -114,31 +158,45 @@
     <init>(...);
 }
 
-# 字段一律不改名（Gson / 反射 / DataBinding 按字段名访问）。
-# 为什么「private 变量」也不改名 —— 本框架的字段是数据载体，不是实现细节：
-#   ・SPUtils.saveEntity/getEntity、GsonUtils、JsonPraise 走 Gson，Gson 用
-#     Field.getName() 反射读写实例字段，改名后 JSON 直接解析成 null（静默错误，最难查）；
-#   ・Serializable 的默认序列化按字段名写出流，改名后旧数据反序列化失败；
-#   ・DataBinding 生成的绑定类按字段名访问 public 字段；
-#   ・第四节 RxJava 的 producerIndex/consumerIndex 靠字段名做 CAS。
-# 实测数据（javap 统计 classes.jar）：private static 389 + private 实例 433 = 822 个字段。
-# 其中只有 private static 那 389 个在理论上可安全改名（Gson 与 Java 序列化都跳过 static），
-# 但它们承载的是 sSPMap / TAG / NULL 这类内部状态，改名对「隐藏实现」几乎没有增益，
-# 却要额外承担 serialVersionUID、Kotlin companion 字段等边角风险 —— 收益远小于风险，故不做。
-# 若确实需要，可把下面两行取消注释（务必自测 Gson 与 SP 存量数据）：
-#   -keepclassmembers class com.ved.framework.** { !static <fields>; public protected static <fields>; }
-#   （即用上面这行替换下面的 <fields>; 那一行，只放行 private/包级 static 字段改名）
+# 字段：public / protected 一律保留原名（它们是对外 API 的一部分，
+# DataBinding 生成的绑定类也按名字访问 public 字段）；
+# private / 包级字段放开改名 —— 实测 1016 个字段被改名。
+# 为什么这次敢放开：按名字访问字段的四条路径都已被下面的例外规则逐一挡住，
+#   ・Gson 用 Field.getName() 反射读写「实例」字段（只跳过 static/transient）
+#     → entity.** / net.** 两个数据载体包 + @SerializedName 标注字段整体豁免；
+#   ・Java 序列化按字段名写流 → 第四节 `-keepclassmembers class * implements
+#     java.io.Serializable { !static !transient <fields>; }` 已覆盖（本库共 5 处：
+#     SerializableHttpCookie、DownLoadStateBean、CaocConfig、
+#     UtilsTransActivity$TransActivityDelegate、SpanUtils 的内部类）；
+#     serialVersionUID 与 serialPersistentFields 额外在下面显式保住；
+#   ・DataBinding 只按名字访问 public 字段与 BR 常量 → 第 1 行已覆盖；
+#   ・RxJava 靠字段名做 CAS 的 producerIndex/consumerIndex 属于 io.reactivex，
+#     不在 com.ved.framework 下，且第四节已单独保住。
+# 另：全库 grep 过 getDeclaredField / getField，命中的全是 android.app.ActivityThread、
+# android.os.storage.StorageVolume、android.telephony.SignalStrength 这类系统类，
+# 没有一处用字符串字面量反查本库自己的字段名，所以改名不会引发 NoSuchFieldError。
+# 接入方如果把自己的实体类放进 com.ved.framework.entity / net 包（不推荐），
+# 也会自动落进下面的豁免名单。
 -keepclassmembers class com.ved.framework.** {
-    <fields>;
+    public protected <fields>;
+    static final long serialVersionUID;
+    static final java.io.ObjectStreamField[] serialPersistentFields;
+}
+# 数据载体：字段名就是 JSON 的 key，改名后 Gson 会静默解析成 null（最难查的一类 bug）
+-keepclassmembers class com.ved.framework.entity.** { <fields>; }
+-keepclassmembers class com.ved.framework.net.** { <fields>; }
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
 }
 
-# 关于「private 内部类」：javap 实测 classes.jar 里 604 个类含 300 个嵌套类，
-# 但没有任何一个带 private 修饰 —— Java 编译产物中嵌套类的 private 标记只存在于
-# InnerClasses 属性里，class 文件自身的 access_flags 没有 ACC_PRIVATE，
-# ProGuard/R8 的类匹配读的是后者，因此不存在「只挑 private 内部类改名」的写法。
-# 而且类名必须全保留：接入方按全限定名引用（SPUtils$SpDao、XBannerDataWrapper 等），
-# DataBinding 布局、AndroidManifest、ReflectFragmentFactory 也都按名字硬引用。
-# 这些嵌套类内部的 private 方法已经按第 2 条改名了，实现细节同样被隐藏。
+# 关于「private 内部类」（结论与完整实测证据见本节开头，这里只补充两个现场现象）：
+#   ・javap 打印 SPUtils$ParameterizedTypeImpl 得到的是 `final class ...`，而不是源码里的
+#     `private static final class` —— private/static 只写在 InnerClasses 属性里，
+#     class 文件的 access_flags 没有它们，而 R8 的类匹配读的正是 access_flags。
+#     这也是为什么 `-keep private class X` 在 R8 里直接是语法错误，
+#     而 `-keep public class X` 可用：不命中 public 的就是 private/包级，无需枚举名单。
+#   ・改名后在 SpDao 的字段签名里能直接看到效果：
+#     `private volatile SPUtils$SpDao$a<T, K> g;`（原为 TableSnapshot<T, K> table）。
 
 
 #------------------------------------------------------------------------------
@@ -148,6 +206,12 @@
 # 接入方 App 生成的 DataBinderMapperImpl 里是 new com.ved.framework.DataBinderMapperImpl()，
 # 属于跨模块的编译期硬引用，一旦被改名，本框架的 aa.xml / ab.xml 绑定运行时直接失效。
 -keep class com.ved.framework.DataBinderMapperImpl { *; }
+# 它的两个包级嵌套类 InnerBrLookup / InnerLayoutIdLookup 不在上面那条的覆盖范围内
+# （-keep class X 不包含 X$Y），第二节的 `-keep public class` 也不会命中它们。
+# 二者只被外层 mapper 内部引用，改名本身安全；但它们是 DataBinding 的编译期生成产物，
+# 万一哪个 AGP 版本改成按名字引用，就会变成极难排查的绑定静默失效，
+# 这里花 2 个类的代价买断这个风险。
+-keep class com.ved.framework.DataBinderMapperImpl$* { *; }
 -keep class com.ved.framework.BR { *; }
 # 不要给 DataBindingInfo 写 -keep：它只是 AGP 为触发 DataBinding 注解处理器生成的空壳类
 # （类体为空，仅带 @BindingBuildInfo），其源码目录 build/generated/source/dataBinding/trigger
