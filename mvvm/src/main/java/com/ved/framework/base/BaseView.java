@@ -69,62 +69,69 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
     private void setupViewModelObservers() {
         LifecycleOwner owner = viewDelegate.getLifecycleOwner();
 
+        // ICommand / UIChangeLiveData 都是包级类型，Kotlin 无法用任何非 private 的声明暴露它们
+        // （否则报 'public' function exposes its public-package return type），而且 Kotlin 的
+        // `private val command` 编译后是真私有字段、不生成访问器，同包的 Java 也读不到。
+        // 所以 BaseViewModel 只交出返回 Object 的 provideCommand()，由本类（同包）向下转型，
+        // 之后直接使用 command 的 liveData；顺便把原来 15 次重复取值收敛成一次。
+        UIChangeLiveData uc = ((ICommand) viewModel.provideCommand()).getLiveData();
+
         // 对话框相关
-        viewModel.getUC().getShowDialogEvent().observe(owner, this::showDialog);
-        viewModel.getUC().getDismissDialogEvent().observe(owner, v -> dismissDialog());
+        uc.getShowDialogEvent().observe(owner, this::showDialog);
+        uc.getDismissDialogEvent().observe(owner, v -> dismissDialog());
 
         // 权限相关
-        viewModel.getUC().getRequestPermissionEvent().observe(owner, params -> {
+        uc.getRequestPermissionEvent().observe(owner, params -> {
             IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
             String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
             requestPermission(iPermission, permissions);
         });
 
         // 电话相关
-        viewModel.getUC().getRequestCallPhoneEvent().observe(owner, params -> {
+        uc.getRequestCallPhoneEvent().observe(owner, params -> {
             String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
             permissionHelper.callPhone(phoneNumber);
         });
 
-        viewModel.getUC().getRequestWifiRssiEvent().observe(owner, o -> permissionHelper.getWifiRssi());
+        uc.getRequestWifiRssiEvent().observe(owner, o -> permissionHelper.getWifiRssi());
 
         // 活动跳转相关
-        viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
+        uc.getStartActivityEvent().observe(owner, params -> {
             Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
             startActivity(clz, bundle);
         });
 
-        viewModel.getUC().getStartActivityForResultEvent().observe(owner, params -> {
+        uc.getStartActivityForResultEvent().observe(owner, params -> {
             Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
             int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
             startActivityForResult(clz, requestCode, bundle);
         });
 
-        viewModel.getUC().getStartContainerActivityEvent().observe(owner, params -> {
+        uc.getStartContainerActivityEvent().observe(owner, params -> {
             String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
             startContainerActivity(canonicalName, bundle);
         });
 
         // 生命周期相关
-        viewModel.getUC().getFinishEvent().observe(owner, v -> finishActivity());
-        viewModel.getUC().getOnBackPressedEvent().observe(owner, v -> viewDelegate.FragmentActivity().onBackPressed());
+        uc.getFinishEvent().observe(owner, v -> finishActivity());
+        uc.getOnBackPressedEvent().observe(owner, v -> viewDelegate.FragmentActivity().onBackPressed());
 
         // 初始化相关
-        viewModel.getUC().getOnLoadEvent().observe(owner, o -> handleOnLoadEvent());
+        uc.getOnLoadEvent().observe(owner, o -> handleOnLoadEvent());
 
         // 广播相关
-        viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
+        uc.getReceiverEvent().observe(owner, o -> sendReceiver());
 
         // Fragment Resume事件（getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
         // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
-        if (viewModel.getUC().getOnResumeEvent() != null && owner != null) {
+        if (uc.getOnResumeEvent() != null && owner != null) {
             if (viewDelegate.isFragment()){
-                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
+                uc.getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
             }else {
-                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.refreshView());
+                uc.getOnResumeEvent().observe(owner, o -> viewDelegate.refreshView());
             }
         }
     }

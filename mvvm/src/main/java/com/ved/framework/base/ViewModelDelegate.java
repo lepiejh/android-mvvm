@@ -5,7 +5,7 @@ package com.ved.framework.base;
  * 封装 ViewModel 的懒加载创建与缓存逻辑，
  * 供 BaseActivity / BaseFragment / BaseDialogFragment 复用，消除三处重复实现。
  */
-public class ViewModelDelegate<VM extends BaseViewModel> {
+final class ViewModelDelegate<VM extends BaseViewModel> {
 
     private final Object owner;
     private final ViewModelProxy<VM> viewModelProxy;

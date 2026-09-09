@@ -10,7 +10,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * 统一完成订阅的创建、注册与注销，子类只需实现 {@link #createObservable()} 决定普通/粘性事件流。
  * 订阅挂载到 ViewModel 级订阅容器，随 ViewModel 生命周期自动清理，避免内存泄漏。
  */
-public abstract class BaseEventStrategy implements IEventSubscriptionStrategy {
+abstract class BaseEventStrategy implements IEventSubscriptionStrategy {
     private Disposable eventSubscription;
 
     protected abstract Observable<MessageEvent> createObservable();

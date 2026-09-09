@@ -28,7 +28,6 @@ import android.provider.MediaStore.MediaColumns;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 
-import com.ved.framework.base.IThrowable;
 import com.ved.framework.utils.compression.Luban;
 
 import java.io.BufferedInputStream;

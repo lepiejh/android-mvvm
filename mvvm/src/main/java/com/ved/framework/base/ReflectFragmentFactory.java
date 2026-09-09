@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment;
  * 通过类规范名反射创建 Fragment 实例并注入参数，
  * 使用 {@code getDeclaredConstructor().newInstance()} 替代已废弃的 {@code newInstance()}。
  */
-public class ReflectFragmentFactory implements FragmentFactory {
+class ReflectFragmentFactory implements FragmentFactory {
 
     @Override
     public Fragment create(String canonicalName, Bundle args) {

@@ -12,7 +12,7 @@ import android.view.WindowManager;
 
 //import com.hjq.toast.Toaster;
 import com.tencent.mmkv.MMKV;
-import com.ved.framework.base.AppManager;
+import com.ved.framework.utils.AppManager;
 import com.ved.framework.utils.Configure;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.ReflectUtil;
@@ -31,7 +31,6 @@ import io.reactivex.rxjava3.core.Completable;
 import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import me.jessyan.autosize.AutoSizeConfig;
-import update.UpdateAppUtils;
 
 final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleCallbacks {
 

@@ -8,7 +8,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModel;
 import androidx.lifecycle.ViewModelProvider;
 
-public class ViewModelProxyImpl<VM extends BaseViewModel> implements ViewModelProxy<VM> {
+class ViewModelProxyImpl<VM extends BaseViewModel> implements ViewModelProxy<VM> {
     private final Object obj;
     private VM viewModel;
 

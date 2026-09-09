@@ -23,7 +23,7 @@ import com.ved.framework.utils.bland.code.ObjectUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
-public class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeObserver.OnGlobalLayoutListener{
+class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeObserver.OnGlobalLayoutListener{
     private ImmersionBar mImmersionBar;
 
     @Override

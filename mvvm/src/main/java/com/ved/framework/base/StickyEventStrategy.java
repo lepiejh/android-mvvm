@@ -8,7 +8,7 @@ import io.reactivex.rxjava3.core.Observable;
 /**
  * 粘性事件订阅策略
  */
-public class StickyEventStrategy extends BaseEventStrategy {
+class StickyEventStrategy extends BaseEventStrategy {
 
     @Override
     protected Observable<MessageEvent> createObservable() {

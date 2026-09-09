@@ -1,4 +1,4 @@
-package com.ved.framework.base;
+package com.ved.framework.utils;
 
 import android.app.Activity;
 
@@ -6,8 +6,6 @@ import java.util.Stack;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
-import com.ved.framework.utils.KLog;
 
 /**
  * Created by ved on 2017/6/15.

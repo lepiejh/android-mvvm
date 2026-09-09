@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment;
  * 定义 Fragment 的创建契约，将"创建什么"与"如何创建"解耦，
  * 便于替换不同的创建策略（反射、依赖注入等）。
  */
-public interface FragmentFactory {
+interface FragmentFactory {
 
     /**
      * 根据规范名创建 Fragment 实例

@@ -12,7 +12,7 @@ import com.ved.framework.permission.IPermission;
  * 页面通过 {@link BaseViewModel} 提供的门面方法间接调用，
  * 解耦命令的发起方（ViewModel）与执行方（View）。
  */
-public interface ICommand {
+interface ICommand {
 
     /** 显示加载对话框 */
     void showDialog();
@@ -62,7 +62,16 @@ public interface ICommand {
     /** 触发返回键事件 */
     void onBackPressed();
 
-    /** 获取 UI 事件载体 */
+    /**
+     * 获取 UI 事件载体。
+     *
+     * <p>{@code UIChangeLiveData} 是包级类，本接口也是包级接口，同包内直接引用完全合法。
+     * 注意：本方法的返回值<b>不要</b>再被 Kotlin 侧的任何非 private 声明转发出去，
+     * 否则会触发 “'public' function exposes its 'public/&#47;*package*&#47;' return type” ——
+     * Kotlin 没有包级可见性，internal / protected 同样报错，只有 private 例外。
+     * {@code BaseViewModel} 因此只交出 {@code provideCommand(): Any}，由同包的
+     * {@code BaseView} 向下转型后调用本方法。
+     */
     UIChangeLiveData getLiveData();
 
     /** 发送通用事件 */

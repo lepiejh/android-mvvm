@@ -1,6 +1,6 @@
 package com.ved.framework.base;
 
-public interface IEventSubscriptionStrategy {
+interface IEventSubscriptionStrategy {
     void setupSubscription(BaseViewModel<?> viewModel);
 
     void remove();

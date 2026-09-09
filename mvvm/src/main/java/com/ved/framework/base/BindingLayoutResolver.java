@@ -18,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * 绑定类 {@code XxxActivityBinding} 按 DataBinding 命名规则反推出布局 {@code xxx_activity}。
  * 这样页面类无需再覆写 {@code initContentView()}。
  */
-public final class BindingLayoutResolver {
+final class BindingLayoutResolver {
 
     private BindingLayoutResolver() {
     }

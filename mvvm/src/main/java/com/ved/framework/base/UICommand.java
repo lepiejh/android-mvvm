@@ -11,7 +11,7 @@ import com.ved.framework.utils.Constant;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UICommand implements ICommand {
+final class UICommand implements ICommand {
     private final UIChangeLiveData liveData = new UIChangeLiveData();
 
     public void showDialog() {

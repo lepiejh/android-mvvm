@@ -1,5 +1,5 @@
 package com.ved.framework.base;
 
-public interface ViewModelProxy<VM extends BaseViewModel>{
+interface ViewModelProxy<VM extends BaseViewModel>{
     VM createViewModel();
 }

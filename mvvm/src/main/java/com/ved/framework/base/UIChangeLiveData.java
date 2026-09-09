@@ -12,7 +12,25 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 import androidx.lifecycle.Observer;
 
-public final class UIChangeLiveData extends SingleLiveEvent {
+/**
+ * UI 事件载体：集中持有 ViewModel -> View 的全部一次性事件（对话框 / 跳转 / 权限 / 生命周期 等）。
+ *
+ * <p><b>本类保持包级可见（不加 public）</b>，与同包的 {@link ICommand} / {@code UICommand} /
+ * {@code BaseView} 封装粒度一致：{@code EventKey} 注册表、懒加载 {@code get(EventKey)}
+ * 这些实现细节全部藏在包内，也不会被库模块混淆规则的 {@code -keep public class} 锁死类名。
+ *
+ * <p><b>为什么它能一直待在包级：</b>{@code BaseViewModel} 已经删掉了
+ * {@code fun getUC(): UIChangeLiveData}。Kotlin 没有包级可见性，它把 Java 的包级类型看作
+ * {@code public/&#47;*package*&#47;}，并禁止其出现在任何非 private 的 Kotlin 声明里
+ * （internal / protected 同样报错，只有 private 例外），所以那个 public 函数一存在就必须把
+ * 本类抬成 public。现在改成：{@code BaseViewModel} 只交出 {@code provideCommand(): Any}，
+ * 同包的 {@code BaseView} 向下转型为 {@link ICommand} 后取 {@code liveData}，
+ * 于是本类再也不需要出现在任何 Kotlin 的公开签名里。
+ *
+ * <p>新增事件时：在下面的 {@code EventKey} 里加枚举值，并补一个对应的 public getter；
+ * 若 {@code BaseView} 需要观察，再在那里加一行 {@code uc.getXxxEvent().observe(...)}。
+ */
+final class UIChangeLiveData extends SingleLiveEvent {
 
     /**
      * 事件类型注册表（注册表模式）：将 13 个重复字段收敛为统一的注册表，

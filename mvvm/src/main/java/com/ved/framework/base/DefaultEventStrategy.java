@@ -8,7 +8,7 @@ import io.reactivex.rxjava3.core.Observable;
 /**
  * 普通（非粘性）事件订阅策略
  */
-public class DefaultEventStrategy extends BaseEventStrategy {
+class DefaultEventStrategy extends BaseEventStrategy {
 
     @Override
     protected Observable<MessageEvent> createObservable() {
