@@ -131,7 +131,7 @@ dependencies {
     api 'org.apache.commons:commons-lang3:3.6'
     api 'com.github.lepiejh:android-dialog:v1.2.27'
     compileOnly 'com.github.lepiejh:android-tcp:v1.3.37'
-    api 'com.github.lepiejh:android-tablayout:v1.3.39'
+    api 'com.github.lepiejh:tablayout:v1.3.39'
     compileOnly 'com.github.lepiejh:android-play:v1.0.8'
     compileOnly 'com.github.lepiejh:android-update:v1.0.1'
     compileOnly 'com.github.lepiejh:html:v1.1.0'
