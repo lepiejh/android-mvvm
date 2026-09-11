@@ -58,7 +58,7 @@ final class BindingLayoutResolver {
      * @param context   上下文（Activity / Fragment 均可）
      * @return 布局资源 id，无法解析时返回 0
      */
-    public static int resolveLayoutId(@NonNull Context context, @NonNull Class<?> hostClass) {
+    private static int resolveLayoutId(@NonNull Context context, @NonNull Class<?> hostClass) {
         // 命中缓存：一次 Map 查询，无任何反射/资源查找开销
         Integer cached = RESOLVED_ID_CACHE.get(hostClass);
         if (cached != null) {
