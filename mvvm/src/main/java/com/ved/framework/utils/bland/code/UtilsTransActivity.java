@@ -151,6 +151,12 @@ public class UtilsTransActivity extends AppCompatActivity {
     }
 
     public abstract static class TransActivityDelegate implements Serializable {
+
+        // 消除 -Xlint:serial 警告。本类会被存进 Activity 的 savedInstanceState，
+        // 所以取值必须是 JVM 自动推导的默认值（serialver 实测），不能写成 1L；
+        // 否则接入方升级本库后，进程重建恢复旧状态时会抛 InvalidClassException。
+        private static final long serialVersionUID = 1137553600850403922L;
+
         public void onCreateBefore(@NonNull UtilsTransActivity activity, @Nullable Bundle savedInstanceState) {/**/}
 
         public void onCreated(@NonNull UtilsTransActivity activity, @Nullable Bundle savedInstanceState) {/**/}

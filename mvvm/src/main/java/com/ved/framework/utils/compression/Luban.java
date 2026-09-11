@@ -208,8 +208,9 @@ public class Luban {
     }
 
     /**
-     * @deprecated
+     * @deprecated 压缩后的文件名由内部命名规则生成，外部指定的 filename 不再生效。
      */
+    @Deprecated
     public Luban setFilename(String filename) {
         this.filename = filename;
         return this;

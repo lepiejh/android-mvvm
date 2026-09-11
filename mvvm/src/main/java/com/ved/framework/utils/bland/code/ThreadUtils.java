@@ -1070,6 +1070,9 @@ public final class ThreadUtils {
 
     private static final class LinkedBlockingQueue4Util extends LinkedBlockingQueue<Runnable> {
 
+        // 消除 -Xlint:serial 警告；取值为 JVM 自动推导的默认值（serialver 实测），勿改。
+        private static final long serialVersionUID = 5590783767058279003L;
+
         private volatile ThreadPoolExecutor4Util mPool;
 
         private int mCapacity = Integer.MAX_VALUE;

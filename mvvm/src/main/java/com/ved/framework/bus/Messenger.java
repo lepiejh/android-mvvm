@@ -94,7 +94,9 @@ public class Messenger {
      * @param action                    do something on message received
      */
     public void register(Object recipient, Object token, boolean receiveDerivedMessagesToo, BindingAction action) {
-        doRegister(NotMsgType.class, receiveDerivedMessagesToo, new WeakAction(recipient, action), token);
+        // 菱形推断为 WeakAction<Object>（无参回调不携带消息体，T 无意义），
+        // 与下面 register(..., BindingConsumer<T>, Class<T>) 收敛后的存储类型保持一致。
+        doRegister(NotMsgType.class, receiveDerivedMessagesToo, new WeakAction<>(recipient, action), token);
     }
 
     /**
@@ -148,14 +150,22 @@ public class Messenger {
      * @param <T>                       message data type
      */
     public <T> void register(Object recipient, Object token, boolean receiveDerivedMessagesToo, BindingConsumer<T> action, Class<T> tClass) {
-        doRegister(tClass, receiveDerivedMessagesToo, new WeakAction<T>(recipient, action), token);
+        // 为什么把 WeakAction<T> 收敛成 WeakAction<Object>：本类是个异构消息分发器，
+        // 一个 List<WeakActionAndToken> 里混存了各种 T 的订阅，无法用单一实参描述；
+        // 以前直接用裸类型 WeakAction 来表达这一点，代价是 13 处 rawtypes 告警。
+        // 两者擦除后完全相同，运行期行为一字不差；真正的类型安全本来就靠
+        // sendToTargetOrType 里的 messageType 匹配来保证，而不是靠这里的泛型。
+        // @SuppressWarnings 只盖这一个局部变量，不外溢到整个方法。
+        @SuppressWarnings("unchecked")
+        WeakAction<Object> weakAction = (WeakAction<Object>) new WeakAction<T>(recipient, action);
+        doRegister(tClass, receiveDerivedMessagesToo, weakAction, token);
     }
 
     /**
      * 模板方法：抽取 register 系列方法的公共注册流程。
      * 根据 receiveDerivedMessagesToo 选择对应的接收者容器，再写入消息订阅。
      */
-    private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction weakAction, Object token) {
+    private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
         HashMap<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
 
         List<WeakActionAndToken> list = recipients.computeIfAbsent(messageType, k -> new ArrayList<WeakActionAndToken>());
@@ -291,7 +301,7 @@ public class Messenger {
             listClone.addAll(list);
 
             for (WeakActionAndToken item : listClone) {
-                WeakAction executeAction = item.getAction();
+                WeakAction<Object> executeAction = item.getAction();
                 if (executeAction != null
                         && item.getAction().isLive()
                         && item.getAction().getTarget() != null
@@ -315,7 +325,7 @@ public class Messenger {
         synchronized (lists) {
             for (Type messageType : lists.keySet()) {
                 for (WeakActionAndToken item : lists.get(messageType)) {
-                    WeakAction weakAction = item.getAction();
+                    WeakAction<Object> weakAction = item.getAction();
 
                     if (weakAction != null
                             && recipient == weakAction.getTarget()) {
@@ -346,7 +356,7 @@ public class Messenger {
 
         synchronized (lists) {
             for (WeakActionAndToken item : lists.get(messageType)) {
-                WeakAction weakAction = item.getAction();
+                WeakAction<Object> weakAction = item.getAction();
 
                 if (weakAction != null
                         && recipient == weakAction.getTarget()
@@ -374,8 +384,8 @@ public class Messenger {
                 || instanceType == null) {
             return false;
         }
-        Class[] interfaces = ((Class) instanceType).getInterfaces();
-        for (Class currentInterface : interfaces) {
+        Class<?>[] interfaces = ((Class<?>) instanceType).getInterfaces();
+        for (Class<?> currentInterface : interfaces) {
             if (currentInterface == interfaceType) {
                 return true;
             }
@@ -410,7 +420,7 @@ public class Messenger {
     }
 
     private void sendToTargetOrType(Type messageTargetType, Object token) {
-        Class messageType = NotMsgType.class;
+        Class<?> messageType = NotMsgType.class;
         if (recipientsOfSubclassesAction != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0008.002
@@ -421,7 +431,7 @@ public class Messenger {
                 List<WeakActionAndToken> list = null;
 
                 if (messageType == type
-                        || ((Class) type).isAssignableFrom(messageType)
+                        || ((Class<?>) type).isAssignableFrom(messageType)
                         || classImplements(messageType, type)) {
                     list = recipientsOfSubclassesAction.get(type);
                 }
@@ -451,7 +461,7 @@ public class Messenger {
             listClone.addAll(list);
 
             for (WeakActionAndToken item : listClone) {
-                WeakAction executeAction = item.getAction();
+                WeakAction<Object> executeAction = item.getAction();
                 if (executeAction != null
                         && item.getAction().isLive()
                         && item.getAction().getTarget() != null
@@ -467,7 +477,7 @@ public class Messenger {
     }
 
     private <T> void sendToTargetOrType(T message, Type messageTargetType, Object token) {
-        Class messageType = message.getClass();
+        Class<?> messageType = message.getClass();
 
 
         if (recipientsOfSubclassesAction != null) {
@@ -480,7 +490,7 @@ public class Messenger {
                 List<WeakActionAndToken> list = null;
 
                 if (messageType == type
-                        || ((Class) type).isAssignableFrom(messageType)
+                        || ((Class<?>) type).isAssignableFrom(messageType)
                         || classImplements(messageType, type)) {
                     list = recipientsOfSubclassesAction.get(type);
                 }
@@ -499,20 +509,26 @@ public class Messenger {
         cleanup();
     }
 
+    /**
+     * 订阅条目：把一个 {@code WeakAction} 与可选的 token 绑在一起。
+     * <p>存储类型统一用 {@code WeakAction<Object>}：本类是异构分发器，同一个列表里
+     * 混存了不同消息类型的订阅，无法用单一泛型实参描述（详见 register 处的说明）。
+     * <p>本类是 private 内部类，不对外暴露，因此收紧泛型不影响任何公开 API。
+     */
     private class WeakActionAndToken {
-        private WeakAction action;
+        private WeakAction<Object> action;
         private Object token;
 
-        public WeakActionAndToken(WeakAction action, Object token) {
+        public WeakActionAndToken(WeakAction<Object> action, Object token) {
             this.action = action;
             this.token = token;
         }
 
-        public WeakAction getAction() {
+        public WeakAction<Object> getAction() {
             return action;
         }
 
-        public void setAction(WeakAction action) {
+        public void setAction(WeakAction<Object> action) {
             this.action = action;
         }
 

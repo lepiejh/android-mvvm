@@ -52,6 +52,7 @@ public final class ToastUtils {
      * 设置 Toast 的重力属性（仅适用于 API 30 及以下版本）
      * @deprecated 从 Android 12 开始，文本 Toast 不再支持重力设置
      */
+    @Deprecated
     @RequiresApi(Build.VERSION_CODES.R)
     public static void setGravity(int gravity, int xOffset, int yOffset) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R) {

@@ -1305,7 +1305,15 @@ public final class SPUtils {
             }
         }
 
+        // @SafeVarargs 已承诺不让 entities 产生堆污染，但本方法把它原样交给另一个 varargs
+        // 方法 Arrays.asList(T...)，javac 无法跨方法组合验证该承诺，因此仍报
+        // “Varargs method could cause heap pollution from non-reifiable varargs parameter”。
+        // 已核对两侧：Arrays.asList 只把数组包一层、不写回元素；下面的 insertInTx(List<T>)
+        // 只做 list.addAll(entities)，也不会反向修改这个定长列表。所以转发确实安全。
+        // 不改成 new ArrayList<>(...) 逐个 add：那样会多一次底层数组分配，而本类是
+        // 高频 CRUD 路径，为消除一个已确认安全的编译期告警而增加开销并不划算。
         @SafeVarargs
+        @SuppressWarnings("varargs")
         public final boolean insertInTx(T... entities) {
             if (entities == null || entities.length == 0) {
                 return false;
@@ -1334,7 +1342,9 @@ public final class SPUtils {
             }
         }
 
+        // @SuppressWarnings("varargs") 理由同 insertInTx(T...)：下游 insertOrReplaceInTx(List<T>) 只读不写。
         @SafeVarargs
+        @SuppressWarnings("varargs")
         public final boolean insertOrReplaceInTx(T... entities) {
             if (entities == null || entities.length == 0) {
                 return false;
@@ -1380,7 +1390,9 @@ public final class SPUtils {
             }
         }
 
+        // @SuppressWarnings("varargs") 理由同 insertInTx(T...)：下游 updateInTx(List<T>) 只读不写。
         @SafeVarargs
+        @SuppressWarnings("varargs")
         public final boolean updateInTx(T... entities) {
             if (entities == null || entities.length == 0) {
                 return false;
@@ -1456,7 +1468,9 @@ public final class SPUtils {
             }
         }
 
+        // @SuppressWarnings("varargs") 理由同 insertInTx(T...)：下游 deleteInTx(List<T>) 只读不写。
         @SafeVarargs
+        @SuppressWarnings("varargs")
         public final boolean deleteInTx(T... entities) {
             if (entities == null || entities.length == 0) {
                 return false;
@@ -1482,7 +1496,9 @@ public final class SPUtils {
             }
         }
 
+        // @SuppressWarnings("varargs") 理由同 insertInTx(T...)：下游 deleteByKeyInTx(List<K>) 只读不写。
         @SafeVarargs
+        @SuppressWarnings("varargs")
         public final boolean deleteByKeyInTx(K... keys) {
             if (keys == null || keys.length == 0) {
                 return false;

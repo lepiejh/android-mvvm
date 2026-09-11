@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
@@ -140,8 +141,11 @@ public class MessengerUtils {
         String             mPkgName;
         Messenger          mServer;
         LinkedList<Bundle> mCached = new LinkedList<>();
+        // 无参 new Handler() 自 API 30 起废弃。本类全链路假定在主线程使用
+        // （sClientMap 是非线程安全的 HashMap，subscribe/register 也都在主线程调），
+        // 显式绑定主线程 Looper 后行为不变；回调方拿到的仍是主线程。
         @SuppressLint("HandlerLeak")
-        Handler mReceiveServeMsgHandler = new Handler() {
+        Handler mReceiveServeMsgHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 Bundle data = msg.getData();
@@ -262,8 +266,10 @@ public class MessengerUtils {
 
         private final ConcurrentHashMap<Integer, Messenger> mClientMap = new ConcurrentHashMap<>();
 
+        // 同上：Service 实例由系统在主线程构造，无参 new Handler() 本来就等价于主线程 Looper；
+        // 显式传 Looper.getMainLooper() 只是避开 API 30 的废弃无参构造器。
         @SuppressLint("HandlerLeak")
-        private final Handler mReceiveClientMsgHandler = new Handler() {
+        private final Handler mReceiveClientMsgHandler = new Handler(Looper.getMainLooper()) {
             @Override
             public void handleMessage(Message msg) {
                 switch (msg.what) {

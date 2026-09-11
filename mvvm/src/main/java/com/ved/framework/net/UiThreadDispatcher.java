@@ -22,7 +22,10 @@ final class UiThreadDispatcher {
      * @param viewModel 可能为 null；为 null 时回退到主线程 Handler 调度
      * @param action    需要在 UI 线程执行的任务
      */
-    static void runOnUiThread(@Nullable BaseViewModel viewModel, Runnable action) {
+    // 形参用 BaseViewModel<?>：本方法只调 viewModel.fetchWithCancel(...)，
+    // 而 fetchWithCancel 的签名与 Model 泛型实参 M 无关，通配符不影响调用；
+    // 本类与本方法都是包级，收紧泛型不影响公开 API。
+    static void runOnUiThread(@Nullable BaseViewModel<?> viewModel, Runnable action) {
         if (viewModel != null) {
             viewModel.fetchWithCancel(CorpseUtils.INSTANCE.generateSecureRandomString(12),
                     (coroutineScope, continuation) -> null,

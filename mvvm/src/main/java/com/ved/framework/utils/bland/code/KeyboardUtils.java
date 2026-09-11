@@ -7,6 +7,7 @@ import android.graphics.Rect;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.ResultReceiver;
 import android.os.SystemClock;
 import android.util.Log;
@@ -81,7 +82,10 @@ public final class KeyboardUtils {
         view.setFocusable(true);
         view.setFocusableInTouchMode(true);
         view.requestFocus();
-        imm.showSoftInput(view, flags, new ResultReceiver(new Handler()) {
+        // 无参 new Handler() 自 API 30 起废弃（它隐式绑定当前线程的 Looper）。
+        // 显式传主线程 Looper 后行为不变：本方法本来就在 UI 线程调起键盘；
+        // 而且若从没有 Looper 的子线程调进来，旧写法会直接抛 RuntimeException，现在不会。
+        imm.showSoftInput(view, flags, new ResultReceiver(new Handler(Looper.getMainLooper())) {
             @Override
             protected void onReceiveResult(int resultCode, Bundle resultData) {
                 if (resultCode == InputMethodManager.RESULT_UNCHANGED_HIDDEN

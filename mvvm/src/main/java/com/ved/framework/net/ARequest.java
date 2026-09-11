@@ -34,7 +34,10 @@ import io.reactivex.rxjava3.subjects.PublishSubject;
  * @param <K> 返回的数据类型
  */
 public abstract class ARequest<T, K> {
-    private BaseViewModel viewModel;
+    // 本类只把 viewModel 当成“生命周期/弹窗宿主”使用（dismissDialog、fetchWithCancel 等），
+    // 从不碰它的 Model 泛型实参 M，所以写 BaseViewModel<?> 而不是裸类型；
+    // 擦除后与原来完全一致，二进制兼容。
+    private BaseViewModel<?> viewModel;
     private Class<? extends T> service;
     private IMethod<T, K> method;
     private int index = 0;
@@ -45,7 +48,7 @@ public abstract class ARequest<T, K> {
     private IResponse<K> response;
     private Map<String, String> headers;
 
-    public ARequest<T, K> withViewModel(BaseViewModel viewModel) {
+    public ARequest<T, K> withViewModel(BaseViewModel<?> viewModel) {
         this.viewModel = viewModel;
         return this;
     }
@@ -99,7 +102,7 @@ public abstract class ARequest<T, K> {
         return request(viewModel,method,service,viewState,seatSuccess,seatError,headers,index,isLoading,response);
     }
 
-    private PublishSubject<Object> request(@Nullable BaseViewModel viewModel,
+    private PublishSubject<Object> request(@Nullable BaseViewModel<?> viewModel,
                                           @Nullable IMethod<T, K> method,@Nullable Class<? extends T> service,
                                           View view,ISeatSuccess seatSuccess,ISeatError seatError,Map<String, String> headers,
                                           int index,boolean isLoading, @Nullable IResponse<K> iResponse) {
@@ -142,7 +145,8 @@ public abstract class ARequest<T, K> {
                                     }))
                             // 取消（dispose）时立即清理连接池中的空闲连接，
                             // 避免取消后的下一次请求复用「半死」连接导致失败或需要等待连接释放
-                            .doOnDispose(() -> RetrofitClient.getInstance().evictConnections())
+                            // （evictConnections() 是静态方法，直接用类名限定调用）
+                            .doOnDispose(() -> RetrofitClient.evictConnections())
                             .takeUntil(lifecycleDisposable)
                             .subscribe((Consumer<K>) response ->
                                             parseSuccess(viewModel,view, isLoading, iResponse, response),
@@ -161,7 +165,7 @@ public abstract class ARequest<T, K> {
         return lifecycleDisposable;
     }
 
-    private void parseSuccess(@Nullable BaseViewModel viewModel, View viewState,boolean isLoading, IResponse<K> iResponse, K response) {
+    private void parseSuccess(@Nullable BaseViewModel<?> viewModel, View viewState,boolean isLoading, IResponse<K> iResponse, K response) {
         if (viewState!= null) {
             viewState.setVisibility(View.GONE);
         }
@@ -177,7 +181,7 @@ public abstract class ARequest<T, K> {
      * 统一错误分发模板方法：优先借助 ViewModel 的协程任务在 UI 线程回调，
      * 无 ViewModel 时回退到主线程 Handler，保证错误回调一定发生在 UI 线程。
      */
-    private void dispatchError(boolean isLoading, @Nullable BaseViewModel viewModel, String error,
+    private void dispatchError(boolean isLoading, @Nullable BaseViewModel<?> viewModel, String error,
                                View view, ISeatError seatError, IResponse<K> iResponse) {
         UiThreadDispatcher.runOnUiThread(viewModel, () ->
                 parseError(isLoading, viewModel, error, view, seatError, iResponse, null));
@@ -202,7 +206,7 @@ public abstract class ARequest<T, K> {
         return t instanceof SocketException && "Socket closed".equals(t.getMessage());
     }
 
-    private void parseError(boolean isLoading, @Nullable BaseViewModel viewModel, String error, View viewState,
+    private void parseError(boolean isLoading, @Nullable BaseViewModel<?> viewModel, String error, View viewState,
                             ISeatError seatError, IResponse<K> iResponse, ResponseThrowable throwable) {
         if (isLoading && viewModel != null) {
             viewModel.dismissDialog();
@@ -237,7 +241,7 @@ public abstract class ARequest<T, K> {
     /**
      * 处理 ResultException 业务异常：透出错误码与错误信息到响应回调与占位视图
      */
-    private void handleResultException(@Nullable BaseViewModel viewModel, View viewState,
+    private void handleResultException(@Nullable BaseViewModel<?> viewModel, View viewState,
                                        ISeatError seatError, IResponse<K> iResponse, ResponseThrowable throwable) {
         ResultException resultException = (ResultException) throwable.getCause();
         exceptionHandling(viewModel, resultException.getErrMsg(), resultException.getErrCode());
@@ -252,5 +256,14 @@ public abstract class ARequest<T, K> {
         }
     }
 
+    /**
+     * 异常回调，由子类实现。
+     *
+     * <p><b>注意：这里的 {@code BaseViewModel} 故意保持裸类型，不要改成
+     * {@code BaseViewModel<?>}。</b>本方法是 public abstract，外部使用方必须 override 它；
+     * 一旦把形参改成通配符版本，已发布的子类重写（形参是裸 {@code BaseViewModel}）
+     * 虽然仍能编译（擦除后签名相同、构成子签名），但会在<b>使用方自己的代码里</b>
+     * 新增 rawtypes/unchecked 告警。用本库的 1 条告警去换所有使用方的告警并不划算。
+     */
     public abstract void exceptionHandling(@Nullable BaseViewModel viewModel, @Nullable String error, int code);
 }

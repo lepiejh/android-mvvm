@@ -449,10 +449,10 @@ public final class StringUtils {
     }
 
     /**
-     * @deprecated
-     * 因为 Geocoder.getFromLocation 是一个 同步阻塞调用，它在主线程中执行时会阻塞主线程，导致 UI 无响应
+     * @deprecated 因为 Geocoder.getFromLocation 是一个 同步阻塞调用，它在主线程中执行时会阻塞主线程，导致 UI 无响应
      * 使用com.ved.framework.utils.CorpseUtils#fetchAddressFromLocation替换
      */
+    @Deprecated
     public static Address getAddress(double latitude, double longitude) {
         List<Address> addressList = null;
         Geocoder geocoder = new Geocoder(Utils.getContext());

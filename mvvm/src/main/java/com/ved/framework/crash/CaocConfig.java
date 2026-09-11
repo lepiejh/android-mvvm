@@ -31,6 +31,13 @@ import androidx.annotation.Nullable;
 
 public class CaocConfig implements Serializable {
 
+    /**
+     * 消除 -Xlint:serial 警告。取值不是随手写的 1L，而是 JVM 对本类自动推导出的
+     * 默认值（serialver 实测），因此与历史序列化流完全兼容。
+     * <p><b>不要修改。</b>改了之后旧的序列化数据反序列化会抛 InvalidClassException。
+     */
+    private static final long serialVersionUID = 6564400752115881779L;
+
     @IntDef({BACKGROUND_MODE_CRASH, BACKGROUND_MODE_SHOW_CUSTOM, BACKGROUND_MODE_SILENT})
     @Retention(RetentionPolicy.SOURCE)
     private @interface BackgroundMode {

@@ -797,12 +797,13 @@ public class ImageUtils {
         //默认不缩放
         float scaleWidth = 1;
         float scaleHeight = 1;
-        // 计算宽高缩放率
+        // 计算宽高缩放率（expectWidth / expectHeight / width / height 均为 float，
+        // 无需再做 (float) 强转，除法本身就是浮点运算）
         if (expectWidth < width) {
-            scaleWidth = ((float) expectWidth) / width;
+            scaleWidth = expectWidth / width;
         }
         if (expectHeight < height) {
-            scaleHeight = ((float) expectHeight) / height;
+            scaleHeight = expectHeight / height;
         }
         // 缩放图片动作
         matrix.postScale(scaleWidth, scaleHeight);

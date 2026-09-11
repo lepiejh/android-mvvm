@@ -17,7 +17,9 @@ public class BigDecimalUtils {
      */
     public static String toDecimal(double value) {
         BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(2, BigDecimal.ROUND_HALF_UP);
+        // BigDecimal.ROUND_HALF_UP 与 setScale(int, int) 自 Java 9 / API 29 起都已废弃，
+        // 统一改用 RoundingMode 枚举版本（API 1 即可用），行为完全一致。
+        bd = bd.setScale(2, RoundingMode.HALF_UP);
         return bd.toString();
     }
 
@@ -25,7 +27,7 @@ public class BigDecimalUtils {
         if (BlankUtil.isEmptyObj(value)) {
             return "";
         }
-        value = value.setScale(2, BigDecimal.ROUND_HALF_UP);
+        value = value.setScale(2, RoundingMode.HALF_UP);
         return value.toString();
     }
 
@@ -33,7 +35,7 @@ public class BigDecimalUtils {
         if (BlankUtil.isEmptyObj(value)) {
             return "";
         }
-        value = value.setScale(point, BigDecimal.ROUND_DOWN);
+        value = value.setScale(point, RoundingMode.DOWN);
         return value.toString();
     }
 
@@ -56,7 +58,7 @@ public class BigDecimalUtils {
             return "";
         }
         BigDecimal bd = new BigDecimal(value);
-        bd = bd.setScale(point, BigDecimal.ROUND_HALF_UP);
+        bd = bd.setScale(point, RoundingMode.HALF_UP);
         return bd.toString();
     }
 
@@ -70,7 +72,7 @@ public class BigDecimalUtils {
     public static String toDecimal(float value, int point) {
         double d = Double.parseDouble(String.valueOf(value));  // 保证精度不丢失
         BigDecimal bd = new BigDecimal(d);
-        bd = bd.setScale(point, BigDecimal.ROUND_HALF_UP);
+        bd = bd.setScale(point, RoundingMode.HALF_UP);
         return bd.toString();
     }
 
@@ -178,7 +180,45 @@ public class BigDecimalUtils {
         return new BigDecimal(d).setScale(i, roundingMode).doubleValue();
     }
 
+    /**
+     * 保留历史签名：舍入模式以旧的 {@code BigDecimal.ROUND_*} int 常量传入。
+     * <p>内部先映射成 {@link RoundingMode} 再调上面的重载，避开已废弃的
+     * {@code setScale(int, int)}；对任何合法取值的计算结果与之前完全一致，
+     * 对非法取值同样抛 {@link IllegalArgumentException}。
+     * <p>新代码请直接用 {@link #round(double, int, RoundingMode)}。
+     */
     public static double round(double d, int i, int roundingMode) {
-        return new BigDecimal(d).setScale(i, roundingMode).doubleValue();
+        return round(d, i, toRoundingMode(roundingMode));
+    }
+
+    /**
+     * 把旧的 {@code BigDecimal.ROUND_*} int 常量映射为 {@link RoundingMode}。
+     * <p>不用 {@code RoundingMode.valueOf(int)}：那是 Java 9 才加入的 API，
+     * 本库 {@code minSdkVersion 19}，在低版本设备上会抛 {@code NoSuchMethodError}。
+     * <p>{@code @SuppressWarnings("deprecation")} 只能加在这里：本方法存在的唯一目的
+     * 就是读这些已废弃的常量，把废弃面收拢到一个私有方法里。
+     */
+    @SuppressWarnings("deprecation")
+    private static RoundingMode toRoundingMode(int roundingMode) {
+        switch (roundingMode) {
+            case BigDecimal.ROUND_UP:
+                return RoundingMode.UP;
+            case BigDecimal.ROUND_DOWN:
+                return RoundingMode.DOWN;
+            case BigDecimal.ROUND_CEILING:
+                return RoundingMode.CEILING;
+            case BigDecimal.ROUND_FLOOR:
+                return RoundingMode.FLOOR;
+            case BigDecimal.ROUND_HALF_UP:
+                return RoundingMode.HALF_UP;
+            case BigDecimal.ROUND_HALF_DOWN:
+                return RoundingMode.HALF_DOWN;
+            case BigDecimal.ROUND_HALF_EVEN:
+                return RoundingMode.HALF_EVEN;
+            case BigDecimal.ROUND_UNNECESSARY:
+                return RoundingMode.UNNECESSARY;
+            default:
+                throw new IllegalArgumentException("Invalid rounding mode value: " + roundingMode);
+        }
     }
 }

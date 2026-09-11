@@ -1,7 +1,9 @@
 package com.ved.framework.utils
 
 import android.graphics.Rect
+import android.location.Address
 import android.location.Geocoder
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.TouchDelegate
@@ -11,6 +13,7 @@ import com.ved.framework.utils.bland.code.SizeUtils
 import com.ved.framework.utils.bland.code.ThreadUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import okhttp3.Request
 import org.json.JSONObject
@@ -19,6 +22,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.security.SecureRandom
 import java.util.Locale
+import kotlin.coroutines.resume
 
 object CorpseUtils {
 
@@ -174,8 +178,8 @@ object CorpseUtils {
                 try {
                     // 在 IO 线程执行地理编码
                     val geocoder = Geocoder(Utils.getContext(), Locale.getDefault())
-                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                    addresses?.firstOrNull()?.getAddressLine(0) // 获取地址行
+                    getFromLocationCompat(geocoder, latitude, longitude)
+                        ?.firstOrNull()?.getAddressLine(0) // 获取地址行
                 } catch (e: Exception) {
                     null // 处理异常
                 }
@@ -183,6 +187,46 @@ object CorpseUtils {
             // 切换回主线程返回结果
             onResult(address)
         }
+    }
+
+    /**
+     * 地理编码兼容层。
+     *
+     * `Geocoder.getFromLocation(Double, Double, Int)` 这个同步重载自 API 33 起被废弃
+     * （它会阻塞调用线程等待网络/服务端返回），官方替代品是带
+     * `Geocoder.GeocodeListener` 的异步重载。但本库 `minSdkVersion 19`，异步重载只在
+     * API 33+ 存在，所以这里按版本分流：
+     *
+     * - API 33+：用异步重载，并用 [suspendCancellableCoroutine] 把它接回协程。
+     *   `Geocoder.GeocodeListener` 在 API 33 的真实形状是：
+     *   `void onGeocode(List<Address>)`（抽象）+ `default void onError(String)`，
+     *   两个回调都 resume，所以无论成功、失败还是“找到但为空”都不会挂死；
+     *   空列表经调用方的 `firstOrNull()` 同样归一为 null。
+     *   回调用 `cont.isActive` 做幂等保护：协程若已被取消（如 Lifecycle 销毁），
+     *   迟到的回调不会再去 resume 一个已完成的续体。
+     * - API 33 以下：只能继续用同步重载。调用方 [fetchAddressFromLocation] 已经把它
+     *   放在 `Dispatchers.IO` 上，阻塞的是 IO 线程池而不是主线程，因此用
+     *   `@Suppress("DEPRECATION")` 定点压制这一行是安全的，且不会外溢到其它代码。
+     */
+    private suspend fun getFromLocationCompat(
+        geocoder: Geocoder,
+        latitude: Double,
+        longitude: Double
+    ): List<Address>? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        suspendCancellableCoroutine { cont ->
+            geocoder.getFromLocation(latitude, longitude, 1, object : Geocoder.GeocodeListener {
+                override fun onGeocode(addresses: List<Address>) {
+                    if (cont.isActive) cont.resume(addresses)
+                }
+
+                override fun onError(errorMessage: String?) {
+                    if (cont.isActive) cont.resume(null)
+                }
+            })
+        }
+    } else {
+        @Suppress("DEPRECATION")
+        geocoder.getFromLocation(latitude, longitude, 1)
     }
 
     /**

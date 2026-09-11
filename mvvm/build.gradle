@@ -1,6 +1,9 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+// kotlin-android-extensions 已移除：该插件官方已弃用，且全工程无一处使用它的
+// 两大能力（kotlinx.android.synthetic 合成属性 / @Parcelize），属于纯死配置，
+// 只会在每次构建时刷出 “The 'kotlin-android-extensions' Gradle plugin is
+// deprecated” 警告。视图绑定已由 dataBinding 承担，无需替代品。
 
 apply plugin: 'com.github.dcendents.android-maven'
 group='com.github.lixiong'

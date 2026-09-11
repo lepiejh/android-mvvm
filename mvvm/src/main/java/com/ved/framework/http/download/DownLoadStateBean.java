@@ -10,6 +10,11 @@ import java.io.Serializable;
  */
 
 public class DownLoadStateBean implements Serializable, Parcelable {
+
+    /** 消除 -Xlint:serial 警告；取值为 JVM 自动推导的默认值（serialver 实测），勿改，
+     *  否则旧序列化数据会抛 InvalidClassException。 */
+    private static final long serialVersionUID = 6809064410950035893L;
+
     long total; //  文件总大小
     long bytesLoaded; //已加载文件的大小
     String tag; // 多任务下载时的一个标记

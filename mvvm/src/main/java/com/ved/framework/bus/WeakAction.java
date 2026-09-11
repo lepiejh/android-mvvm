@@ -14,16 +14,18 @@ public class WeakAction<T> {
     private BindingConsumer<T> consumer;
     private boolean isLive;
     private Object target;
-    private WeakReference reference;
+    // 只弱引用订阅方（target）本身，取出来也只当 Object 用（getTarget / isLive），
+    // 所以实参写 Object；以前是裸类型 WeakReference，会报 rawtypes。
+    private WeakReference<Object> reference;
 
     public WeakAction(Object target, BindingAction action) {
-        reference = new WeakReference(target);
+        reference = new WeakReference<>(target);
         this.action = action;
 
     }
 
     public WeakAction(Object target, BindingConsumer<T> consumer) {
-        reference = new WeakReference(target);
+        reference = new WeakReference<>(target);
         this.consumer = consumer;
     }
 
@@ -51,7 +53,13 @@ public class WeakAction<T> {
         return action;
     }
 
-    public BindingConsumer getBindingConsumer() {
+    /**
+     * 返回构造时传入的消费者。
+     * <p>从裸类型 {@code BindingConsumer} 收紧为 {@code BindingConsumer<T>}：擦除后仍是
+     * {@code BindingConsumer}，二进制兼容；对以裸类型使用 {@code WeakAction} 的调用方
+     * （如 {@code Messenger}）而言返回值依旧是裸类型，源码也兼容。
+     */
+    public BindingConsumer<T> getBindingConsumer() {
         return consumer;
     }
 

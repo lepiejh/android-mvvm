@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+// kotlin-android-extensions 已移除：插件已弃用，且本模块无 synthetic / @Parcelize 使用。
 
 android {
     compileSdkVersion 33

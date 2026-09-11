@@ -61,7 +61,7 @@ class RetrofitClient {
         return RetrofitClient.getInstance();
     }
 
-    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult, @Nullable BaseViewModel viewModel, @Nullable IResponse<?> iResponse) {
+    public <T> T create(final Class<T> service, int i, Map<String, String> headers, IResult iResult, @Nullable BaseViewModel<?> viewModel, @Nullable IResponse<?> iResponse) {
         if (service == null) {
             throw new RuntimeException("Api service is null!");
         }
@@ -149,7 +149,9 @@ class RetrofitClient {
 
         private Map<String, String> headers;
         private IResult iResult;
-        private BaseViewModel viewModel;
+        // 只用 viewModel 做生命周期宿主，不碰它的 Model 泛型实参，所以用 BaseViewModel<?> 而非裸类型。
+        // HttpClientBuilder 是 private static final 内部类，收紧泛型不影响任何公开 API。
+        private BaseViewModel<?> viewModel;
         private IResponse<?> iResponse;
         private int connectTimeout = Constant.DEFAULT_TIMEOUT;
         private int readTimeout = Constant.DEFAULT_TIMEOUT;
@@ -167,7 +169,7 @@ class RetrofitClient {
             return this;
         }
 
-        public HttpClientBuilder viewModel(BaseViewModel viewModel) {
+        public HttpClientBuilder viewModel(BaseViewModel<?> viewModel) {
             this.viewModel = viewModel;
             return this;
         }

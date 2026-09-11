@@ -412,6 +412,12 @@ public final class PermissionUtils {
     @RequiresApi(api = Build.VERSION_CODES.M)
     static final class PermissionActivityImpl extends UtilsTransActivity.TransActivityDelegate {
 
+        // 消除 -Xlint:serial 警告。serialVersionUID 是 private 的，不会从
+        // TransActivityDelegate 继承下来，所以本类必须自己声明一份。
+        // 取值为 JVM 自动推导的默认值（serialver 实测），勿改；本类同样会进
+        // savedInstanceState，写错了升级后恢复状态会抛 InvalidClassException。
+        private static final long serialVersionUID = -1099548988534773882L;
+
         private static final String TYPE                = "TYPE";
         private static final int    TYPE_RUNTIME        = 0x01;
         private static final int    TYPE_WRITE_SETTINGS = 0x02;

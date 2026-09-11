@@ -227,8 +227,8 @@ public class ReflectUtil {
     }
 
     private Class<?>[] getArgsType(final Object... args) {
-        if (args == null) return new Class[0];
-        Class<?>[] result = new Class[args.length];
+        if (args == null) return new Class<?>[0];
+        Class<?>[] result = new Class<?>[args.length];
         for (int i = 0; i < args.length; i++) {
             Object value = args[i];
             result[i] = value == null ? NULL.class : value.getClass();
@@ -525,7 +525,7 @@ public class ReflectUtil {
             }
         };
         return (P) Proxy.newProxyInstance(proxyType.getClassLoader(),
-                new Class[]{proxyType},
+                new Class<?>[]{proxyType},
                 handler);
     }
 

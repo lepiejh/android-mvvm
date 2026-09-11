@@ -34,7 +34,16 @@ public final class CollectionUtils {
      * @param array The array.
      * @return a new read-only list of given elements
      */
+    // 关于这里的 @SuppressWarnings("varargs")：本方法已用 @SafeVarargs 承诺「不会让调用方的
+    // 可变参数数组产生堆污染」，但它把该数组原样转发给了另一个 varargs 方法 newArrayList(E...)，
+    // javac 只能逐个方法分析、无法跨方法组合验证这个承诺，所以仍然会报
+    // “Varargs method could cause heap pollution from non-reifiable varargs parameter”。
+    // 已逐个核对被调方实现：newArrayList / newArrayListNotNull 只做 `for (E e : array) list.add(e)`，
+    // 从不把任何元素写回数组，返回的也是全新的 ArrayList（不与调用方的数组共享底层存储），
+    // 因此转发是安全的。这里选择 @SuppressWarnings 而不是先 Arrays.copyOf 一份：
+    // 多一次分配、多一份 GC 压力，却换不来任何实际的安全性提升。
     @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <E> List<E> newUnmodifiableList(E... array) {
         return Collections.unmodifiableList(newArrayList(array));
     }
@@ -45,7 +54,9 @@ public final class CollectionUtils {
      * @param array The array.
      * @return a new read-only list only of those given elements, that are not null
      */
+    // @SuppressWarnings("varargs") 的理由同 newUnmodifiableList：被调方 newArrayListNotNull 只读不写。
     @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <E> List<E> newUnmodifiableListNotNull(E... array) {
         return Collections.unmodifiableList(newArrayListNotNull(array));
     }

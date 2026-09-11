@@ -19,6 +19,11 @@ import androidx.fragment.app.FragmentTransaction;
  * 盛装Fragment的一个容器(代理)Activity
  * 普通界面只需要编写Fragment,使用此Activity盛装,这样就不需要每个界面都在AndroidManifest中注册一遍
  */
+// 这里的第二个泛型实参【必须】保持裸类型 BaseViewModel，不要改成 BaseViewModel<BaseModel> 之类。
+// 原因：ViewModelProxyImpl.createViewModel() 会反射读 getGenericSuperclass() 的第 2 个泛型实参，
+// 并直接强转为 Class。裸类型时拿到的是 Class 对象，强转成功；一旦写成参数化类型，
+// 反射拿到的就是 ParameterizedTypeImpl，(Class) 强转会在运行期抛 ClassCastException。
+// 代价是这里会留一条 [rawtypes] 告警，但那是为了运行期正确性故意保留的。
 public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel> {
     protected WeakReference<Fragment> mFragment;
 

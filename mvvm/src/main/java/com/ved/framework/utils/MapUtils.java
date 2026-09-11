@@ -62,7 +62,13 @@ public class MapUtils {
      * @param pairs a list of pairs
      * @return a new read-only map with the specified contents
      */
+    // @SafeVarargs 已承诺不产生堆污染，但本方法把数组原样转发给另一个 varargs 方法
+    // newHashMap(Pair<K, V>...)，javac 无法跨方法组合验证，所以仍报
+    // “Varargs method could cause heap pollution from non-reifiable varargs parameter”。
+    // 已核对被调方：newHashMap 只做 `map.put(pair.first, pair.second)`，从不写回 pairs 数组，
+    // 返回的也是全新的 HashMap，转发安全；拷贝数组只会白白多一次分配。
     @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <K, V> Map<K, V> newUnmodifiableMap(final Pair<K, V>... pairs) {
         return Collections.unmodifiableMap(newHashMap(pairs));
     }
