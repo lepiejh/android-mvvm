@@ -38,10 +38,10 @@ import com.ved.framework.databinding.AbBinding;
 import androidx.core.content.res.ResourcesCompat;
 
 
-// 同 ContainerActivity：第二个泛型实参【必须】保持裸类型 BaseViewModel。
-// ViewModelProxyImpl.createViewModel() 会把它反射出来并直接强转为 Class，
-// 写成 BaseViewModel<BaseModel> 会让反射拿到 ParameterizedTypeImpl，运行期抛 ClassCastException。
-public final class DefaultErrorActivity extends BaseActivity<AbBinding, BaseViewModel> {
+// 第二个泛型实参写成 BaseViewModel<?>（而不是裸 BaseViewModel）是为了消除 rawtypes 告警。
+// ViewModelProxyImpl.resolveViewModelClass() 会把 WildcardType 归一化为 BaseViewModel.class，
+// 反射依然拿到 Class，运行期不会抛 ClassCastException。
+public final class DefaultErrorActivity extends BaseActivity<AbBinding, BaseViewModel<?>> {
 
     @SuppressLint("PrivateResource")
     @Override

@@ -28,7 +28,7 @@ import org.greenrobot.eventbus.ThreadMode;
  * 公共逻辑全部收敛到 {@link FragmentDelegate}，本类只保留 super 生命周期调用与宿主能力方法，
  * 与 {@link BaseDialogFragment} 共享同一份委托实现。
  */
-public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel>
+public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseViewModel<? extends BaseModel>>
         extends RxFragment implements Host<V, VM> {
 
     private final FragmentDelegate<V, VM> delegate = new FragmentDelegate<>(this);

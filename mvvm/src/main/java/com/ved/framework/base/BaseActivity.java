@@ -19,7 +19,7 @@ import com.ved.framework.utils.KLog;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel> extends ImmersionBarBaseActivity implements IBaseView<V, VM> {
+public abstract class BaseActivity<V extends ViewDataBinding, VM extends BaseViewModel<? extends BaseModel>> extends ImmersionBarBaseActivity implements IBaseView<V, VM> {
     private final BaseView<V, VM> baseView = new BaseView<>(this);
 
     protected V binding;
