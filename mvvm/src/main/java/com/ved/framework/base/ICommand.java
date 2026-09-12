@@ -72,7 +72,7 @@ interface ICommand {
      * {@code BaseViewModel} 因此只交出 {@code provideCommand(): Any}，由同包的
      * {@code BaseView} 向下转型后调用本方法。
      */
-    UIChangeLiveData getLiveData();
+    IUIChangeLiveData getLiveData();
 
     /** 发送通用事件 */
     void setViewEvent(MessageEvent<?> event);

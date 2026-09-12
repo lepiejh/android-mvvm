@@ -31,7 +31,7 @@ import java.util.Map;
  * <p>新增事件时：在下面的 {@code EventKey} 里加枚举值，并补一个对应的 public getter；
  * 若 {@code BaseView} 需要观察，再在那里加一行 {@code uc.getXxxEvent().observe(...)}。
  */
-public class UIChangeLiveData extends SingleLiveEvent<Object> {
+class UIChangeLiveData extends SingleLiveEvent<Object> implements IUIChangeLiveData{
 
     /**
      * 事件类型注册表（注册表模式）：将原来十多个重复字段收敛为统一的注册表，
@@ -50,6 +50,7 @@ public class UIChangeLiveData extends SingleLiveEvent<Object> {
     /**
      * 获取通用事件 LiveData
      */
+    @Override
     public SingleLiveEvent<MessageEvent<?>> getViewEvent() {
         return get(EventKey.VIEW_EVENT);
     }
@@ -57,58 +58,72 @@ public class UIChangeLiveData extends SingleLiveEvent<Object> {
     /**
      * 发送通用事件
      */
+    @Override
     public void setViewEvent(MessageEvent<?> event) {
         getViewEvent().setValue(event);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getRequestCallPhoneEvent() {
         return get(EventKey.REQUEST_CALL_PHONE);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getRequestWifiRssiEvent() {
         return get(EventKey.REQUEST_WIFI_RSSI);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getRequestPermissionEvent() {
         return get(EventKey.REQUEST_PERMISSION);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getStartActivityForResultEvent() {
         return get(EventKey.START_ACTIVITY_FOR_RESULT);
     }
 
+    @Override
     public SingleLiveEvent<String> getShowDialogEvent() {
         return get(EventKey.SHOW_DIALOG);
     }
 
+    @Override
     public SingleLiveEvent<Void> getDismissDialogEvent() {
         return get(EventKey.DISMISS_DIALOG);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getStartActivityEvent() {
         return get(EventKey.START_ACTIVITY);
     }
 
+    @Override
     public SingleLiveEvent<Bundle> getReceiverEvent() {
         return get(EventKey.SEND_RECEIVER);
     }
 
+    @Override
     public SingleLiveEvent<Map<String, Object>> getStartContainerActivityEvent() {
         return get(EventKey.START_CONTAINER_ACTIVITY);
     }
 
+    @Override
     public SingleLiveEvent<Void> getFinishEvent() {
         return get(EventKey.FINISH);
     }
 
+    @Override
     public SingleLiveEvent<Void> getOnBackPressedEvent() {
         return get(EventKey.ON_BACK_PRESSED);
     }
 
+    @Override
     public SingleLiveEvent<Void> getOnLoadEvent() {
         return get(EventKey.ON_LOAD);
     }
 
+    @Override
     public SingleLiveEvent<Void> getOnResumeEvent() {
         return get(EventKey.ON_RESUME);
     }

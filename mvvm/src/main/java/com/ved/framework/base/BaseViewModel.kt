@@ -105,7 +105,7 @@ open class BaseViewModel<M : BaseModel?> @JvmOverloads constructor(
 
     fun getLifecycleProvider() = lifecycle?.get()
 
-    fun getUC(): UIChangeLiveData = command.liveData
+    fun getUC(): IUIChangeLiveData = command.liveData
 
     fun showDialog() {
         command.showDialog()

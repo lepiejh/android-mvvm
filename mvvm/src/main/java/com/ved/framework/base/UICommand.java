@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 final class UICommand implements ICommand {
-    private final UIChangeLiveData liveData = new UIChangeLiveData();
+    private final IUIChangeLiveData liveData = new UIChangeLiveData();
 
     public void showDialog() {
         showDialog("请稍后...");
@@ -104,7 +104,7 @@ final class UICommand implements ICommand {
         liveData.getOnBackPressedEvent().call();
     }
 
-    public UIChangeLiveData getLiveData() {
+    public IUIChangeLiveData getLiveData() {
         return liveData;
     }
 
