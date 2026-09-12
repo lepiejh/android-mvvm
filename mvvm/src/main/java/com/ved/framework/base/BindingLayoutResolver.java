@@ -6,6 +6,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.databinding.ViewDataBinding;
 
+import com.ved.framework.utils.KLog;
+
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -79,7 +81,18 @@ final class BindingLayoutResolver {
         if (layoutName == null) {
             return 0;
         }
-        return context.getResources().getIdentifier(layoutName, "layout", context.getPackageName());
+
+        // 不再使用 getIdentifier，改为反射 R.layout 字段
+        try {
+            // 注意：这里的 R 类需要替换为你项目中实际的 R 类路径
+            // 例如：com.ved.framework.R
+            Class<?> layoutClass = Class.forName(context.getPackageName() + ".R$layout");
+            java.lang.reflect.Field field = layoutClass.getField(layoutName);
+            return field.getInt(null);
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+            return 0;
+        }
     }
 
     /**
