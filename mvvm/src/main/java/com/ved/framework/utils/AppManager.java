@@ -13,6 +13,10 @@ import androidx.fragment.app.Fragment;
  * <p>
  * 模板方法 + 泛型：Activity 栈与 Fragment 栈的对称操作（add / remove / isEmpty / current）
  * 收敛为私有泛型模板方法，公共 API 保持不变。
+ * <p>
+ * 修复：activityStack / fragmentStack 是静态字段，初始为 null。
+ * 所有会触碰集合的公共方法（finishAllActivity / getActivityStack / getFragmentStack /
+ * isActivity / isFragment 等）均需判空，避免在"还没有任何 Activity 入栈"时调用直接 NPE。
  */
 public class AppManager {
 
@@ -35,10 +39,22 @@ public class AppManager {
         return instance;
     }
 
+    /**
+     * 获取 Activity 栈。
+     * <p>
+     * 注意：为兼容旧调用方，返回值可能为 null（尚未有任何 Activity 入栈时）。
+     * 调用方使用前必须判空。
+     */
     public static Stack<Activity> getActivityStack() {
         return activityStack;
     }
 
+    /**
+     * 获取 Fragment 栈。
+     * <p>
+     * 注意：为兼容旧调用方，返回值可能为 null（尚未有任何 Fragment 入栈时）。
+     * 调用方使用前必须判空。
+     */
     public static Stack<Fragment> getFragmentStack() {
         return fragmentStack;
     }
@@ -49,7 +65,7 @@ public class AppManager {
      * 惰性初始化栈（模板步骤 1）
      */
     private static <T> Stack<T> ensure(Stack<T> stack) {
-        return stack != null ? stack : new Stack<>();
+        return stack != null ? stack : new Stack<T>();
     }
 
     /**
@@ -88,6 +104,9 @@ public class AppManager {
      * 添加Activity到堆栈
      */
     public void addActivity(@Nullable Activity activity) {
+        if (activity == null) {
+            return;
+        }
         activityStack = ensure(activityStack);
         push(activityStack, activity);
     }
@@ -134,8 +153,11 @@ public class AppManager {
      * 结束指定类名的Activity
      */
     public void finishActivity(@Nullable Class<?> cls) {
+        if (cls == null || activityStack == null) {
+            return;
+        }
         for (Activity activity : activityStack) {
-            if (activity.getClass().equals(cls)) {
+            if (activity != null && activity.getClass().equals(cls)) {
                 finishActivity(activity);
                 break;
             }
@@ -146,6 +168,11 @@ public class AppManager {
      * 结束所有Activity
      */
     public void finishAllActivity() {
+        // activityStack 尚未初始化（还没有任何 Activity 入栈）时直接返回，
+        // 否则 activityStack.size() 会抛 NullPointerException
+        if (activityStack == null) {
+            return;
+        }
         for (int i = 0, size = activityStack.size(); i < size; i++) {
             if (null != activityStack.get(i)) {
                 finishActivity(activityStack.get(i));
@@ -160,12 +187,13 @@ public class AppManager {
      * @author kymjs
      */
     public Activity getActivity(@Nullable Class<?> cls) {
-        if (activityStack != null)
+        if (activityStack != null && cls != null) {
             for (Activity activity : activityStack) {
-                if (activity.getClass().equals(cls)) {
+                if (activity != null && activity.getClass().equals(cls)) {
                     return activity;
                 }
             }
+        }
         return null;
     }
 
@@ -175,6 +203,9 @@ public class AppManager {
      * 添加Fragment到堆栈
      */
     public void addFragment(@Nullable Fragment fragment) {
+        if (fragment == null) {
+            return;
+        }
         fragmentStack = ensure(fragmentStack);
         push(fragmentStack, fragment);
     }
@@ -198,24 +229,5 @@ public class AppManager {
      */
     public Fragment currentFragment() {
         return current(fragmentStack);
-    }
-
-    /**
-     * 退出应用程序
-     */
-    public void AppExit() {
-        try {
-            finishAllActivity();
-            // 杀死该应用进程
-//          android.os.Process.killProcess(android.os.Process.myPid());
-//            调用 System.exit(n) 实际上等效于调用：
-//            Runtime.getRuntime().exit(n)
-//            finish()是Activity的类方法，仅仅针对Activity，当调用finish()时，只是将活动推向后台，并没有立即释放内存，活动的资源并没有被清理；当调用System.exit(0)时，退出当前Activity并释放资源（内存），但是该方法不可以结束整个App如有多个Activty或者其他组件service等不会结束。
-//            其实android的机制决定了用户无法完全退出应用，当你的application最长时间没有被用过的时候，android自身会决定将application关闭了。
-            //System.exit(0);
-        } catch (Exception e) {
-            activityStack.clear();
-            KLog.e(e.getMessage());
-        }
     }
 }
