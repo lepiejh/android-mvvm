@@ -104,9 +104,7 @@ public abstract class BaseFragment<V extends ViewDataBinding, VM extends BaseVie
      * 仅当布局名与 Binding 类名无法按约定对应时，覆写本方法返回布局 id。
      */
     @Override
-    public int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return BindingLayoutResolver.resolveLayoutIdOrThrow(requireContext(), getClass());
-    }
+    public abstract int initContentView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState);
 
     @Override
     public FragmentActivity FragmentActivity() {

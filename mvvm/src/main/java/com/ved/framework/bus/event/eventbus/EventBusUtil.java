@@ -3,6 +3,7 @@ package com.ved.framework.bus.event.eventbus;
 import org.greenrobot.eventbus.EventBus;
 
 public class EventBusUtil {
+
     public static void register(Object subscriber) {
         EventBus.getDefault().register(subscriber);
     }
@@ -11,11 +12,11 @@ public class EventBusUtil {
         EventBus.getDefault().unregister(subscriber);
     }
 
-    public static void sendEvent(MessageEvent event) {
+    public static <T> void sendEvent(MessageEvent<T> event) {
         EventBus.getDefault().post(event);
     }
 
-    public static void sendStickyEvent(MessageEvent event) {
+    public static <T> void sendStickyEvent(MessageEvent<T> event) {
         EventBus.getDefault().postSticky(event);
     }
 }
