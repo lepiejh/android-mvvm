@@ -25,7 +25,7 @@ import java.util.concurrent.Executors;
 
 public class KLog {
 
-    public static boolean IS_SHOW_LOG = false;
+    private static boolean IS_SHOW_LOG = false;
 
     // ============ 日志文件保存功能 ============
 
