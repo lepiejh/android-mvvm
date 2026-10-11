@@ -83,7 +83,6 @@ object CorpseUtils {
 
     /**
      * 将 "XX XX XX XX" 格式的字符串转换为 "XXXX"（取前两个字节）
-     * @param input 输入字符串（如 "0A 00 00 00"）
      * @return 合并后的前两字节字符串（如 "0A00"），若输入无效则返回空字符串 ""
      */
     fun String.formatHexString(): String {
