@@ -560,8 +560,6 @@ public class TimeUtils {
 
 
     /**
-     * @param mContext
-     * @return
      * @since 是否24小时制 true  是
      */
     public static Boolean is24Hh(){
@@ -1203,7 +1201,15 @@ public class TimeUtils {
         try {
             Date d1 = df.parse(df.format(new Date()));
             Date d2 = df.parse(startTime);
-            long diff = d1.getTime() - d2.getTime();//这样得到的差值是毫秒级别
+            long l1 = 0L;
+            long l2 = 0L;
+            if (d1 != null){
+                l1 = d1.getTime();
+            }
+            if (d2 != null){
+                l2 = d2.getTime();
+            }
+            long diff = l1 - l2;//这样得到的差值是毫秒级别
             if (diff > 432000000) {
                 long days = (diff - 432000000) / (1000 * 60 * 60 * 24);
                 long hours = ((diff - 432000000) - days * (1000 * 60 * 60 * 24)) / (1000 * 60 * 60);
@@ -1215,7 +1221,7 @@ public class TimeUtils {
                 long minutes = ((432000000 - diff) - days * (1000 * 60 * 60 * 24) - hours * (1000 * 60 * 60)) / (1000 * 60);
                 return "距到期" + days + "天" + hours + "小时" + minutes + "分";
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
         return "";
     }
@@ -1250,10 +1256,10 @@ public class TimeUtils {
             if ((start.compareTo(nowTime)) > 0) {
                 return nowTime.substring(0,7)+".01"+nowTime;
             }else {
-                if ((time.substring(0, 7)+"."+getDaysByYearMonth(Integer.valueOf(time.substring(0, 4)),Integer.valueOf(time.substring(5, 7)))).replace(".","-").compareTo(nowTime)>0){
+                if ((time.substring(0, 7)+"."+getDaysByYearMonth(Integer.parseInt(time.substring(0, 4)),Integer.parseInt(time.substring(5, 7)))).replace(".","-").compareTo(nowTime)>0){
                     return (time.substring(0, 7)+".01").replace(".","-")+nowTime;
                 }else {
-                    return (time.substring(0, 7)+".01").replace(".","-")+(time.substring(0, 7)+"."+getDaysByYearMonth(Integer.valueOf(time.substring(0, 4)),Integer.valueOf(time.substring(5, 7)))).replace(".","-");
+                    return (time.substring(0, 7)+".01").replace(".","-")+(time.substring(0, 7)+"."+getDaysByYearMonth(Integer.parseInt(time.substring(0, 4)),Integer.parseInt(time.substring(5, 7)))).replace(".","-");
                 }
             }
         }
@@ -1343,7 +1349,9 @@ public class TimeUtils {
      */
     public static long string2Millis(final String time, @NonNull final DateFormat format) {
         try {
-            return format.parse(time).getTime();
+            Date t = format.parse(time);
+            if (t == null) return -1;
+            return t.getTime();
         } catch (ParseException e) {
             KLog.e(e.getMessage());
         }
@@ -1923,7 +1931,7 @@ public class TimeUtils {
      */
     public static boolean isAm() {
         Calendar cal = Calendar.getInstance();
-        return cal.get(GregorianCalendar.AM_PM) == 0;
+        return cal.get(GregorianCalendar.AM_PM) == Calendar.AM;
     }
 
     /**
