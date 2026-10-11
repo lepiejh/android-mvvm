@@ -69,16 +69,13 @@ public class ViewUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isLayoutRtl() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            Locale primaryLocale;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                primaryLocale = Utils.getContext().getResources().getConfiguration().getLocales().get(0);
-            } else {
-                primaryLocale = Utils.getContext().getResources().getConfiguration().locale;
-            }
-            return TextUtils.getLayoutDirectionFromLocale(primaryLocale) == View.LAYOUT_DIRECTION_RTL;
+        Locale primaryLocale;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            primaryLocale = Utils.getContext().getResources().getConfiguration().getLocales().get(0);
+        } else {
+            primaryLocale = Utils.getContext().getResources().getConfiguration().locale;
         }
-        return false;
+        return TextUtils.getLayoutDirectionFromLocale(primaryLocale) == View.LAYOUT_DIRECTION_RTL;
     }
 
     /**
