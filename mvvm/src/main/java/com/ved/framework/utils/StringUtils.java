@@ -1,5 +1,6 @@
 package com.ved.framework.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.ComponentName;
@@ -192,7 +193,6 @@ public final class StringUtils {
      * @param colorResId 颜色资源
      * @param start      开始位置(从0开始数，包括首尾)
      * @param end        结束位置（从结尾1开始数，不包括结束位）
-     * @return
      */
     public static SpannableStringBuilder getRepayNumBuilder(String str, @ColorInt int colorResId, int start, int end) {
         if (TextUtils.isEmpty(str)) return new SpannableStringBuilder("");
@@ -208,14 +208,11 @@ public final class StringUtils {
      * @return {@code true}: null或全空格<br> {@code false}: 不为null且不全空格
      */
     public static boolean isTrimEmpty(final String s) {
-        return (s == null || s.trim().length() == 0);
+        return (s == null || s.trim().isEmpty());
     }
 
     /**
      * 移除小数
-     *
-     * @param s
-     * @return
      */
     public static String removeDecimal(String s) {
         if (TextUtils.isEmpty(s)) return "";
@@ -314,8 +311,9 @@ public final class StringUtils {
             return false;
         ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
         List<ActivityManager.RunningTaskInfo> list = am.getRunningTasks(1);
-        if (list != null && list.size() > 0) {
+        if (list != null && !list.isEmpty()) {
             ComponentName cpn = list.get(0).topActivity;
+            if (cpn == null) return false;
             return className.equals(cpn.getClassName());
         }
         return false;
@@ -461,7 +459,7 @@ public final class StringUtils {
         } catch (IOException e) {
             KLog.e(e.getMessage());
         }
-        if (addressList != null && addressList.size() > 0) {
+        if (addressList != null && !addressList.isEmpty()) {
             return addressList.get(0);
         }else {
             return null;
@@ -519,7 +517,7 @@ public final class StringUtils {
     }
 
     public static byte[] hexStringToByteArray(String str) {
-        if (str == null || str.length() == 0) {
+        if (str == null || str.isEmpty()) {
             return new byte[0];
         }
         // 奇数长度时末尾补一个 0, 避免 charAt(i + 1) 越界
@@ -569,7 +567,7 @@ public final class StringUtils {
 
     public static int getIntValue(String str,int i){
         try {
-            return Integer.valueOf(str, i).intValue();
+            return Integer.valueOf(str, i);
         } catch (NumberFormatException e) {
             KLog.e(e.getMessage());
             return 0;
@@ -577,7 +575,7 @@ public final class StringUtils {
     }
 
     public static String intToInt(int i,String n){
-        return String.format("%0"+n, Integer.valueOf(i));
+        return String.format("%0"+n, i);
     }
 
     public static String parseDataByIndex(String str, int i) {
@@ -613,7 +611,7 @@ public final class StringUtils {
 
     private static String getCRC(String str,String n) {
         int[] byteArrayFromString = getByteArrayFromString(str);
-        int i = SupportMenu.USER_MASK;
+        @SuppressLint("RestrictedApi") int i = SupportMenu.USER_MASK;
         int i2 = 0;
         while (i2 < byteArrayFromString.length) {
             int i3 = i ^ byteArrayFromString[i2];
@@ -623,7 +621,7 @@ public final class StringUtils {
             i2++;
             i = i3;
         }
-        return String.format("%0"+n+"%0"+n, Integer.valueOf(i % 256), Integer.valueOf(i / 256));
+        return String.format("%0"+n+"%0"+n, i % 256, i / 256);
     }
 
     private static int[] getByteArrayFromString(String str) {
