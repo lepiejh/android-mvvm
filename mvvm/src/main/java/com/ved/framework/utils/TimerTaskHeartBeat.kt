@@ -23,7 +23,7 @@ class TimerTaskHeartBeat{
                 }
             }
             timer?.schedule(timerTask, 0, period)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             stopTimer()
         }
     }
