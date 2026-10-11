@@ -1,5 +1,6 @@
 package com.ved.framework.base;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -61,18 +62,26 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
     }
 
     //通过反射判断是否是透明页面
+    @SuppressLint("PrivateApi")
     private boolean isTranslucentOrFloating() {
         boolean isTranslucentOrFloating = false;
+        TypedArray ta = null;
         try {
             int[] styleableRes = (int[]) Class.forName("com.android.internal.R$styleable").getField("Window").get(null);
-            final TypedArray ta = obtainStyledAttributes(styleableRes);
-            Method m = ActivityInfo.class.getMethod("isTranslucentOrFloating", TypedArray.class);
+            if (styleableRes == null) return isTranslucentOrFloating;
+            ta = obtainStyledAttributes(styleableRes);
+            String methodName = "isTranslucentOrFloating";
+            Method m = ActivityInfo.class.getMethod(methodName, TypedArray.class);
             m.setAccessible(true);
             Boolean isTranslucent = (Boolean) m.invoke(null, ta);
             isTranslucentOrFloating = isTranslucent != null && isTranslucent;
             m.setAccessible(false);
         } catch (Exception e) {
             KLog.e(e.getMessage());
+        } finally {
+            if (ta != null) {
+                ta.recycle();
+            }
         }
         return isTranslucentOrFloating;
     }
@@ -80,7 +89,8 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
     //通过反射将方向设置为 SCREEN_ORIENTATION_UNSPECIFIED，绕开系统的检查
     private boolean fixOrientation() {
         try {
-            Field field = Activity.class.getDeclaredField("mActivityInfo");
+            String methodName = "mActivityInfo";
+            @SuppressLint("DiscouragedPrivateApi") Field field = Activity.class.getDeclaredField(methodName);
             field.setAccessible(true);
             ActivityInfo o = (ActivityInfo) field.get(this);
             if (o != null) {
