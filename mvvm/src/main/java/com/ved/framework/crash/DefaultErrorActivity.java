@@ -47,11 +47,11 @@ public final class DefaultErrorActivity extends BaseActivity<AbBinding, BaseView
     @Override
     public void initParam() {
         super.initParam();
-        TypedArray a = obtainStyledAttributes(R.styleable.AppCompatTheme);
-        if (!a.hasValue(R.styleable.AppCompatTheme_windowActionBar)) {
-            setTheme(R.style.Theme_AppCompat_Light_DarkActionBar);
+        try (TypedArray a = obtainStyledAttributes(R.styleable.AppCompatTheme)) {
+            if (!a.hasValue(R.styleable.AppCompatTheme_windowActionBar)) {
+                setTheme(R.style.Theme_AppCompat_Light_DarkActionBar);
+            }
         }
-        a.recycle();
     }
 
     @Override
