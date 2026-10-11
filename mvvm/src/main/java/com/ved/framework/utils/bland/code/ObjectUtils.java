@@ -1,14 +1,11 @@
 package com.ved.framework.utils.bland.code;
-import com.ved.framework.utils.Utils;
 
-import android.os.Build;
 import android.util.SparseArray;
 import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 import android.util.SparseLongArray;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.collection.LongSparseArray;
 import androidx.collection.SimpleArrayMap;
 
@@ -17,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
+import java.util.Objects;
 
 public final class ObjectUtils {
 
@@ -37,7 +35,7 @@ public final class ObjectUtils {
         if (obj.getClass().isArray() && Array.getLength(obj) == 0) {
             return true;
         }
-        if (obj instanceof CharSequence && obj.toString().length() == 0) {
+        if (obj instanceof CharSequence && obj.toString().isEmpty()) {
             return true;
         }
         if (obj instanceof Collection<?> && ((Collection<?>) obj).isEmpty()) {
@@ -58,25 +56,18 @@ public final class ObjectUtils {
         if (obj instanceof SparseIntArray && ((SparseIntArray) obj).size() == 0) {
             return true;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            if (obj instanceof SparseLongArray && ((SparseLongArray) obj).size() == 0) {
-                return true;
-            }
-        }
-        if (obj instanceof LongSparseArray<?> && ((LongSparseArray<?>) obj).size() == 0) {
+        if (obj instanceof SparseLongArray && ((SparseLongArray) obj).size() == 0) {
             return true;
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            if (obj instanceof android.util.LongSparseArray<?>
-                    && ((android.util.LongSparseArray<?>) obj).size() == 0) {
-                return true;
-            }
+        if (obj instanceof LongSparseArray<?> && ((LongSparseArray<?>) obj).isEmpty()) {
+            return true;
         }
-        return false;
+        return obj instanceof android.util.LongSparseArray<?>
+                && ((android.util.LongSparseArray<?>) obj).size() == 0;
     }
 
     public static boolean isEmpty(final CharSequence obj) {
-        return obj == null || obj.toString().length() == 0;
+        return obj == null || obj.toString().isEmpty();
     }
 
     public static boolean isEmpty(final Collection<?> obj) {
@@ -104,15 +95,13 @@ public final class ObjectUtils {
     }
 
     public static boolean isEmpty(final LongSparseArray<?> obj) {
-        return obj == null || obj.size() == 0;
+        return obj == null || obj.isEmpty();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public static boolean isEmpty(final SparseLongArray obj) {
         return obj == null || obj.size() == 0;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public static boolean isEmpty(final android.util.LongSparseArray<?> obj) {
         return obj == null || obj.size() == 0;
     }
@@ -160,12 +149,10 @@ public final class ObjectUtils {
         return !isEmpty(obj);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR2)
     public static boolean isNotEmpty(final SparseLongArray obj) {
         return !isEmpty(obj);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     public static boolean isNotEmpty(final android.util.LongSparseArray<?> obj) {
         return !isEmpty(obj);
     }
@@ -178,7 +165,7 @@ public final class ObjectUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean equals(final Object o1, final Object o2) {
-        return o1 == o2 || (o1 != null && o1.equals(o2));
+        return Objects.equals(o1, o2);
     }
 
     /**
