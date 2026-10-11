@@ -2,7 +2,6 @@ package com.ved.framework.utils;
 
 import android.util.Base64;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 /**

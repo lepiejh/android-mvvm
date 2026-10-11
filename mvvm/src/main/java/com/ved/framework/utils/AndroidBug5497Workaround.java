@@ -13,9 +13,9 @@ public class AndroidBug5497Workaround {
         new AndroidBug5497Workaround(activity);
     }
 
-    private View mChildOfContent;
+    private final View mChildOfContent;
     private int usableHeightPrevious;
-    private FrameLayout.LayoutParams frameLayoutParams;
+    private final FrameLayout.LayoutParams frameLayoutParams;
 
     private AndroidBug5497Workaround(Activity activity) {
         FrameLayout content = (FrameLayout) activity.findViewById(android.R.id.content);

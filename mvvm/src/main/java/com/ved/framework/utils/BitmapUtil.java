@@ -16,7 +16,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Random;
 
 /**
@@ -128,7 +127,8 @@ public final class BitmapUtil {
         if (path == null) {
             return null;
         }
-        BufferedInputStream in = new BufferedInputStream(Files.newInputStream(new File(path).toPath()));
+        BufferedInputStream in = new BufferedInputStream(new FileInputStream(
+                new File(path)));
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         options.inInputShareable = true;
@@ -141,7 +141,7 @@ public final class BitmapUtil {
             if ((options.outWidth >> i <= 1000)
                     && (options.outHeight >> i <= 1000)) {
                 in = new BufferedInputStream(
-                        Files.newInputStream(new File(path).toPath()));
+                        new FileInputStream(new File(path)));
                 try {
                     options.inSampleSize = (int) Math.pow(2.0D, i);
                     options.inJustDecodeBounds = false;
@@ -237,7 +237,7 @@ public final class BitmapUtil {
             String filePath = PathUtil.getCacheDir() + "/img";
             FileUtils.createDir(filePath);
             File file = new File(filePath, fileName);//将要保存图片的路径
-            try (BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
+            try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(file))) {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
                 bos.flush();
                 return file.getAbsolutePath();

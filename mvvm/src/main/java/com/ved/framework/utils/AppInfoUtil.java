@@ -43,7 +43,6 @@ public class AppInfoUtil {
      * 逐段按数值比较, 如 "1.0.99" < "1.0.100"
      * @param version1    本地的版本号
      * @param version2    服务器的版本号
-     * @return
      */
     public static int compareVersion(String version1, String version2) {
         if (version1 == null || version2 == null) {

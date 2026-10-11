@@ -1,6 +1,7 @@
 package com.ved.framework.utils;
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Locale;
@@ -17,13 +18,12 @@ import javax.crypto.spec.SecretKeySpec;
  */
 public final class AESUtil {
 
-    private static IvParameterSpec enc_iv;
+    private static final IvParameterSpec enc_iv;
     private static SecretKeySpec enc_key;
     private static Cipher cipherEnc;
 
     //密钥有限制，貌似不能随便改
-    private static String AESKEY = "0123456789abcdef";
-    private static String IvKey = "fedcba9876543210";
+    private static final String AESKEY = "0123456789abcdef";
 
     static final char[] HEX_CHAR_TABLE = {
             '0', '1', '2', '3', '4', '5', '6', '7',
@@ -33,13 +33,12 @@ public final class AESUtil {
     static {//初始化代码块
         try {
             cipherEnc = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        } catch (NoSuchAlgorithmException ex) {
-            ex.printStackTrace();
-        } catch (NoSuchPaddingException ex) {
-            ex.printStackTrace();
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException ex) {
+            KLog.e(ex.getMessage());
         }
         enc_key = new SecretKeySpec(AESKEY.getBytes(), "AES");
-        enc_iv = new IvParameterSpec(IvKey.getBytes());
+        String ivKey = "fedcba9876543210";
+        enc_iv = new IvParameterSpec(ivKey.getBytes());
     }
 
     private AESUtil() {
@@ -54,13 +53,13 @@ public final class AESUtil {
     public static String encrypt(String str) {
         byte[] ret = null;
         try {
-            enc_key = getKey(AESKEY);
+            enc_key = getKey();
             cipherEnc.init(Cipher.ENCRYPT_MODE, enc_key, enc_iv);
             String padRight = padRight(str, ((int) Math.ceil(str.length() / 16.0)) * 16);
-            byte[] origData = padRight.getBytes("UTF-8");
+            byte[] origData = padRight.getBytes(StandardCharsets.UTF_8);
             ret = cipherEnc.doFinal(origData);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            KLog.e(ex.getMessage());
             return null;
         }
         return byteArray2HexString(ret);
@@ -70,7 +69,6 @@ public final class AESUtil {
      * 解密
      *
      * @param str 要解密的字符串
-     * @return
      */
     public static String decrypt(String str) {
         byte[] ret = null;
@@ -78,14 +76,10 @@ public final class AESUtil {
             cipherEnc.init(Cipher.DECRYPT_MODE, enc_key, enc_iv);
             ret = cipherEnc.doFinal(hexString2ByteArray(str));
         } catch (Exception ex) {
-            ex.printStackTrace();
+            KLog.e(ex.getMessage());
             return null;
         }
-        try {
-            return new String(ret, "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            return null;
-        }
+        return new String(ret, StandardCharsets.UTF_8);
     }
 
     public static String byteArray2HexString(byte[] b) {
@@ -118,7 +112,7 @@ public final class AESUtil {
      * 将16进制转换为二进制
      */
     public static byte[] parseHexStr2Byte(String hexStr) {
-        if (hexStr.length() < 1)
+        if (hexStr.isEmpty())
             return null;
         byte[] result = new byte[hexStr.length() / 2];
         for (int i = 0; i < hexStr.length() / 2; i++) {
@@ -132,10 +126,10 @@ public final class AESUtil {
     /**
      * 将二进制转换成16进制
      */
-    public static String parseByte2HexStr(byte buf[]) {
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < buf.length; i++) {
-            String hex = Integer.toHexString(buf[i] & 0xFF);
+    public static String parseByte2HexStr(byte[] buf) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : buf) {
+            String hex = Integer.toHexString(b & 0xFF);
             if (hex.length() == 1) {
                 hex = '0' + hex;
             }
@@ -155,14 +149,60 @@ public final class AESUtil {
     /**
      * 获取适配密钥
      */
-    private static SecretKeySpec getKey(String strKey) throws Exception {
-        byte[] arrBTmp = strKey.getBytes();
+    private static SecretKeySpec getKey() throws Exception {
+        byte[] arrBTmp = AESUtil.AESKEY.getBytes();
         byte[] arrB = new byte[16]; // 创建一个空的16位字节数组（默认值为0）
         for (int i = 0; i < arrBTmp.length && i < arrB.length; i++) {
             arrB[i] = arrBTmp[i];
         }
-        SecretKeySpec skeySpec = new SecretKeySpec(arrB, "AES");
-        return skeySpec;
+        return new SecretKeySpec(arrB, "AES");
+    }
+
+    /**
+     * 解密 encryptString2Bytes 加密后的字节数组
+     *
+     * @param encrypted 加密后的字节数组（前 16 字节是 IV，后面是密文）
+     * @return 解密后的字符串；失败返回 null
+     */
+    public static String decryptStringFromBytes(byte[] encrypted) {
+        if (encrypted == null || encrypted.length <= 16) {
+            KLog.e("解密失败：密文为空或长度不足");
+            return null;
+        }
+        try {
+            // 1. 取出前 16 字节作为 IV
+            byte[] iv = new byte[16];
+            System.arraycopy(encrypted, 0, iv, 0, 16);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            // 2. 剩下的才是真正的密文
+            byte[] cipherText = new byte[encrypted.length - 16];
+            System.arraycopy(encrypted, 16, cipherText, 0, cipherText.length);
+
+            // 3. 用同一把密钥解密（注意：必须和加密时用的 key 完全一致）
+            SecretKeySpec key = new SecretKeySpec(getKeyBytes(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+            byte[] decrypted = cipher.doFinal(cipherText);
+
+            return new String(decrypted, StandardCharsets.UTF_8);
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * 获取加密用的 16 字节密钥（和 getKey() 保持一致）
+     */
+    private static byte[] getKeyBytes() {
+        byte[] arrBTmp = AESUtil.AESKEY.getBytes(StandardCharsets.UTF_8);
+        byte[] arrB = new byte[16]; // 默认填充 0
+        for (int i = 0; i < arrBTmp.length && i < arrB.length; i++) {
+            arrB[i] = arrBTmp[i];
+        }
+        return arrB;
     }
 
     /**
@@ -173,16 +213,26 @@ public final class AESUtil {
      */
     public static byte[] encryptString2Bytes(String content) {
         try {
-            KeyGenerator kgen = KeyGenerator.getInstance("AES");
-            kgen.init(128, new SecureRandom(AESKEY.getBytes()));
-            SecretKey secretKey = kgen.generateKey();
-            byte[] enCodeFormat = secretKey.getEncoded();
-            SecretKeySpec key = new SecretKeySpec(enCodeFormat, "AES");
-            Cipher cipher = Cipher.getInstance("AES");// 创建密码器
-            byte[] byteContent = content.getBytes("utf-8");
-            cipher.init(Cipher.ENCRYPT_MODE, key);// 初始化
-            byte[] result = cipher.doFinal(byteContent);
-            return result; // 加密
+            // 用固定密钥，而不是每次随机生成
+            SecretKeySpec key = new SecretKeySpec(getKeyBytes(), "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+            // 随机生成 16 字节 IV
+            byte[] iv = new byte[16];
+            new SecureRandom().nextBytes(iv);
+            IvParameterSpec ivSpec = new IvParameterSpec(iv);
+
+            byte[] byteContent = content.getBytes(StandardCharsets.UTF_8);
+            cipher.init(Cipher.ENCRYPT_MODE, key, ivSpec);
+            byte[] encrypted = cipher.doFinal(byteContent);
+
+            // IV 拼在密文前面
+            byte[] result = new byte[iv.length + encrypted.length];
+            System.arraycopy(iv, 0, result, 0, iv.length);
+            System.arraycopy(encrypted, 0, result, iv.length, encrypted.length);
+            return result;
+
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
