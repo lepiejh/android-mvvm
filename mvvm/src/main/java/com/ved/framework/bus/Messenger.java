@@ -1,6 +1,8 @@
 package com.ved.framework.bus;
 
 
+import android.os.Build;
+
 import com.ved.framework.command.BindingAction;
 import com.ved.framework.command.BindingConsumer;
 
@@ -168,7 +170,16 @@ public class Messenger {
     private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
         HashMap<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
 
-        List<WeakActionAndToken> list = recipients.computeIfAbsent(messageType, k -> new ArrayList<>());
+        List<WeakActionAndToken> list;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            list = recipients.computeIfAbsent(messageType, k -> new ArrayList<>());
+        }else {
+            list = recipients.get(messageType);
+            if (list == null) {
+                list = new ArrayList<>();
+                recipients.put(messageType, list);
+            }
+        }
 
         list.add(new WeakActionAndToken(weakAction, token));
         cleanup();
