@@ -32,11 +32,11 @@ final class UiThreadDispatcher {
                     continuation -> {
                         action.run();
                         return null;
-                    }, throwable -> null, throwable -> null);
+                    }, throwable -> kotlin.Unit.INSTANCE, throwable -> kotlin.Unit.INSTANCE);
         } else {
             CorpseUtils.INSTANCE.handlerThread(() -> {
                 action.run();
-                return null;
+                return kotlin.Unit.INSTANCE;
             });
         }
     }
