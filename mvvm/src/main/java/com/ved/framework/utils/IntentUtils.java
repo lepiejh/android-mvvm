@@ -72,8 +72,6 @@ public class IntentUtils {
             intent = getAudioFileIntent(fileName);
         } else if (".mp4".equalsIgnoreCase(ext) || ".avi".equalsIgnoreCase(ext) || ".flv".equalsIgnoreCase(ext)) {
             intent = getVideoFileIntent(fileName);
-        } else {
-
         }
         if (intent != null) {
             intent.putExtra(IS_DOCUMENT, isDocument);
@@ -197,10 +195,9 @@ public class IntentUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isIntentAvailable(final Intent intent) {
-        return Utils.getContext()
+        return !Utils.getContext()
                 .getPackageManager()
-                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-                .size() > 0;
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isEmpty();
     }
 
     /**
@@ -637,7 +634,7 @@ public class IntentUtils {
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.setPackage(pkgName);
         List<ResolveInfo> lists = Utils.getContext().getPackageManager().queryIntentActivities(intent, 0);
-        return lists.size() > 0 ? lists.get(0).activityInfo.name : "";
+        return !lists.isEmpty() ? lists.get(0).activityInfo.name : "";
     }
 
     private static Uri file2Uri(final File file) {
