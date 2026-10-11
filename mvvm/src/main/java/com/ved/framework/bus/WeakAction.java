@@ -67,10 +67,7 @@ public class WeakAction<T> {
         if (reference == null) {
             return false;
         }
-        if (reference.get() == null) {
-            return false;
-        }
-        return true;
+        return reference.get() != null;
     }
 
 
