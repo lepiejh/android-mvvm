@@ -1,10 +1,11 @@
 package com.ved.framework.utils.compression;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
-import android.media.ExifInterface;
+import androidx.exifinterface.media.ExifInterface;
 import android.net.Uri;
 import android.os.Build;
 import android.text.TextUtils;
@@ -26,6 +27,7 @@ import androidx.annotation.NonNull;
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
@@ -38,7 +40,7 @@ public class Luban {
     public static final int THIRD_GEAR = 3;
 
     private static final String TAG = "smartcity";
-    private static String DEFAULT_DISK_CACHE_DIR = "smartcity_disk_cache";
+    private static final String DEFAULT_DISK_CACHE_DIR = "smartcity_disk_cache";
 
     private static volatile Luban INSTANCE;
 
@@ -103,12 +105,21 @@ public class Luban {
         return INSTANCE;
     }
 
-    public Luban launch() {
+    /**
+     * 调用方：
+     * Luban.launch()
+     *  在 onDestroy 中：
+     * if (disposable != null && !disposable.isDisposed()) {
+     *     disposable.dispose();
+     * }
+     */
+    @SuppressLint("CheckResult")
+    public Disposable launch() {
         Preconditions.checkNotNull(mFile, "the image file cannot be null, please call .load() before this method!");
 
         if (compressListener != null) compressListener.onStart();
         if (gear == Luban.FIRST_GEAR)
-            Observable.just(mFile)
+            return Observable.just(mFile)
                     .map(new Function<String, File>() {
                         @Override
                         public File apply(String s) throws Exception {
@@ -146,7 +157,7 @@ public class Luban {
                         }
                     });
         else if (gear == Luban.THIRD_GEAR)
-            Observable.just(mFile)
+            return Observable.just(mFile)
                     .map(new Function<String, File>() {
                         @Override
                         public File apply(String s) throws Exception {
@@ -183,7 +194,7 @@ public class Luban {
                             if (compressListener != null) compressListener.onSuccess(file);
                         }
                     });
-        return this;
+        return null;
     }
 
 
@@ -347,8 +358,8 @@ public class Luban {
         int thumbW = width % 2 == 1 ? width + 1 : width;
         int thumbH = height % 2 == 1 ? height + 1 : height;
 
-        width = thumbW > thumbH ? thumbH : thumbW;
-        height = thumbW > thumbH ? thumbW : thumbH;
+        width = Math.min(thumbW, thumbH);
+        height = Math.max(thumbW, thumbH);
 
         double scale = ((double) width / height);
 
@@ -358,18 +369,18 @@ public class Luban {
 
                 size = (width * height) / Math.pow(1664, 2) * 150;
                 size = size < 60 ? 60 : size;
-            } else if (height >= 1664 && height < 4990) {
+            } else if (height < 4990) {
                 thumbW = width / 2;
                 thumbH = height / 2;
                 size = (thumbW * thumbH) / Math.pow(2495, 2) * 300;
                 size = size < 60 ? 60 : size;
-            } else if (height >= 4990 && height < 10240) {
+            } else if (height < 10240) {
                 thumbW = width / 4;
                 thumbH = height / 4;
                 size = (thumbW * thumbH) / Math.pow(2560, 2) * 300;
                 size = size < 100 ? 100 : size;
             } else {
-                int multiple = height / 1280 == 0 ? 1 : height / 1280;
+                int multiple = height / 1280;
                 thumbW = width / multiple;
                 thumbH = height / multiple;
                 size = (thumbW * thumbH) / Math.pow(2560, 2) * 300;

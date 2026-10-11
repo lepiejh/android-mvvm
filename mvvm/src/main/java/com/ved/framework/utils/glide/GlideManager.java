@@ -61,11 +61,11 @@ public class GlideManager {
     /**
      * RequestOptions集合
      */
-    private Map<String, RequestOptions> mRequestOptionsMap;
+    private final Map<String, RequestOptions> mRequestOptionsMap;
     /**
      * Transformation集合
      */
-    private Map<String, BitmapTransformation> mTransformationMap;
+    private final Map<String, BitmapTransformation> mTransformationMap;
 
     /**
      * 获取RequestOptions
