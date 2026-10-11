@@ -22,15 +22,15 @@ public class LimitUtil {
     /**
      * 身份证允许输入字符
      */
-    private static char[] idCardNumberLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9',
+    private static final char[] idCardNumberLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9',
             '0', 'X','x'};
 
-    private static char[] numberLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
+    private static final char[] numberLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0'};
 
-    private static char[] doubleLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    private static final char[] doubleLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
             '.'};
 
-    private static char[] fixPhoneLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
+    private static final char[] fixPhoneLimitChars = {'1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
             '-'};
 
 
@@ -104,7 +104,7 @@ public class LimitUtil {
 
                 if (s.toString().startsWith("0") //第一位是0只能输入
                         && s.toString().trim().length() > 1) {
-                    if (!s.toString().substring(1, 2).equals(".")) {
+                    if (s.toString().charAt(1) != '.') {
                         editText.setText(s.subSequence(0, 1));
                         editText.setSelection(1);
                     }

@@ -28,8 +28,6 @@ public class JsonPraise {
 
     /**
      * 判断字符串是否为json格式
-     * @param jsonString
-     * @return
      */
     public static boolean isJSONValid(String jsonString) {
         try {
@@ -42,9 +40,6 @@ public class JsonPraise {
 
     /**
      * obj转换为json字符串
-     *
-     * @param obj
-     * @return
      */
     public static String objToJson(Object obj) {
         String tmp = "";
@@ -67,9 +62,6 @@ public class JsonPraise {
 
     /**
      * 函数名称: parseData 函数描述: 将json字符串转换为map
-     *
-     * @param data
-     * @return
      */
     public static Map<String, Object> jsonToMapObj(String data) {
         return gson.fromJson(data, new TypeToken<Map<String, Object>>() {
@@ -83,9 +75,6 @@ public class JsonPraise {
 
     /**
      * 函数名称: parseData 函数描述: 将json字符串转换为map
-     *
-     * @param data
-     * @return
      */
     public static Map<String, String> jsonToMap(String data) {
         return gson.fromJson(data, new TypeToken<Map<String, String>>() {
@@ -98,15 +87,11 @@ public class JsonPraise {
 
     /**
      * 获取参数值
-     *
-     * @param jsonStr
-     * @return
-     * @throws JSONException
      */
     public static String optCode(String jsonStr, String key) {
         String code = null;
         try {
-            code = new JSONObject(jsonStr).opt(key).toString();
+            code = new JSONObject(jsonStr).optString(key);
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
@@ -124,9 +109,6 @@ public class JsonPraise {
 
     /**
      * 将001的data对象转换为Map<String,Object>
-     *
-     * @param data
-     * @return
      */
     public static Map<String, Object> jsonToObjMap(String data) {
         return gson.fromJson(data, new TypeToken<Map<String, Object>>() {
@@ -135,10 +117,6 @@ public class JsonPraise {
 
     /**
      * 获取对象值
-     *
-     * @param jsonStr
-     * @return
-     * @throws JSONException
      */
     public static Object opt001ObjData(String jsonStr,
                                        @SuppressWarnings("rawtypes") Class clazz, String keys) throws Exception {
@@ -154,9 +132,6 @@ public class JsonPraise {
 
     /**
      * 获取List值
-     *
-     * @return
-     * @throws JSONException
      */
     public static Object opt001ListData(JSONArray obj, Type type)
             throws Exception {
@@ -169,9 +144,6 @@ public class JsonPraise {
 
     /**
      * 获取List值
-     *
-     * @return
-     * @throws JSONException
      */
     public static Object opt001ListData(String json, Type type) {
         if (json != null) {
@@ -183,10 +155,6 @@ public class JsonPraise {
 
     /**
      * 获取List值
-     *
-     * @param jsonStr
-     * @return
-     * @throws JSONException
      */
     public static Object opt001ListData(String jsonStr, Type type, String keys)
             throws JSONException {

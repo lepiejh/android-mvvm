@@ -84,7 +84,7 @@ public class OpenFile {
         h.put("axs", "application/olescript");
         h.put("bas", "text/plain");
         h.put("bcpio", "application/x-bcpio");
-        h.put("bin ", "application/octet-stream");
+        h.put("bin", "application/octet-stream");
         h.put("bld", "application/bld");
         h.put("bld2", "application/bld2");
         h.put("bmp", "image/bmp");
@@ -326,7 +326,7 @@ public class OpenFile {
         h.put("png", "image/png");
         h.put("pnm", "image/x-portable-anymap");
         h.put("pnz", "image/png");
-        h.put("pot,", "application/vnd.ms-powerpoint");
+        h.put("pot", "application/vnd.ms-powerpoint");
         h.put("ppm", "image/x-portable-pixmap");
         h.put("pps", "application/vnd.ms-powerpoint");
         h.put("ppt", "application/vnd.ms-powerpoint");
@@ -524,7 +524,6 @@ public class OpenFile {
         h.put("xlt", "application/vnd.ms-excel");
         h.put("xlw", "application/vnd.ms-excel");
         h.put("xm", "audio/x-mod");
-        h.put("xml", "text/plain");
         h.put("xml", "application/xml");
         h.put("xmz", "audio/x-mod");
         h.put("xof", "x-world/x-vrml");

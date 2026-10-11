@@ -1,10 +1,9 @@
 package com.ved.framework.utils;
 
-import android.util.Base64;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.util.Locale;
@@ -26,7 +25,7 @@ public final class Md5Util {
         byte[] resultBytes = null;
         try {
             MessageDigest md = MessageDigest.getInstance(MD5);
-            byte[] bytes = data.getBytes("utf-8");
+            byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
             resultBytes = md.digest(bytes);
         } catch (Exception e) {
             KLog.e(e.getMessage());
@@ -40,8 +39,8 @@ public final class Md5Util {
     public static String encodeStringByMD5(String str) {
         try {
             MessageDigest md5 = MessageDigest.getInstance("MD5");
-            md5.update(str.getBytes("UTF-8"));
-            byte messageDigest[] = md5.digest();
+            md5.update(str.getBytes(StandardCharsets.UTF_8));
+            byte[] messageDigest = md5.digest();
             StringBuilder hexString = new StringBuilder();
             for (byte b : messageDigest) {
                 hexString.append(String.format(Locale.getDefault(), "%02X", b));
@@ -65,6 +64,7 @@ public final class Md5Util {
             //必须把文件读取完毕才能拿到md5
             byte[] buffer = new byte[4096];
             while (digestInputStream.read(buffer) > -1) {
+                KLog.i("正在读取数据...");
             }
             MessageDigest digest = digestInputStream.getMessageDigest();
             digestInputStream.close();
@@ -87,11 +87,10 @@ public final class Md5Util {
         byte[] bytes = encryptByMD5(data);
         String buff = null;
         try {
-            buff = new String(bytes, "utf-8");
+            buff = new String(bytes, StandardCharsets.UTF_8);
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
-        String result = Base64Util.encryptBASE64(buff);
-        return result;
+        return Base64Util.encryptBASE64(buff);
     }
 }

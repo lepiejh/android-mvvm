@@ -1,8 +1,12 @@
 package com.ved.framework.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,6 +18,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -51,13 +56,15 @@ public class KLog {
     private static final ExecutorService LOG_EXECUTOR = Executors.newSingleThreadExecutor();
 
     /** 日期格式 */
+    @SuppressLint("ConstantLocale")
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
+    @SuppressLint("ConstantLocale")
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
     // ============================================
 
     private static final String DEFAULT_MESSAGE = "execute";
-    private static final String LINE_SEPARATOR = System.getProperty("line.separator");
+    private static final String LINE_SEPARATOR = System.lineSeparator();
     private static final int JSON_INDENT = 4;
 
     private static final int V = 0x1;
@@ -140,7 +147,12 @@ public class KLog {
             LOG_FILE_DIR = logDir.endsWith(File.separator) ? logDir : logDir + File.separator;
             File dir = new File(LOG_FILE_DIR);
             if (!dir.exists()) {
-                dir.mkdirs();
+                boolean d = dir.mkdirs();
+                if (d){
+                    KLog.i("文件创建成功");
+                }else {
+                    KLog.i("文件创建失败");
+                }
             }
         }
     }
@@ -197,8 +209,12 @@ public class KLog {
             String timestamp = new SimpleDateFormat("HHmmss", Locale.getDefault()).format(new Date());
             String baseName = logFile.getName().replace(LOG_FILE_SUFFIX, "");
             File archiveFile = new File(logFile.getParent(), baseName + "_" + timestamp + LOG_FILE_SUFFIX);
-            logFile.renameTo(archiveFile);
-
+            boolean b = logFile.renameTo(archiveFile);
+            if (b){
+                KLog.i("文件重命名成功");
+            }else {
+                KLog.i("文件重命名失败");
+            }
             // 清理旧的归档文件
             cleanOldLogFiles();
         } catch (Exception e) {
@@ -234,7 +250,9 @@ public class KLog {
 
             if (logFiles.size() > MAX_LOG_FILES) {
                 // 按最后修改时间排序，保留最新的
-                logFiles.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    logFiles.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+                }
                 for (int i = MAX_LOG_FILES; i < logFiles.size(); i++) {
                     boolean deleted = logFiles.get(i).delete();
                     if (deleted) {
@@ -274,7 +292,9 @@ public class KLog {
         }
 
         // 按最后修改时间排序，最新的在前
-        result.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            result.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
+        }
         return result;
     }
 
@@ -309,7 +329,7 @@ public class KLog {
 
         try {
             FileInputStream fis = new FileInputStream(file);
-            InputStreamReader isr = new InputStreamReader(fis, "UTF-8");
+            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
             BufferedReader reader = new BufferedReader(isr);
 
             String line;
@@ -363,7 +383,12 @@ public class KLog {
         try {
             List<File> files = getLogFiles();
             for (File file : files) {
-                file.delete();
+                boolean b = file.delete();
+                if (b){
+                    KLog.i("文件删除成功");
+                }else {
+                    KLog.i("文件删除失败");
+                }
             }
             return true;
         } catch (Exception e) {
@@ -428,7 +453,12 @@ public class KLog {
 
             // 确保父目录存在
             if (destFile.getParentFile() != null && !destFile.getParentFile().exists()) {
-                destFile.getParentFile().mkdirs();
+                boolean b = destFile.getParentFile().mkdirs();
+                if (b){
+                    KLog.i("文件创建成功");
+                }else {
+                    KLog.i("文件创建失败");
+                }
             }
 
             // 合并所有日志
@@ -556,7 +586,7 @@ public class KLog {
         } else {
             msg = objectMsg.toString();
         }
-        if (msg != null && type != JSON) {
+        if (type != JSON) {
             stringBuilder.append(msg);
         }
 
@@ -645,19 +675,7 @@ public class KLog {
 
                 // JSON 日志也保存到文件
                 if (IS_SAVE_TO_FILE) {
-                    String jsonToSave = msg;
-                    try {
-                        if (msg.startsWith("{")) {
-                            JSONObject jsonObject = new JSONObject(msg);
-                            jsonToSave = jsonObject.toString(JSON_INDENT);
-                        } else if (msg.startsWith("[")) {
-                            JSONArray jsonArray = new JSONArray(msg);
-                            jsonToSave = jsonArray.toString(JSON_INDENT);
-                        }
-                    } catch (JSONException e) {
-                        jsonToSave = msg;
-                    }
-                    String fullLog = logStr + LINE_SEPARATOR + jsonToSave;
+                    String fullLog = getString(msg, logStr);
                     writeLogToFile(levelName, tag, fullLog);
                 }
                 return;
@@ -665,9 +683,26 @@ public class KLog {
         }
 
         // 保存日志到文件（非JSON类型）
-        if (IS_SAVE_TO_FILE && type != JSON) {
+        if (IS_SAVE_TO_FILE) {
             writeLogToFile(levelName, tag, logStr);
         }
+    }
+
+    @NonNull
+    private static String getString(String msg, String logStr) {
+        String jsonToSave = msg;
+        try {
+            if (msg.startsWith("{")) {
+                JSONObject jsonObject = new JSONObject(msg);
+                jsonToSave = jsonObject.toString(JSON_INDENT);
+            } else if (msg.startsWith("[")) {
+                JSONArray jsonArray = new JSONArray(msg);
+                jsonToSave = jsonArray.toString(JSON_INDENT);
+            }
+        } catch (JSONException e) {
+            jsonToSave = msg;
+        }
+        return logStr + LINE_SEPARATOR + jsonToSave;
     }
 
     private static void printLine(String tag, boolean isTop) {

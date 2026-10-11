@@ -42,13 +42,13 @@ public final class MoneyUtil {
                         editText.setSelection(s.length()); //光标设置到最后
                     }
                 }
-                if (s.toString().trim().substring(0).equals(".")) { //如果第1位输入小数点,则补零
+                if (s.toString().trim().equals(".")) { //如果第1位输入小数点,则补零
                     s = "0" + s;
                     editText.setText(s); //设置为"0."
                     editText.setSelection(2); //光标位于小数点之后
                 }
                 if (s.toString().startsWith("0") && s.toString().trim().length() > 1) { //0开头且长度>1
-                    if (!s.toString().substring(1, 2).equals(".")) {
+                    if (s.toString().charAt(1) != '.') {
                         editText.setText(s.subSequence(0, 1));
                         editText.setSelection(1);
                         return;

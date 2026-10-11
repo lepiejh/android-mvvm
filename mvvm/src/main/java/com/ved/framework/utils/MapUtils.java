@@ -76,7 +76,7 @@ public class MapUtils {
     @SafeVarargs
     public static <K, V> HashMap<K, V> newHashMap(final Pair<K, V>... pairs) {
         HashMap<K, V> map = new HashMap<>();
-        if (pairs == null || pairs.length == 0) {
+        if (pairs == null) {
             return map;
         }
         for (Pair<K, V> pair : pairs) {
@@ -89,7 +89,7 @@ public class MapUtils {
     @SafeVarargs
     public static <K, V> LinkedHashMap<K, V> newLinkedHashMap(final Pair<K, V>... pairs) {
         LinkedHashMap<K, V> map = new LinkedHashMap<>();
-        if (pairs == null || pairs.length == 0) {
+        if (pairs == null) {
             return map;
         }
         for (Pair<K, V> pair : pairs) {
@@ -106,7 +106,7 @@ public class MapUtils {
             throw new IllegalArgumentException("comparator must not be null");
         }
         TreeMap<K, V> map = new TreeMap<>(comparator);
-        if (pairs == null || pairs.length == 0) {
+        if (pairs == null) {
             return map;
         }
         for (Pair<K, V> pair : pairs) {
@@ -119,7 +119,7 @@ public class MapUtils {
     @SafeVarargs
     public static <K, V> Hashtable<K, V> newHashTable(final Pair<K, V>... pairs) {
         Hashtable<K, V> map = new Hashtable<>();
-        if (pairs == null || pairs.length == 0) {
+        if (pairs == null) {
             return map;
         }
         for (Pair<K, V> pair : pairs) {
@@ -138,7 +138,7 @@ public class MapUtils {
      * @return true if empty or null
      */
     public static boolean isEmpty(Map<?, ?> map) {
-        return map == null || map.size() == 0;
+        return map == null || map.isEmpty();
     }
 
     /**
@@ -202,9 +202,7 @@ public class MapUtils {
                 }
             });
             return transMap;
-        } catch (IllegalAccessException e) {
-            KLog.e(e.getMessage());
-        } catch (InstantiationException e) {
+        } catch (IllegalAccessException | InstantiationException e) {
             KLog.e(e.getMessage());
         }
         return null;
