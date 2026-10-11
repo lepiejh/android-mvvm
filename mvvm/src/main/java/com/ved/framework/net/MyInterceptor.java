@@ -24,7 +24,7 @@ class MyInterceptor implements Interceptor {
         Request request = chain.request();
         Request.Builder builder = chain.request()
                 .newBuilder();
-        if (headers != null && headers.size() > 0) {
+        if (headers != null && !headers.isEmpty()) {
             Set<String> keys = headers.keySet();
             for (String headerKey : keys) {
                 builder.addHeader(headerKey, Objects.requireNonNull(headers.get(headerKey))).build();
