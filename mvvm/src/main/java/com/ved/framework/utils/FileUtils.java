@@ -42,24 +42,31 @@ import androidx.core.content.ContextCompat;
 import com.ved.framework.utils.bland.code.FileIOUtils;
 
 public class FileUtils {
-    private static final String LINE_SEP = System.getProperty("line.separator");
+    private static final String LINE_SEP = System.lineSeparator();
 
     /**
      * 拷贝Asset文件夹到sd卡
      *
      * @param fromDir 如果拷贝assets ，则传入 ""
      * @param destDir 目的地
-     * @throws IOException
      */
     public static void copyAssetsDir(String fromDir, String destDir) throws IOException {
         String[] files = Utils.getContext().getAssets().list(fromDir);
+        if (files == null) return;
         for (String f : files) {
             copyFile(Utils.getContext().getAssets().open(fromDir + File.separator + f), destDir + File.separator + f);
         }
     }
 
     public static void copyFile(InputStream in, String newPath) {
-        new File(newPath).getParentFile().mkdirs();
+        File parentFile = new File(newPath).getParentFile();
+        if (parentFile != null) {
+            if (parentFile.mkdirs()){
+                KLog.i("父文件创建 成功");
+            }else {
+                KLog.i("父文件创建 失败");
+            }
+        }
         try (
                 InputStream inStream = in;
                 FileOutputStream fs = new FileOutputStream(newPath)
@@ -324,7 +331,7 @@ public class FileUtils {
         // dir isn't a directory then return false
         if (!dir.isDirectory()) return false;
         File[] files = dir.listFiles();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (File file : files) {
                 if (file.isFile()) {
                     if (!file.delete()) return false;
@@ -422,7 +429,7 @@ public class FileUtils {
         // dir isn't a directory then return false
         if (!dir.isDirectory()) return false;
         File[] files = dir.listFiles();
-        if (files != null && files.length != 0) {
+        if (files != null) {
             for (File file : files) {
                 if (filter.accept(file)) {
                     if (file.isFile()) {
@@ -438,7 +445,7 @@ public class FileUtils {
 
     public static List<File> listFileSortByModifyTime(final String dirPath){
         List<File> list = listFilesInDir(dirPath);
-        if (list.size() > 0){
+        if (!list.isEmpty()){
             Collections.sort(list, (file, newFile) -> Long.compare(newFile.lastModified(), file.lastModified()));
         }
         return list;
@@ -723,24 +730,19 @@ public class FileUtils {
      * @param file The file.
      * @return the charset of file simply
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static String getFileCharsetSimple(final File file) {
         if (file == null) return "";
         if (isUtf8(file)) return "UTF-8";
         int p = 0;
-        InputStream is = null;
-        try {
-            is = new BufferedInputStream(new FileInputStream(file));
-            p = (is.read() << 8) + is.read();
-        } catch (IOException e) {
-            KLog.e(e.getMessage());
-        } finally {
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
             try {
-                if (is != null) {
-                    is.close();
-                }
+                p = (is.read() << 8) + is.read();
             } catch (IOException e) {
                 KLog.e(e.getMessage());
             }
+        } catch (IOException e) {
+            KLog.e(e.getMessage());
         }
         switch (p) {
             case 0xfffe:
@@ -768,6 +770,7 @@ public class FileUtils {
      * @param file The file.
      * @return {@code true}: yes<br>{@code false}: no
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static boolean isUtf8(final File file) {
         if (file == null) return false;
         InputStream is = null;
@@ -881,13 +884,14 @@ public class FileUtils {
      * @param file The file.
      * @return the number of lines of file
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static int getFileLines(final File file) {
         int count = 1;
         try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
             try {
                 byte[] buffer = new byte[1024];
                 int readChars;
-                if (LINE_SEP != null && LINE_SEP.endsWith("\n")) {
+                if (LINE_SEP.endsWith("\n")) {
                     while ((readChars = is.read(buffer, 0, 1024)) != -1) {
                         for (int i = 0; i < readChars; ++i) {
                             if (buffer[i] == '\n') ++count;
@@ -1187,13 +1191,8 @@ public class FileUtils {
         StatFs statFs = new StatFs(anyPathInFs);
         long blockSize;
         long availableSize;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = statFs.getBlockSizeLong();
-            availableSize = statFs.getAvailableBlocksLong();
-        } else {
-            blockSize = statFs.getBlockSize();
-            availableSize = statFs.getAvailableBlocks();
-        }
+        blockSize = statFs.getBlockSizeLong();
+        availableSize = statFs.getAvailableBlocksLong();
         return blockSize * availableSize;
     }
 
@@ -1527,6 +1526,7 @@ public class FileUtils {
     }
 
     //从私有目录copy到公有目录
+    @SuppressWarnings("IOStreamConstructor")
     @RequiresApi(api = Build.VERSION_CODES.Q)
     public static void copyToDownloadAndroidQ(String sourcePath, String fileName, String saveDirName) {
         ContentValues values = new ContentValues();
@@ -1713,7 +1713,7 @@ public class FileUtils {
 
     }
 
-
+    @SuppressWarnings("IOStreamConstructor")
     public static boolean copyFile(String sourceFilePath, final Uri insertUri) {
         if (insertUri == null) {
             return false;
@@ -1777,44 +1777,27 @@ public class FileUtils {
     private static boolean copyFileWithStream(OutputStream os, InputStream is) {
         if (os == null || is == null) {
             return false;
-
         }
 
-        int read = 0;
-
-        while (true) {
+        try {
+            byte[] buffer = new byte[4096];
+            int read;
+            while ((read = is.read(buffer)) != -1) {
+                os.write(buffer, 0, read);
+            }
+            os.flush();
+            return true;
+        } catch (IOException e) {
+            KLog.e(e.getMessage());
+            return false;
+        } finally {
             try {
-                byte[] buffer = new byte[1444];
-
-                while ((read = is.read(buffer)) != -1) {
-                    os.write(buffer, 0, read);
-
-                    os.flush();
-
-                }
-
-                return true;
-
+                os.close();
+                is.close();
             } catch (IOException e) {
                 KLog.e(e.getMessage());
-
-                return false;
-
-            } finally {
-                try {
-                    os.close();
-
-                    is.close();
-
-                } catch (IOException e) {
-                    KLog.e(e.getMessage());
-
-                }
-
             }
-
         }
-
     }
 
     public static String getSdCard(){
