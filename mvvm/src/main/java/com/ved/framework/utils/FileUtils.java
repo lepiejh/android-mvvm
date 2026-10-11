@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.Files;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -671,7 +672,7 @@ public class FileUtils {
         List<File> list = new ArrayList<>();
         if (!isDir(dir)) return list;
         File[] files = dir.listFiles();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (File file : files) {
                 if (filter.accept(file)) {
                     list.add(file);
@@ -835,7 +836,7 @@ public class FileUtils {
                 }
                 i++;
             } else {
-                child = (raw.length - i > child) ? child : (raw.length - i);
+                child = Math.min(raw.length - i, child);
                 boolean currentNotUtf8 = false;
                 for (int children = 0; children < child; children++) {
                     // format must is 0x10******
@@ -882,34 +883,28 @@ public class FileUtils {
      */
     public static int getFileLines(final File file) {
         int count = 1;
-        InputStream is = null;
-        try {
-            is = new BufferedInputStream(new FileInputStream(file));
-            byte[] buffer = new byte[1024];
-            int readChars;
-            if (LINE_SEP.endsWith("\n")) {
-                while ((readChars = is.read(buffer, 0, 1024)) != -1) {
-                    for (int i = 0; i < readChars; ++i) {
-                        if (buffer[i] == '\n') ++count;
-                    }
-                }
-            } else {
-                while ((readChars = is.read(buffer, 0, 1024)) != -1) {
-                    for (int i = 0; i < readChars; ++i) {
-                        if (buffer[i] == '\r') ++count;
-                    }
-                }
-            }
-        } catch (IOException e) {
-            KLog.e(e.getMessage());
-        } finally {
+        try (InputStream is = new BufferedInputStream(new FileInputStream(file))) {
             try {
-                if (is != null) {
-                    is.close();
+                byte[] buffer = new byte[1024];
+                int readChars;
+                if (LINE_SEP != null && LINE_SEP.endsWith("\n")) {
+                    while ((readChars = is.read(buffer, 0, 1024)) != -1) {
+                        for (int i = 0; i < readChars; ++i) {
+                            if (buffer[i] == '\n') ++count;
+                        }
+                    }
+                } else {
+                    while ((readChars = is.read(buffer, 0, 1024)) != -1) {
+                        for (int i = 0; i < readChars; ++i) {
+                            if (buffer[i] == '\r') ++count;
+                        }
+                    }
                 }
             } catch (IOException e) {
                 KLog.e(e.getMessage());
             }
+        } catch (IOException e) {
+            KLog.e(e.getMessage());
         }
         return count;
     }
@@ -948,7 +943,7 @@ public class FileUtils {
         if (!isDir(dir)) return -1;
         long len = 0;
         File[] files = dir.listFiles();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (File file : files) {
                 if (file.isDirectory()) {
                     len += getDirLength(file);
@@ -1176,13 +1171,8 @@ public class FileUtils {
         StatFs statFs = new StatFs(anyPathInFs);
         long blockSize;
         long totalSize;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-            blockSize = statFs.getBlockSizeLong();
-            totalSize = statFs.getBlockCountLong();
-        } else {
-            blockSize = statFs.getBlockSize();
-            totalSize = statFs.getBlockCount();
-        }
+        blockSize = statFs.getBlockSizeLong();
+        totalSize = statFs.getBlockCountLong();
         return blockSize * totalSize;
     }
 
@@ -1387,7 +1377,7 @@ public class FileUtils {
         if (!srcDir.exists() || !srcDir.isDirectory()) return false;
         if (!createOrExistsDir(destDir)) return false;
         File[] files = srcDir.listFiles();
-        if (files != null && files.length > 0) {
+        if (files != null) {
             for (File file : files) {
                 File oneDestFile = new File(destPath + file.getName());
                 if (file.isFile()) {
@@ -1620,7 +1610,7 @@ public class FileUtils {
         OutputStream os = null;
         boolean result = false;
         try {
-            inputStream = new BufferedInputStream(new FileInputStream(sourceFile));
+            inputStream = new BufferedInputStream(Files.newInputStream(sourceFile.toPath()));
             if (insertUri != null) {
                 os = resolver.openOutputStream(insertUri);
             }
@@ -1633,8 +1623,7 @@ public class FileUtils {
                 os.flush();
             }
             result = true;
-        } catch (IOException e) {
-            result = false;
+        } catch (IOException ignored) {
         } finally {
             try {
                 if (os != null) {
@@ -1655,18 +1644,11 @@ public class FileUtils {
     }
 
     public static boolean currentVersionLessThan29() {
-        boolean flag = true;
         //若是自己是大于等于 29  而且开启沙盒 则返回false 走适配沙盒分支
-        if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-                !isExternalStorageLegacy()) {
-            flag = false;
-        }
-        return flag;
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
+                isExternalStorageLegacy();
     }
 
-    /**
-     * @return
-     */
     @RequiresApi(api = Build.VERSION_CODES.Q)
     private static boolean isExternalStorageLegacy() {
         return Environment.isExternalStorageLegacy();
@@ -1864,7 +1846,8 @@ public class FileUtils {
             // 1. 父目录为 null（相对路径无父目录），直接尝试创建
             if (parent == null) {
                 if (file.mkdir() || file.exists()) {
-                    file.getAbsolutePath();
+                    String path = file.getAbsolutePath();
+                    KLog.i("创建的文件绝对路径："+path);
                     return;
                 }
                 return;
@@ -1877,7 +1860,8 @@ public class FileUtils {
 
             // 3. 尝试创建当前目录，mkdir 返回 false 时可能是已存在，用 exists 兜底
             if (file.mkdir() || file.exists()) {
-                file.getAbsolutePath();
+                String path = file.getAbsolutePath();
+                KLog.i("创建的文件绝对路径："+path);
             }
 
         } catch (Exception e) {
