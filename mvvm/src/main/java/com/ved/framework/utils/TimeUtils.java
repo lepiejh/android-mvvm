@@ -2,7 +2,6 @@ package com.ved.framework.utils;
 
 import android.annotation.SuppressLint;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.os.Build;
 import android.provider.Settings;
 import android.text.TextUtils;
@@ -82,6 +81,7 @@ public class TimeUtils {
                 return 0;
             }
             Date d = s_format.parse(dateString);
+            if (d == null) return 0;
             return d.getTime();
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -110,8 +110,7 @@ public class TimeUtils {
             dateOld = new Date(currentTime*1000L);
         }
         String sDateTime = dateToString(dateOld, formatType); // 把date类型的时间转换为string
-        Date date = stringToDate(sDateTime, formatType); // 把String类型转换为Date类型
-        return date;
+        return stringToDate(sDateTime, formatType);
     }
 
     public static long stringToLong(String strTime, String formatType)
@@ -123,8 +122,7 @@ public class TimeUtils {
         if (date == null) {
             return 0;
         } else {
-            long currentTime = dateToLong(date); // date类型转成long类型
-            return currentTime;
+            return dateToLong(date);
         }
     }
 
@@ -147,8 +145,7 @@ public class TimeUtils {
         } else {
             date = longToDate(currentTime*1000L, formatType);
         }
-        String strTime = dateToString(date, formatType); // date类型转成String
-        return strTime;
+        return dateToString(date, formatType);
     }
 
     public static String dateToString(Date data, String formatType) {
@@ -165,6 +162,7 @@ public class TimeUtils {
                 return 0;
             }
             Date d = f_format.parse(dateString);
+            if (d == null)return 0;
             return d.getTime() / 1000;
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -178,6 +176,7 @@ public class TimeUtils {
                 return 0;
             }
             Date d = f_format.parse(dateString);
+            if (d == null)return 0;
             return d.getTime() / 1000;
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -263,11 +262,11 @@ public class TimeUtils {
      * 获取字符串时间的年份
      *
      * @param dateString 格式为yyyy-MM-ss，或者yyyy-MM-dd HH:mm:ss
-     * @return
      */
     public static int getYear(String dateString) {
         try {
             Date d = s_format.parse(dateString);
+            if (d == null) return 0;
             return d.getYear() + 1900;// 年份是基于格林威治时间，所以加上1900
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -279,11 +278,11 @@ public class TimeUtils {
      * 获取字符串时间的月份
      *
      * @param dateString 格式为yyyy-MM-ss，或者yyyy-MM-dd hh:mm:ss
-     * @return
      */
     public static int getMonth(String dateString) {
         try {
             Date d = s_format.parse(dateString);
+            if (d == null) return 0;
             return d.getMonth();// 月份从0-11
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -296,11 +295,11 @@ public class TimeUtils {
      * 获取字符串时间的天
      *
      * @param dateString 格式为yyyy-MM-ss，或者yyyy-MM-dd hh:mm:ss
-     * @return
      */
     public static int getDayOfMonth(String dateString) {
         try {
             Date d = s_format.parse(dateString);
+            if (d == null) return 0;
             return d.getDate();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -313,6 +312,7 @@ public class TimeUtils {
         SimpleDateFormat formart = new SimpleDateFormat("HH:mm:ss");
         try {
             Date date = formart.parse(timeString);
+            if (date == null) return 0;
             return date.getHours();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -325,6 +325,7 @@ public class TimeUtils {
         SimpleDateFormat formart = new SimpleDateFormat("HH:mm:ss");
         try {
             Date date = formart.parse(timeString);
+            if (date == null) return 0;
             return date.getMinutes();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -337,6 +338,7 @@ public class TimeUtils {
         SimpleDateFormat formart = new SimpleDateFormat("HH:mm:ss");
         try {
             Date date = formart.parse(timeString);
+            if (date == null) return 0;
             return date.getSeconds();
         } catch (ParseException e) {
             // TODO Auto-generated catch block
@@ -351,38 +353,20 @@ public class TimeUtils {
 
     /**
      * 在当前时间上加上多少毫秒，返回这个时间
-     *
-     * @param mask
-     * @return
      */
     public static String getCurrentTimeMask(long mask) {
         return f_format.format(new Date(System.currentTimeMillis() + mask));
     }
 
-    // /////////////////////以上是通用的，下面为特殊需求的////////////////////////
-    // /**
-    // * 时间戳转换日期格式
-    // *
-    // * @param timestamp
-    // * 单位秒
-    // * @return
-    // */
-    // public static String getCurrentTime(long timestamp) {
-    // SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    // return f.format(new Date(timestamp * 1000));
-    // }
-
     /**
      * 获取精简的日期
-     *
-     * @param time
-     * @return
      */
     public static String getSimpleDate(String time) {
         SimpleDateFormat formater = new SimpleDateFormat("yyyy-MM-dd");
         Date date = null;
         try {
             date = f_format.parse(time);
+            if (date == null) return "";
             return formater.format(date);
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -390,15 +374,12 @@ public class TimeUtils {
         }
     }
 
-    /**
-     * @param time
-     * @return
-     */
     public static String getSimpleDateTime(String time) {
         SimpleDateFormat formater = new SimpleDateFormat("yy-MM-dd HH:mm");
         Date date = null;
         try {
             date = f_format.parse(time);
+            if (date == null) return "";
             return formater.format(date);
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -411,6 +392,7 @@ public class TimeUtils {
         Date date = null;
         try {
             date = f_format.parse(time);
+            if (date == null) return "";
             return formater.format(date);
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -423,6 +405,7 @@ public class TimeUtils {
         Date date = null;
         try {
             date = f_format.parse(time);
+            if (date == null) return "";
             return formater.format(date);
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -435,6 +418,7 @@ public class TimeUtils {
         Date date = null;
         try {
             date = f_format.parse(time);
+            if (date == null) return "";
             return formater.format(date);
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -507,10 +491,10 @@ public class TimeUtils {
         return System.currentTimeMillis();
     }
 
-    private static SimpleDateFormat hm_formater = new SimpleDateFormat("HH:mm");
+    private static final SimpleDateFormat hm_formater = new SimpleDateFormat("HH:mm");
 
 
-    private static SimpleDateFormat hm_formater12 = new SimpleDateFormat("aa hh:mm ");
+    private static final SimpleDateFormat hm_formater12 = new SimpleDateFormat("aa hh:mm ");
 
     public static String sk_time_long_to_hm_str(long time) {
         try {
@@ -566,10 +550,7 @@ public class TimeUtils {
         ContentResolver cv = Utils.getContext().getContentResolver();
         String strTimeFormat = android.provider.Settings.System.getString(cv,
                 android.provider.Settings.System.TIME_12_24);
-        if(strTimeFormat !=null && strTimeFormat.equals("24")){
-            return true;
-        }
-        return false;
+        return strTimeFormat != null && strTimeFormat.equals("24");
     }
 
     public static final SimpleDateFormat sk_format_1 = new SimpleDateFormat("yyyy/MM/dd HH:mm");
@@ -602,7 +583,9 @@ public class TimeUtils {
             if (StringUtils.isEmpty(time)){
                 return 0;
             }
-            return sk_format_1.parse(time).getTime() / 1000;
+            Date d = sk_format_1.parse(time);
+            if (d == null) return 0;
+            return d.getTime() / 1000;
         } catch (ParseException e) {
             KLog.e(e.getMessage());
         }
@@ -612,6 +595,7 @@ public class TimeUtils {
     public static int yMdHm_getYear(String dateString) {
         try {
             Date d = sk_format_1.parse(dateString);
+            if (d == null) return 0;
             return d.getYear() + 1900;// 年份是基于格林威治时间，所以加上1900
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -622,6 +606,7 @@ public class TimeUtils {
     public static int yMdHm_getMonth(String dateString) {
         try {
             Date d = sk_format_1.parse(dateString);
+            if (d == null) return 0;
             return d.getMonth();// 月份从0-11
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -632,6 +617,7 @@ public class TimeUtils {
     public static int yMdHm_getDayOfMonth(String dateString) {
         try {
             Date d = sk_format_1.parse(dateString);
+            if (d == null) return 0;
             return d.getDate();
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -642,6 +628,7 @@ public class TimeUtils {
     public static int yMdHm_getHours(String timeString) {
         try {
             Date date = sk_format_1.parse(timeString);
+            if (date == null) return 0;
             return date.getHours();
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -652,6 +639,7 @@ public class TimeUtils {
     public static int yMdHm_getMinutes(String timeString) {
         try {
             Date date = sk_format_1.parse(timeString);
+            if (date == null) return 0;
             return date.getMinutes();
         } catch (ParseException e) {
             KLog.e(e.getMessage());
@@ -660,9 +648,7 @@ public class TimeUtils {
     }
 
     /**
-     * @param textView
      * @param time     时间戳/1000
-     * @return
      */
     public static long getSpecialBeginTime(TextView textView, long time) {
         long currentTime = System.currentTimeMillis() / 1000;
@@ -688,8 +674,6 @@ public class TimeUtils {
 
     /**
      * 时间格式化为今天，昨天，前天   年-月-日
-     *
-     * @param time
      */
     @SuppressLint("SimpleDateFormat")
     public static String setFormatDate(long time) {
@@ -720,8 +704,6 @@ public class TimeUtils {
 
     /**
      * 字符串转为时间格式
-     *
-     * @return
      */
     public static String strToTime(double str) {
         long time = Long.parseLong(StringUtils.removeDecimal(String.valueOf(str)));
@@ -912,26 +894,15 @@ public class TimeUtils {
 
     /**
      * 获取当前时间
-     *
-     * @param pattern
-     * @return
      */
     public static String getNowDate(String pattern) {
         return getDate(new Date(System.currentTimeMillis()), pattern);
     }
 
-    /**
-     * @param pattern
-     * @return
-     */
     public static String getYesterday(String pattern) {
         return getDate(new Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000), pattern);
     }
 
-    /**
-     * @param pattern
-     * @return
-     */
     public static String getTomorrowDay(String pattern) {
         return getDate(new Date(System.currentTimeMillis() + 24 * 60 * 60 * 1000), pattern);
     }
@@ -939,9 +910,6 @@ public class TimeUtils {
 
     /**
      * 获取时间
-     *
-     * @param pattern
-     * @return
      */
     public static String getDate(Date date, String pattern) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -950,9 +918,6 @@ public class TimeUtils {
 
     /**
      * 获取时间
-     *
-     * @param pattern
-     * @return
      */
     public static Date getDate(String date, String pattern) {
         SimpleDateFormat simpleDateFormat = new SimpleDateFormat(pattern);
@@ -969,7 +934,9 @@ public class TimeUtils {
         String dateTo="";
         try {
             d1 = new SimpleDateFormat(patternFrom).parse(date);
-            dateTo = new SimpleDateFormat(pattrtnTo).format(d1);
+            if (d1 != null) {
+                dateTo = new SimpleDateFormat(pattrtnTo).format(d1);
+            }
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
@@ -984,8 +951,7 @@ public class TimeUtils {
         Calendar a = Calendar.getInstance();
         a.set(Calendar.DATE, 1);//把日期设置为当月第一天
         a.roll(Calendar.DATE, -1);//日期回滚一天，也就是最后一天
-        int maxDate = a.get(Calendar.DATE);
-        return maxDate;
+        return a.get(Calendar.DATE);
     }
 
 
@@ -998,8 +964,7 @@ public class TimeUtils {
         a.set(Calendar.MONTH, month - 1);
         a.set(Calendar.DATE, 1);//把日期设置为当月第一天
         a.roll(Calendar.DATE, -1);//日期回滚一天，也就是最后一天
-        int maxDate = a.get(Calendar.DATE);
-        return maxDate;
+        return a.get(Calendar.DATE);
     }
 
     public static String getWeek() {
@@ -1016,13 +981,11 @@ public class TimeUtils {
 
 
     public static String formatDate(long millis) {
-        StringBuilder sb = new StringBuilder();
         long mss = millis / 1000;
         long hours = mss / (60 * 60);
         long day = mss / (60 * 60 * 24);
         DecimalFormat decimalFormat = new DecimalFormat("00");
-        sb.append(decimalFormat.format(day) + "天").append(decimalFormat.format(hours) + "时");
-        return sb.toString();
+        return decimalFormat.format(day) + "天" + decimalFormat.format(hours) + "时";
     }
 
     /**
@@ -1068,7 +1031,9 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.DAY_OF_MONTH, -1);
             date = c.getTime();
         } else {
@@ -1079,7 +1044,9 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.DAY_OF_MONTH, 1);
             date = c.getTime();
 
@@ -1136,10 +1103,11 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.DAY_OF_MONTH, 1);
             date = c.getTime();
-            return simpleDateFormat.format(date);
         } else {
             try {
                 date = simpleDateFormat.parse(time);
@@ -1147,11 +1115,13 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.DAY_OF_MONTH, -1);
             date = c.getTime();
-            return simpleDateFormat.format(date);
         }
+        return simpleDateFormat.format(date);
     }
 
     public static String selectMonth(String time, boolean next) {
@@ -1164,10 +1134,11 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.MONTH, 1);
             date = c.getTime();
-            return simpleDateFormat.format(date);
         } else {
             try {
                 date = simpleDateFormat.parse(time);
@@ -1175,11 +1146,13 @@ public class TimeUtils {
                 KLog.e(e.getMessage());
             }
             Calendar c = Calendar.getInstance();
-            c.setTime(date);
+            if (date != null) {
+                c.setTime(date);
+            }
             c.add(Calendar.MONTH, -1);
             date = c.getTime();
-            return simpleDateFormat.format(date);
         }
+        return simpleDateFormat.format(date);
     }
 
     /**
@@ -1192,8 +1165,7 @@ public class TimeUtils {
         a.set(Calendar.MONTH, month - 1);
         a.set(Calendar.DATE, 1);
         a.roll(Calendar.DATE, -1);
-        int maxDate = a.get(Calendar.DATE);
-        return maxDate;
+        return a.get(Calendar.DATE);
     }
 
     public static String getTimeOut(String startTime) {
