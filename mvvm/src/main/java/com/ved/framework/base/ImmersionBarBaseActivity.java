@@ -128,40 +128,38 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
      * 防止从底部上滑或顶部下滑时显示状态栏和导航栏
      */
     private void setupFullScreenImmersiveMode() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            View decorView = getWindow().getDecorView();
+        View decorView = getWindow().getDecorView();
 
-            // 设置系统UI可见性标志
-            int uiOptions;
+        // 设置系统UI可见性标志
+        int uiOptions;
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                // Android 11 及以上
-                getWindow().setDecorFitsSystemWindows(false);
-                uiOptions = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            } else {
-                // Android 11 以下
-                uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                        | View.SYSTEM_UI_FLAG_FULLSCREEN
-                        | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-            }
-
-            decorView.setSystemUiVisibility(uiOptions);
-
-            // 设置窗口标志，确保全屏
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-
-            // 监听系统UI可见性变化，确保在用户试图滑动时立即重新隐藏
-            decorView.setOnSystemUiVisibilityChangeListener(visibility -> {
-                if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                    // 系统UI显示了，重新隐藏
-                    decorView.postDelayed(() -> decorView.setSystemUiVisibility(uiOptions), 100);
-                }
-            });
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // Android 11 及以上
+            getWindow().setDecorFitsSystemWindows(false);
+            uiOptions = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        } else {
+            // Android 11 以下
+            uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                    | View.SYSTEM_UI_FLAG_FULLSCREEN
+                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         }
+
+        decorView.setSystemUiVisibility(uiOptions);
+
+        // 设置窗口标志，确保全屏
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+
+        // 监听系统UI可见性变化，确保在用户试图滑动时立即重新隐藏
+        decorView.setOnSystemUiVisibilityChangeListener(visibility -> {
+            if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
+                // 系统UI显示了，重新隐藏
+                decorView.postDelayed(() -> decorView.setSystemUiVisibility(uiOptions), 100);
+            }
+        });
     }
 
     @Override
