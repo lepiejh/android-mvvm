@@ -123,6 +123,7 @@ public final class BitmapUtil {
     /**
      * 修正图片大小,图片压缩后小于100k,失真不明显
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static Bitmap revisionImageSize(String path) throws IOException {
         if (path == null) {
             return null;
@@ -230,6 +231,7 @@ public final class BitmapUtil {
     /**
      * Bitmap对象保存为图片文件
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static String saveBitmapFile(Bitmap bitmap) {
         String fileName = Md5Util.encodeStringByMD5((System
                 .currentTimeMillis() + new Random().nextLong() * 500) + "") + ".png";
