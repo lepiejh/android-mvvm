@@ -2,6 +2,8 @@ package com.ved.framework.utils;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -597,6 +599,7 @@ public class ReflectUtil {
         return obj instanceof ReflectUtil && object.equals(((ReflectUtil) obj).get());
     }
 
+    @NonNull
     @Override
     public String toString() {
         return object.toString();

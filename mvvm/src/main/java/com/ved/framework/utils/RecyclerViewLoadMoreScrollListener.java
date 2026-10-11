@@ -2,6 +2,7 @@ package com.ved.framework.utils;
 
 import com.ved.framework.command.BindingCommand;
 
+import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -32,7 +33,7 @@ public class RecyclerViewLoadMoreScrollListener extends RecyclerView.OnScrollLis
     }
 
     @Override
-    public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+    public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
         // no-op
     }
 

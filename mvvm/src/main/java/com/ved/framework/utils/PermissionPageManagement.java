@@ -16,9 +16,8 @@ public class PermissionPageManagement {
     }
 
     private static boolean isIntentAvailable(Context context, final Intent intent) {
-        return context.getApplicationContext()
+        return !context.getApplicationContext()
                 .getPackageManager()
-                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY)
-                .size() > 0;
+                .queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY).isEmpty();
     }
 }
