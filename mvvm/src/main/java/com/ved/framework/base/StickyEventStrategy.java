@@ -11,8 +11,8 @@ import io.reactivex.rxjava3.core.Observable;
 class StickyEventStrategy extends BaseEventStrategy {
 
     @Override
-    protected Observable<MessageEvent> createObservable() {
+    protected Observable<MessageEvent<?>> createObservable() {
         return RxBus.getDefault()
-                .toObservableSticky(MessageEvent.class);
+                .toObservableSticky(MessageEvent.TYPE);
     }
 }

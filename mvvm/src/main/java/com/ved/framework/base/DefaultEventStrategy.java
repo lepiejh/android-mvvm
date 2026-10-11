@@ -11,8 +11,8 @@ import io.reactivex.rxjava3.core.Observable;
 class DefaultEventStrategy extends BaseEventStrategy {
 
     @Override
-    protected Observable<MessageEvent> createObservable() {
+    protected Observable<MessageEvent<?>> createObservable() {
         return RxBus.getDefault()
-                .toObservable(MessageEvent.class);
+                .toObservable(MessageEvent.TYPE);
     }
 }

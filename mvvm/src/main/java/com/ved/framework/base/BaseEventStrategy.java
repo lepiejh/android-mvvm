@@ -13,7 +13,7 @@ import io.reactivex.rxjava3.disposables.Disposable;
 abstract class BaseEventStrategy implements IEventSubscriptionStrategy {
     private Disposable eventSubscription;
 
-    protected abstract Observable<MessageEvent> createObservable();
+    protected abstract Observable<MessageEvent<?>> createObservable();
 
     @Override
     public void setupSubscription(BaseViewModel<?> viewModel) {
