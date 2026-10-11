@@ -22,12 +22,10 @@ public class FileViewerUtils {
 
     /**
      * 查看文件
-     *
-     * @param filePath
      */
     public static void viewFile(Context activity, String filePath) {
         File viewFile = new File(filePath);
-        Intent intent = new Intent();
+        Intent intent = new Intent(Intent.ACTION_VIEW);  // 明确指定动作
         intent.setDataAndType(Uri.fromFile(viewFile), getMimeType(viewFile));
         intent.addCategory("android.intent.category.DEFAULT");
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -36,9 +34,6 @@ public class FileViewerUtils {
 
     /**
      * Android 4.4 系统上文件查看
-     *
-     * @param context
-     * @param fileName
      */
     public static void viewFile4_4(Context context, String fileName) {
         String ext = getExtension(fileName);
@@ -58,7 +53,6 @@ public class FileViewerUtils {
     /**
      * Gets the extension of a file name, like ".png" or ".jpg".
      *
-     * @param fileName
      * @return Extension including the dot("."); "" if there is no extension;
      * null if fileName was null.
      */
@@ -87,7 +81,7 @@ public class FileViewerUtils {
 
         String extension = getExtension(file.getName());
 
-        if (extension.length() > 0)
+        if (!extension.isEmpty())
             return MimeTypeMap.getSingleton().getMimeTypeFromExtension(extension.substring(1));
 
         return "application/octet-stream";
