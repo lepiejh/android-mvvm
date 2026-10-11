@@ -672,7 +672,7 @@ public final class SPUtils {
         } else if (value instanceof byte[]) {
             // 字节数组：Base64 编码后按字符串（加密）保存
             editor.putString(key, encryptDES(Base64.encodeToString((byte[]) value, Base64.NO_WRAP)));
-        } else if (value instanceof Collection) {
+        } else if (value instanceof Collection<?>) {
             Collection<?> collection = (Collection<?>) value;
             if (!collection.isEmpty()) {
                 Class<?> elementType = collection.iterator().next().getClass();
@@ -680,7 +680,7 @@ public final class SPUtils {
             } else {
                 return saveEntity("");
             }
-        } else if (value instanceof Map || (value != null && value.getClass().isArray())) {
+        } else if (value instanceof Map<?, ?> || (value != null && value.getClass().isArray())) {
             // Map / 数组（int[]/long[]/String[]/对象数组等）：序列化为 JSON 后按字符串（加密）保存
             String json = JsonPraise.objToJson(value);
             if (TextUtils.isEmpty(json)) {
@@ -756,7 +756,7 @@ public final class SPUtils {
                 KLog.e(e.getMessage());
                 return defaultValue;
             }
-        }else if (defaultValue instanceof Collection){
+        }else if (defaultValue instanceof Collection<?>){
             Collection<?> collection = (Collection<?>) defaultValue;
             if (collection.isEmpty()) {
                 return defaultValue;
@@ -764,7 +764,7 @@ public final class SPUtils {
             Class<?> elementType = collection.iterator().next().getClass();
             Collection<?> ret = getCollection(elementType);
             return ret != null ? ret : defaultValue;
-        } else if (defaultValue instanceof Map
+        } else if (defaultValue instanceof Map<?, ?>
                 || (defaultValue != null && defaultValue.getClass().isArray())) {
             // Map / 数组：读取字符串并解密后按运行时类型反序列化
             String json = decryptDES(sp.getString(key, ""));
@@ -1212,7 +1212,7 @@ public final class SPUtils {
          * newList 将成为新快照，调用方之后不得再修改它。
          */
         private boolean persist(List<T> newList) {
-            final List<T> safe = (newList != null) ? newList : new ArrayList<T>();
+            final List<T> safe = (newList != null) ? newList : new ArrayList<>();
             boolean ok;
             selfWrite = true;
             try {
@@ -1442,7 +1442,7 @@ public final class SPUtils {
                 } finally {
                     selfWrite = false;
                 }
-                table = new TableSnapshot<>(new ArrayList<T>(), new HashMap<K, Integer>());
+                table = new TableSnapshot<>(new ArrayList<>(), new HashMap<>());
                 return removed;
             }
         }

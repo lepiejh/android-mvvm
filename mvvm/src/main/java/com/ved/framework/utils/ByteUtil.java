@@ -5,6 +5,7 @@ package com.ved.framework.utils;
 
 
 import java.io.UnsupportedEncodingException;
+import java.util.Locale;
 
 /**
  * byte辅助类
@@ -73,7 +74,7 @@ public class ByteUtil {
         if (byteStr.length() == 1) {
             byteStr = "0" + byteStr;
         }
-        return "0x" + byteStr.toUpperCase();
+        return "0x" + byteStr.toUpperCase(Locale.getDefault());
     }
 
     public static byte[] hexStringToBytes(String hexStr) {
@@ -81,7 +82,7 @@ public class ByteUtil {
         if (length % two != 0) {
             return null;
         }
-        hexStr = hexStr.toUpperCase();
+        hexStr = hexStr.toUpperCase(Locale.getDefault());
         byte[] outArray = new byte[length / two];
         for (int i = 0; i < length; i += two) {
             char li = hexStr.charAt(i);

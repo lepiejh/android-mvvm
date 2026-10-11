@@ -45,7 +45,7 @@ public class DownLoadManager {
     }
 
     //下载
-    public void load(String downUrl, final ProgressCallBack callBack) {
+    public void load(String downUrl, final ProgressCallBack<ResponseBody> callBack) {
         retrofit.create(ApiService.class)
                 .download(downUrl)
                 .subscribeOn(Schedulers.io())//请求网络 在调度者的io线程

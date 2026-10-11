@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -538,9 +539,9 @@ public class ReflectUtil {
         if (length == 0) {
             return "";
         } else if (length == 1) {
-            return string.toLowerCase();
+            return string.toLowerCase(Locale.getDefault());
         } else {
-            return string.substring(0, 1).toLowerCase() + string.substring(1);
+            return string.substring(0, 1).toLowerCase(Locale.getDefault()) + string.substring(1);
         }
     }
 

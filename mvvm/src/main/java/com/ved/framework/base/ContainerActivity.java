@@ -10,6 +10,7 @@ import com.ved.framework.entity.ParameterField;
 
 import java.lang.ref.WeakReference;
 
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
@@ -58,7 +59,7 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel<?>> 
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         // WeakReference 可能在极端场景下已被清空，避免 putFragment(null) 抛 IllegalStateException
         Fragment fragment = mFragment.get();
@@ -73,7 +74,7 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel<?>> 
                     "you must provide a page info to display");
         }
         String fragmentName = data.getStringExtra(ParameterField.FRAGMENT);
-        if (fragmentName == null || "".equals(fragmentName)) {
+        if (fragmentName == null || fragmentName.isEmpty()) {
             throw new IllegalArgumentException("can not find page fragmentName");
         }
         Bundle args = data.getBundleExtra(ParameterField.BUNDLE);
@@ -83,8 +84,8 @@ public class ContainerActivity extends BaseActivity<AaBinding,BaseViewModel<?>> 
     @Override
     public void onBackPressed() {
         Fragment fragment = getSupportFragmentManager().findFragmentById(R.id.content);
-        if (fragment instanceof BaseFragment) {
-            if (!((BaseFragment) fragment).isBackPressed()) {
+        if (fragment instanceof BaseFragment<?, ?>) {
+            if (!((BaseFragment<?, ?>) fragment).isBackPressed()) {
                 super.onBackPressed();
             }
         } else {

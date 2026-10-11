@@ -119,7 +119,7 @@ public class PersistentCookieStore implements CookieStore {
     @Override
     public void saveCookie(HttpUrl url, List<Cookie> urlCookies) {
         if (!cookies.containsKey(url.host())) {
-            cookies.put(url.host(), new ConcurrentHashMap<String, Cookie>());
+            cookies.put(url.host(), new ConcurrentHashMap<>());
         }
         for (Cookie cookie : urlCookies) {
             //当前cookie是否过期
@@ -134,7 +134,7 @@ public class PersistentCookieStore implements CookieStore {
     @Override
     public void saveCookie(HttpUrl url, Cookie cookie) {
         if (!cookies.containsKey(url.host())) {
-            cookies.put(url.host(), new ConcurrentHashMap<String, Cookie>());
+            cookies.put(url.host(), new ConcurrentHashMap<>());
         }
         //当前cookie是否过期
         if (isCookieExpired(cookie)) {

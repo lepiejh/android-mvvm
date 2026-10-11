@@ -546,7 +546,7 @@ public class KLog {
         int lineNumber = stackTrace[index].getLineNumber();
 
         String tag = (tagStr == null ? className : tagStr);
-        methodName = methodName.substring(0, 1).toUpperCase() + methodName.substring(1);
+        methodName = methodName.substring(0, 1).toUpperCase(Locale.getDefault()) + methodName.substring(1);
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[ (").append(className).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");

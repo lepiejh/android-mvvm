@@ -113,7 +113,7 @@ public final class AdaptScreenUtils {
     private static void applyOtherDisplayMetrics(final Resources resources, final float newXdpi) {
         if (sMetricsFields == null) {
             sMetricsFields = new ArrayList<>();
-            Class resCls = resources.getClass();
+            Class<?> resCls = resources.getClass();
             Field[] declaredFields = resCls.getDeclaredFields();
             while (declaredFields != null && declaredFields.length > 0) {
                 for (Field field : declaredFields) {

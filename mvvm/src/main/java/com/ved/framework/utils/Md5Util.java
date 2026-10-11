@@ -46,7 +46,7 @@ public final class Md5Util {
             for (byte b : messageDigest) {
                 hexString.append(String.format(Locale.getDefault(), "%02X", b));
             }
-            return hexString.toString().toLowerCase();
+            return hexString.toString().toLowerCase(Locale.getDefault());
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
@@ -73,7 +73,7 @@ public final class Md5Util {
             for (byte b : md5) {
                 sb.append(String.format(Locale.getDefault(), "%02X", b));
             }
-            return sb.toString().toLowerCase();
+            return sb.toString().toLowerCase(Locale.getDefault());
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }

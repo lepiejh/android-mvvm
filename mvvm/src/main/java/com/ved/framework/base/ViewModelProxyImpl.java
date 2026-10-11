@@ -119,7 +119,7 @@ class ViewModelProxyImpl<VM extends BaseViewModel<?>> implements ViewModelProxy<
      * - 其它（如 TypeVariable、GenericArrayType）：回退到 BaseViewModel。
      */
     private Class<?> toClass(Type type) {
-        if (type instanceof Class) {
+        if (type instanceof Class<?>) {
             return (Class<?>) type;
         }
         if (type instanceof ParameterizedType) {
@@ -135,7 +135,7 @@ class ViewModelProxyImpl<VM extends BaseViewModel<?>> implements ViewModelProxy<
                 // 会在下面 instanceof Class 时命中并最终返回 Object，
                 // 所以这里先做一次 BaseViewModel 子类判断再决定是否采纳。
                 Type upper = upperBounds[0];
-                if (upper instanceof Class
+                if (upper instanceof Class<?>
                         && BaseViewModel.class.isAssignableFrom((Class<?>) upper)) {
                     return (Class<?>) upper;
                 }

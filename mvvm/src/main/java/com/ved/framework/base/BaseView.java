@@ -3,6 +3,7 @@ package com.ved.framework.base;
 import android.content.Intent;
 import android.os.Bundle;
 
+import androidx.core.content.ContextCompat;
 import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -19,7 +20,7 @@ import com.ved.framework.utils.bland.code.SizeUtils;
 
 import org.greenrobot.eventbus.EventBus;
 
-class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
+class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
     protected V binding;
     protected VM viewModel;
     private final IBaseView<V, VM> viewDelegate;
@@ -120,7 +121,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
 
         // Fragment Resume事件（getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
         // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
-        if (viewModel.getUC().getOnResumeEvent() != null && owner != null) {
+        if (viewModel.getUC().getOnResumeEvent() != null) {
             if (viewDelegate.isFragment()){
                 viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
             }else {
@@ -258,7 +259,8 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel> {
             final SwipePanel swipeLayout = new SwipePanel(viewDelegate.FragmentActivity());
             swipeLayout.setLeftDrawable(R.drawable.ca);
             swipeLayout.setLeftEdgeSize(SizeUtils.dp2px(16));
-            swipeLayout.setLeftSwipeColor(viewDelegate.FragmentActivity().getResources().getColor(R.color.colorPrimary));
+            // Resources.getColor(int) 在 API 23 已过时，统一走 ContextCompat 做版本兼容
+            swipeLayout.setLeftSwipeColor(ContextCompat.getColor(viewDelegate.FragmentActivity(), R.color.colorPrimary));
             swipeLayout.wrapView(viewDelegate.FragmentActivity().findViewById(android.R.id.content));
             swipeLayout.setOnFullSwipeListener(direction -> {
                 swipeLayout.close(direction);

@@ -8,9 +8,9 @@ import io.reactivex.rxjava3.observers.DisposableObserver;
  */
 
 public class DownLoadSubscriber<T> extends DisposableObserver<T> {
-    private ProgressCallBack fileCallBack;
+    private ProgressCallBack<T> fileCallBack;
 
-    public DownLoadSubscriber(ProgressCallBack fileCallBack) {
+    public DownLoadSubscriber(ProgressCallBack<T> fileCallBack) {
         this.fileCallBack = fileCallBack;
     }
 

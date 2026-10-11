@@ -39,7 +39,7 @@ public class MapUtils {
                 Object values = entry.getValue();
                 if (values != null && com.ved.framework.utils.StringUtils.isNotEmpty(values)) {
                     if (values instanceof Collection) {
-                        String collValues = StringUtils.join((Collection) values, ",");
+                        String collValues = StringUtils.join((Collection<?>) values, ",");
                         paramsList.add(key + "=" + collValues);
                     } else {
                         paramsList.add(key + "=" + values);
@@ -137,7 +137,7 @@ public class MapUtils {
      * @param map the map to check, may be null
      * @return true if empty or null
      */
-    public static boolean isEmpty(Map map) {
+    public static boolean isEmpty(Map<?, ?> map) {
         return map == null || map.size() == 0;
     }
 
@@ -149,7 +149,7 @@ public class MapUtils {
      * @param map the map to check, may be null
      * @return true if non-null and non-empty
      */
-    public static boolean isNotEmpty(Map map) {
+    public static boolean isNotEmpty(Map<?, ?> map) {
         return !isEmpty(map);
     }
 
@@ -159,7 +159,7 @@ public class MapUtils {
      * @param map The map.
      * @return the size of the map specified
      */
-    public static int size(Map map) {
+    public static int size(Map<?, ?> map) {
         if (map == null) return 0;
         return map.size();
     }
@@ -190,7 +190,10 @@ public class MapUtils {
     public static <K1, V1, K2, V2> Map<K2, V2> transform(Map<K1, V1> map, final Transformer<K1, V1, K2, V2> transformer) {
         if (map == null || transformer == null) return null;
         try {
-            final Map<K2, V2> transMap = map.getClass().newInstance();
+            // map.getClass() 的静态类型是 Class<? extends Map>（泛型已被擦除），
+            // newInstance() 因此只能给出 Map 的裸类型，转成 Map<K2, V2> 属于 unchecked 转换。
+            @SuppressWarnings("unchecked")
+            final Map<K2, V2> transMap = (Map<K2, V2>) map.getClass().newInstance();
             forAllDo(map, new Closure<K1, V1>() {
                 @Override
                 public void execute(K1 key, V1 value) {
@@ -213,7 +216,7 @@ public class MapUtils {
      * @param map The map.
      * @return the string of map
      */
-    public static String toString(Map map) {
+    public static String toString(Map<?, ?> map) {
         if (map == null) return "null";
         return map.toString();
     }

@@ -54,7 +54,7 @@ public class OpenFile {
 
     private static String getMimeType(String docType) {
         String mime = "";
-        HashMap<String, String> h = new HashMap<String, String>();
+        HashMap<String, String> h = new HashMap<>();
         h.put("", "application/octet-stream");
         h.put("323", "text/h323");
         h.put("3gp", "video/3gpp");

@@ -244,7 +244,7 @@ public final class BusUtils {
         return null;
     }
 
-    private Class getClassName(String paramType) throws ClassNotFoundException {
+    private Class<?> getClassName(String paramType) throws ClassNotFoundException {
         switch (paramType) {
             case "boolean":
                 return boolean.class;

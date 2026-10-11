@@ -17,6 +17,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.spec.AlgorithmParameterSpec;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Locale;
 
 import javax.crypto.Cipher;
 import javax.crypto.Mac;
@@ -1137,7 +1138,7 @@ public final class EncryptUtils {
             int len = data.length;
             int maxLen = keySize / 8;
             if (isEncrypt) {
-                String lowerTrans = transformation.toLowerCase();
+                String lowerTrans = transformation.toLowerCase(Locale.getDefault());
                 if (lowerTrans.endsWith("pkcs1padding")) {
                     maxLen -= 11;
                 }

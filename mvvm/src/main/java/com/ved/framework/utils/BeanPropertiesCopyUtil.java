@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * 利用反射实现对象之间属性复制（模板方法模式）：
@@ -47,7 +48,7 @@ public class BeanPropertiesCopyUtil {
             }
             // 排除列表检测
             return excludesList == null
-                    || !excludesList.contains(methodName.substring(3).toLowerCase());
+                    || !excludesList.contains(methodName.substring(3).toLowerCase(Locale.getDefault()));
         });
     }
 
@@ -66,7 +67,7 @@ public class BeanPropertiesCopyUtil {
         copyProperties(from, to, methodName -> {
             String fieldName = methodName.substring(3);
             // 包含列表检测（属性名首字母转小写）
-            return includesList.contains(fieldName.substring(0, 1).toLowerCase() + fieldName.substring(1));
+            return includesList.contains(fieldName.substring(0, 1).toLowerCase(Locale.getDefault()) + fieldName.substring(1));
         });
     }
 
@@ -90,7 +91,7 @@ public class BeanPropertiesCopyUtil {
                 continue;
             }
             // 集合类判空处理
-            if (value instanceof Collection && ((Collection<?>) value).size() <= 0) {
+            if (value instanceof Collection<?> && ((Collection<?>) value).size() <= 0) {
                 continue;
             }
             toMethod.invoke(to, value);

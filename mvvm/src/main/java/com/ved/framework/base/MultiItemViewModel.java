@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
  * Create Date：2019/01/25
  * Description：RecycleView多布局ItemViewModel是封装
  */
-public class MultiItemViewModel<VM extends BaseViewModel> extends ItemViewModel<VM> {
+public class MultiItemViewModel<VM extends BaseViewModel<?>> extends ItemViewModel<VM> {
     protected Object multiType;
 
     public Object getItemType() {

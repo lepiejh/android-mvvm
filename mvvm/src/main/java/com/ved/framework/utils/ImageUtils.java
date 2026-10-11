@@ -907,7 +907,7 @@ public class ImageUtils {
      * android图片压缩工具
      * 压缩多张图片 RxJava 方式
      */
-    public static void compressWithRx(List<String> files, Observer observer) {
+    public static void compressWithRx(List<String> files, Observer<File> observer) {
 
         Luban.get(Utils.getContext())
                 .load(files)
@@ -941,7 +941,7 @@ public class ImageUtils {
      * android图片压缩工具
      * 压缩单张图片 RxJava 方式
      */
-    public static void compressWithRx(String url, Consumer consumer){
+    public static void compressWithRx(String url, Consumer<File> consumer){
 
         Luban.get(Utils.getContext())
                 .load(url)
@@ -964,7 +964,7 @@ public class ImageUtils {
                 .subscribe(consumer);
     }
 
-    public static void compressWithRx(String url, Consumer consumer, IThrowable iThrowable){
+    public static void compressWithRx(String url, Consumer<File> consumer, IThrowable iThrowable){
 
         Luban.get(Utils.getContext())
                 .load(url)

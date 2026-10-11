@@ -18,6 +18,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by ved on 2017/5/14.
@@ -155,7 +156,7 @@ public final class SDCardUtils {
         for (SDCardInfo cardInfo : sdCardInfo) {
             String state = cardInfo.state;
             if (state == null) continue;
-            if ("mounted".equals(state.toLowerCase())) {
+            if ("mounted".equals(state.toLowerCase(Locale.getDefault()))) {
                 path.add(cardInfo.path);
             }
         }

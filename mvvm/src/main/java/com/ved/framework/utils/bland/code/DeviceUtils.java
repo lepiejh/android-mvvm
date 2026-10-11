@@ -31,6 +31,7 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.util.Enumeration;
+import java.util.Locale;
 import java.util.UUID;
 
 public final class DeviceUtils {
@@ -352,8 +353,8 @@ public final class DeviceUtils {
      */
     public static boolean isEmulator() {
         boolean checkProperty = Build.FINGERPRINT.startsWith("generic")
-                || Build.FINGERPRINT.toLowerCase().contains("vbox")
-                || Build.FINGERPRINT.toLowerCase().contains("test-keys")
+                || Build.FINGERPRINT.toLowerCase(Locale.getDefault()).contains("vbox")
+                || Build.FINGERPRINT.toLowerCase(Locale.getDefault()).contains("test-keys")
                 || Build.MODEL.contains("google_sdk")
                 || Build.MODEL.contains("Emulator")
                 || Build.MODEL.contains("Android SDK built for x86")
@@ -370,7 +371,7 @@ public final class DeviceUtils {
                 operatorName = name;
             }
         }
-        boolean checkOperatorName = operatorName.toLowerCase().equals("android");
+        boolean checkOperatorName = operatorName.toLowerCase(Locale.getDefault()).equals("android");
         if (checkOperatorName) return true;
 
         String url = "tel:" + "123456";
@@ -417,7 +418,7 @@ public final class DeviceUtils {
                 sb.append(readLine);
             }
             responseReader.close();
-            result = sb.toString().toLowerCase();
+            result = sb.toString().toLowerCase(Locale.getDefault());
         } catch (IOException ignored) {
         }
         return result;

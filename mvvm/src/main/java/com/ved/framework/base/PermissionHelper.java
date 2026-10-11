@@ -15,7 +15,7 @@ import com.ved.framework.utils.phone.PhoneUtils;
  * 封装运行时权限申请、拨打电话、WiFi 信号强度监听等系统能力，
  * 使 BaseView 从系统权限细节中解耦。
  */
-class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
+class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     private final IBaseView<V, VM> viewDelegate;
 

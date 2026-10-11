@@ -18,8 +18,8 @@ public final class ApiUtils {
 
     private static final String TAG = "ApiUtils";
 
-    private Map<Class, BaseApi> mApiMap           = new ConcurrentHashMap<>();
-    private Map<Class, Class>   mInjectApiImplMap = new HashMap<>();
+    private Map<Class<?>, BaseApi> mApiMap           = new ConcurrentHashMap<>();
+    private Map<Class<?>, Class<?>> mInjectApiImplMap = new HashMap<>();
 
     private ApiUtils() {
         init();
@@ -31,7 +31,7 @@ public final class ApiUtils {
      */
     private void init() {/*inject*/}
 
-    private void registerImpl(Class implClass) {
+    private void registerImpl(Class<? extends BaseApi> implClass) {
         mInjectApiImplMap.put(implClass.getSuperclass(), implClass);
     }
 
@@ -66,7 +66,10 @@ public final class ApiUtils {
         return LazyHolder.INSTANCE;
     }
 
-    private <Result> Result getApiInner(Class apiClass) {
+    // 反射拿到的 api 在运行期必然就是调用方要求的 Result 类型，但静态上只有 BaseApi，
+    // 转成类型变量 Result 属于 unchecked 转换，特此收窄抑制范围到本方法。
+    @SuppressWarnings("unchecked")
+    private <Result> Result getApiInner(Class<?> apiClass) {
         BaseApi api = mApiMap.get(apiClass);
         if (api != null) {
             return (Result) api;
@@ -76,7 +79,7 @@ public final class ApiUtils {
             if (api != null) {
                 return (Result) api;
             }
-            Class implClass = mInjectApiImplMap.get(apiClass);
+            Class<?> implClass = mInjectApiImplMap.get(apiClass);
             if (implClass != null) {
                 try {
                     api = (BaseApi) implClass.newInstance();

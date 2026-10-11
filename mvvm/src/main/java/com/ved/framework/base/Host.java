@@ -7,7 +7,7 @@ import android.view.ViewGroup;
 import androidx.annotation.Nullable;
 import androidx.databinding.ViewDataBinding;
 
-interface Host<V extends ViewDataBinding, VM extends BaseViewModel> extends IBaseView<V, VM> {
+interface Host<V extends ViewDataBinding, VM extends BaseViewModel<?>> extends IBaseView<V, VM> {
 
     /**
      * 初始化根布局，返回 layoutId。

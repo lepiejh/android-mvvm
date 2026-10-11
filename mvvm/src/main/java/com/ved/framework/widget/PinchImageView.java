@@ -447,7 +447,7 @@ public class PinchImageView extends androidx.appcompat.widget.AppCompatImageView
         //如果监听列表没有被修改锁定直接将监听添加到监听列表
         if (mDispatchOuterMatrixChangedLock == 0) {
             if (mOuterMatrixChangedListeners == null) {
-                mOuterMatrixChangedListeners = new ArrayList<OuterMatrixChangedListener>();
+                mOuterMatrixChangedListeners = new ArrayList<>();
             }
             mOuterMatrixChangedListeners.add(listener);
         } else {
@@ -455,9 +455,9 @@ public class PinchImageView extends androidx.appcompat.widget.AppCompatImageView
             //监听列表副本将会在锁定被解除时替换到监听列表里
             if (mOuterMatrixChangedListenersCopy == null) {
                 if (mOuterMatrixChangedListeners != null) {
-                    mOuterMatrixChangedListenersCopy = new ArrayList<OuterMatrixChangedListener>(mOuterMatrixChangedListeners);
+                    mOuterMatrixChangedListenersCopy = new ArrayList<>(mOuterMatrixChangedListeners);
                 } else {
-                    mOuterMatrixChangedListenersCopy = new ArrayList<OuterMatrixChangedListener>();
+                    mOuterMatrixChangedListenersCopy = new ArrayList<>();
                 }
             }
             mOuterMatrixChangedListenersCopy.add(listener);
@@ -1346,7 +1346,7 @@ public class PinchImageView extends androidx.appcompat.widget.AppCompatImageView
          */
         public ObjectsPool(int size) {
             mSize = size;
-            mQueue = new LinkedList<T>();
+            mQueue = new LinkedList<>();
         }
 
         /**

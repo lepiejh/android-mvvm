@@ -32,6 +32,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by ved on 2017/5/14.
@@ -80,7 +81,7 @@ public final class ConvertUtils {
             hexString = "0" + hexString;
             len = len + 1;
         }
-        char[] hexBytes = hexString.toUpperCase().toCharArray();
+        char[] hexBytes = hexString.toUpperCase(Locale.getDefault()).toCharArray();
         byte[] ret = new byte[len >> 1];
         for (int i = 0; i < len; i += 2) {
             ret[i >> 1] = (byte) (hex2Dec(hexBytes[i]) << 4 | hex2Dec(hexBytes[i + 1]));

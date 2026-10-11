@@ -48,6 +48,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -648,8 +649,8 @@ public class NetworkUtils {
                         if (!isIPv4) {
                             int index = hostAddress.indexOf('%');
                             return index < 0
-                                    ? hostAddress.toUpperCase()
-                                    : hostAddress.substring(0, index).toUpperCase();
+                                    ? hostAddress.toUpperCase(Locale.getDefault())
+                                    : hostAddress.substring(0, index).toUpperCase(Locale.getDefault());
                         }
                     }
                 }

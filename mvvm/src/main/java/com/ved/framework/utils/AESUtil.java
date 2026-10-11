@@ -139,7 +139,7 @@ public final class AESUtil {
             if (hex.length() == 1) {
                 hex = '0' + hex;
             }
-            sb.append(hex.toUpperCase());
+            sb.append(hex.toUpperCase(Locale.getDefault()));
         }
         return sb.toString();
     }

@@ -24,7 +24,7 @@ import com.ved.framework.utils.KLog;
  * @param <V>  ViewDataBinding 泛型
  * @param <VM> BaseViewModel 泛型
  */
-class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel> {
+class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     private final Host<V, VM> host;
     private final BaseView<V, VM> baseView;

@@ -26,6 +26,7 @@ public class ArrayUtils {
      * @return a new array only of those given elements.
      */
     @NonNull
+    @SafeVarargs
     public static <T> T[] newArray(T... array) {
         return array;
     }
@@ -472,7 +473,7 @@ public class ArrayUtils {
             endIndexExclusive = length;
         }
         int newSize = endIndexExclusive - startIndexInclusive;
-        Class type = array.getClass().getComponentType();
+        Class<?> type = array.getClass().getComponentType();
         if (newSize <= 0) {
             return Array.newInstance(type, 0);
         }
@@ -508,8 +509,10 @@ public class ArrayUtils {
      * @return A new array containing the existing elements plus the new element
      */
     @NonNull
+    // realAddOne 只能给出 Object，转成 T[] 属于 unchecked 转换（元素类型由运行时数组保证）
+    @SuppressWarnings("unchecked")
     public static <T> T[] add(@Nullable T[] array, @Nullable T element) {
-        Class type = array != null ? array.getClass() : (element != null ? element.getClass() : Object.class);
+        Class<?> type = array != null ? array.getClass() : (element != null ? element.getClass() : Object.class);
         return (T[]) realAddOne(array, element, type);
     }
 
@@ -554,7 +557,7 @@ public class ArrayUtils {
     }
 
     @NonNull
-    private static Object realAddOne(@Nullable Object array, @Nullable Object element, Class newArrayComponentType) {
+    private static Object realAddOne(@Nullable Object array, @Nullable Object element, Class<?> newArrayComponentType) {
         Object newArray;
         int arrayLength = 0;
         if (array != null) {
@@ -589,6 +592,8 @@ public class ArrayUtils {
      * The type of the new array is the type of the first array.
      */
     @Nullable
+    // 同上：realAddArr 只能给出 Object，转成 T[] 属于 unchecked 转换
+    @SuppressWarnings("unchecked")
     public static <T> T[] add(@Nullable T[] array1, @Nullable T[] array2) {
         return (T[]) realAddArr(array1, array2);
     }
@@ -678,8 +683,10 @@ public class ArrayUtils {
      *                                   (index < 0 || index > array.length).
      */
     @Nullable
+    // 同上：realAddArr 只能给出 Object，转成 T[] 属于 unchecked 转换
+    @SuppressWarnings("unchecked")
     public static <T> T[] add(@Nullable T[] array1, int index, @Nullable T[] array2) {
-        Class clss;
+        Class<?> clss;
         if (array1 != null) {
             clss = array1.getClass().getComponentType();
         } else if (array2 != null) {
@@ -746,7 +753,7 @@ public class ArrayUtils {
     }
 
     @Nullable
-    private static Object realAddArr(@Nullable Object array1, int index, @Nullable Object array2, Class clss) {
+    private static Object realAddArr(@Nullable Object array1, int index, @Nullable Object array2, Class<?> clss) {
         if (array1 == null && array2 == null) return null;
         int len1 = getLength(array1);
         int len2 = getLength(array2);
@@ -806,8 +813,10 @@ public class ArrayUtils {
      *                                   (index < 0 || index > array.length).
      */
     @NonNull
+    // new Object[]{null} 与 realAdd 的返回值转成 T[] 都属于 unchecked 转换
+    @SuppressWarnings("unchecked")
     public static <T> T[] add(@Nullable T[] array, int index, @Nullable T element) {
-        Class clss;
+        Class<?> clss;
         if (array != null) {
             clss = array.getClass().getComponentType();
         } else if (element != null) {
@@ -859,7 +868,7 @@ public class ArrayUtils {
     }
 
     @NonNull
-    private static Object realAdd(@Nullable Object array, int index, @Nullable Object element, Class clss) {
+    private static Object realAdd(@Nullable Object array, int index, @Nullable Object element, Class<?> clss) {
         if (array == null) {
             if (index != 0) {
                 throw new IndexOutOfBoundsException("Index: " + index + ", Length: 0");
@@ -1961,6 +1970,7 @@ public class ArrayUtils {
     }
 
     @NonNull
+    @SafeVarargs
     public static <T> List<T> asList(@Nullable T... array) {
         if (array == null || array.length == 0) {
             return Collections.emptyList();
@@ -1969,11 +1979,15 @@ public class ArrayUtils {
     }
 
     @NonNull
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <T> List<T> asUnmodifiableList(@Nullable T... array) {
         return Collections.unmodifiableList(asList(array));
     }
 
     @NonNull
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <T> List<T> asArrayList(@Nullable T... array) {
         List<T> list = new ArrayList<>();
         if (array == null || array.length == 0) return list;
@@ -1982,6 +1996,8 @@ public class ArrayUtils {
     }
 
     @NonNull
+    @SafeVarargs
+    @SuppressWarnings("varargs")
     public static <T> List<T> asLinkedList(@Nullable T... array) {
         List<T> list = new LinkedList<>();
         if (array == null || array.length == 0) return list;
@@ -2037,6 +2053,9 @@ public class ArrayUtils {
      * @param array   The array.
      * @param closure the closure to perform, may be null
      */
+    // 入参是 Object（可能是任意基础类型数组），把拆箱后的元素交给 Closure<E> 时
+    // 静态类型无法证明它就是 E，只能 unchecked 强转；元素实际类型由调用方保证。
+    @SuppressWarnings("unchecked")
     public static <E> void forAllDo(@Nullable Object array, @Nullable Closure<E> closure) {
         if (array == null || closure == null) return;
         if (array instanceof Object[]) {

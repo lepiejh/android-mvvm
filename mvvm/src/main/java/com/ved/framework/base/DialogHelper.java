@@ -10,7 +10,7 @@ import com.orhanobut.dialog.dialog.IDialogStrategy;
  * 封装 MVVM 加载对话框策略的创建与显隐控制，
  * 使 BaseView 从对话框细节中解耦。
  */
-class DialogHelper<V extends ViewDataBinding, VM extends BaseViewModel> {
+class DialogHelper<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     private static final String DEFAULT_TITLE = "加载中...";
 

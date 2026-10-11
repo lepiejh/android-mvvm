@@ -3,6 +3,7 @@ package com.ved.framework.utils;
 import java.io.ObjectStreamException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -132,6 +133,6 @@ public class AssignReflect {
         }
         // 只将首字母转为小写, 避免 replace 替换掉属性名中所有同名大写字符(如 getCCName -> cCName)
         String s = string.substring(0, 1);
-        return s.toLowerCase() + string.substring(1);
+        return s.toLowerCase(Locale.getDefault()) + string.substring(1);
     }
 }

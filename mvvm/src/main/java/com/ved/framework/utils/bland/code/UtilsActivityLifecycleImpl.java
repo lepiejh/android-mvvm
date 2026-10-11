@@ -274,7 +274,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
 
     Application getApplicationByReflect() {
         try {
-            Class activityThreadClass = Class.forName("android.app.ActivityThread");
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
             Object thread = getActivityThread();
             if (thread == null) return null;
             Object app = activityThreadClass.getMethod("getApplication").invoke(thread);
@@ -471,9 +471,11 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
             if (!(mActivities instanceof Map)) {
                 return list;
             }
+            // mActivities 是反射拿到的 Object，转成 Map<Object, Object> 属于 unchecked 转换
+            @SuppressWarnings("unchecked")
             Map<Object, Object> binder_activityClientRecord_map = (Map<Object, Object>) mActivities;
             for (Object activityRecord : binder_activityClientRecord_map.values()) {
-                Class activityClientRecordClass = activityRecord.getClass();
+                Class<?> activityClientRecordClass = activityRecord.getClass();
                 Field activityField = activityClientRecordClass.getDeclaredField("activity");
                 activityField.setAccessible(true);
                 Activity activity = (Activity) activityField.get(activityRecord);
@@ -506,7 +508,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
 
     private Object getActivityThreadInActivityThreadStaticField() {
         try {
-            Class activityThreadClass = Class.forName("android.app.ActivityThread");
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
             Field sCurrentActivityThreadField = activityThreadClass.getDeclaredField("sCurrentActivityThread");
             sCurrentActivityThreadField.setAccessible(true);
             return sCurrentActivityThreadField.get(null);
@@ -518,7 +520,7 @@ final class UtilsActivityLifecycleImpl implements Application.ActivityLifecycleC
 
     private Object getActivityThreadInActivityThreadStaticMethod() {
         try {
-            Class activityThreadClass = Class.forName("android.app.ActivityThread");
+            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
             return activityThreadClass.getMethod("currentActivityThread").invoke(null);
         } catch (Exception e) {
             KLog.e("UtilsActivityLifecycle", "getActivityThreadInActivityThreadStaticMethod: " + e.getMessage());

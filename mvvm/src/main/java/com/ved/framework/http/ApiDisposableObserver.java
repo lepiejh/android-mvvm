@@ -46,7 +46,7 @@ public abstract class ApiDisposableObserver<T> extends DisposableObserver<T> {
     }
 
     @Override
-    public void onNext(Object o) {
-        onResult((T) o);
+    public void onNext(T o) {
+        onResult(o);
     }
 }

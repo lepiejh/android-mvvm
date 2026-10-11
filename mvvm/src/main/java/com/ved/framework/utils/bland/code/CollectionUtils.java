@@ -145,11 +145,11 @@ public final class CollectionUtils {
         return set;
     }
 
-    public static Collection newSynchronizedCollection(Collection collection) {
+    public static <E> Collection<E> newSynchronizedCollection(Collection<E> collection) {
         return Collections.synchronizedCollection(collection);
     }
 
-    public static Collection newUnmodifiableCollection(Collection collection) {
+    public static <E> Collection<E> newUnmodifiableCollection(Collection<E> collection) {
         return Collections.unmodifiableCollection(collection);
     }
 
@@ -166,16 +166,16 @@ public final class CollectionUtils {
      * @return the union of the two collections
      * @see Collection#addAll
      */
-    public static Collection union(final Collection a, final Collection b) {
-        if (a == null && b == null) return new ArrayList();
-        if (a == null) return new ArrayList<Object>(b);
-        if (b == null) return new ArrayList<Object>(a);
-        ArrayList<Object> list = new ArrayList<>();
+    public static <E> Collection<E> union(final Collection<? extends E> a, final Collection<? extends E> b) {
+        if (a == null && b == null) return new ArrayList<>();
+        if (a == null) return new ArrayList<>(b);
+        if (b == null) return new ArrayList<>(a);
+        ArrayList<E> list = new ArrayList<>();
         Map<Object, Integer> mapA = getCardinalityMap(a);
         Map<Object, Integer> mapB = getCardinalityMap(b);
-        Set<Object> elts = new HashSet<Object>(a);
+        Set<E> elts = new HashSet<E>(a);
         elts.addAll(b);
-        for (Object obj : elts) {
+        for (E obj : elts) {
             for (int i = 0, m = Math.max(getFreq(obj, mapA), getFreq(obj, mapB)); i < m; i++) {
                 list.add(obj);
             }
@@ -196,14 +196,14 @@ public final class CollectionUtils {
      * @return the intersection of the two collections
      * @see Collection#retainAll
      */
-    public static Collection intersection(final Collection a, final Collection b) {
-        if (a == null || b == null) return new ArrayList();
-        ArrayList<Object> list = new ArrayList<>();
-        Map mapA = getCardinalityMap(a);
-        Map mapB = getCardinalityMap(b);
-        Set<Object> elts = new HashSet<Object>(a);
+    public static <E> Collection<E> intersection(final Collection<? extends E> a, final Collection<? extends E> b) {
+        if (a == null || b == null) return new ArrayList<>();
+        ArrayList<E> list = new ArrayList<>();
+        Map<Object, Integer> mapA = getCardinalityMap(a);
+        Map<Object, Integer> mapB = getCardinalityMap(b);
+        Set<E> elts = new HashSet<E>(a);
         elts.addAll(b);
-        for (Object obj : elts) {
+        for (E obj : elts) {
             for (int i = 0, m = Math.min(getFreq(obj, mapA), getFreq(obj, mapB)); i < m; i++) {
                 list.add(obj);
             }
@@ -211,8 +211,8 @@ public final class CollectionUtils {
         return list;
     }
 
-    private static int getFreq(final Object obj, final Map freqMap) {
-        Integer count = (Integer) freqMap.get(obj);
+    private static int getFreq(final Object obj, final Map<?, Integer> freqMap) {
+        Integer count = freqMap.get(obj);
         if (count != null) {
             return count;
         }
@@ -236,16 +236,16 @@ public final class CollectionUtils {
      * @param b the second collection
      * @return the symmetric difference of the two collections
      */
-    public static Collection disjunction(final Collection a, final Collection b) {
-        if (a == null && b == null) return new ArrayList();
-        if (a == null) return new ArrayList<Object>(b);
-        if (b == null) return new ArrayList<Object>(a);
-        ArrayList<Object> list = new ArrayList<>();
-        Map mapA = getCardinalityMap(a);
-        Map mapB = getCardinalityMap(b);
-        Set<Object> elts = new HashSet<Object>(a);
+    public static <E> Collection<E> disjunction(final Collection<? extends E> a, final Collection<? extends E> b) {
+        if (a == null && b == null) return new ArrayList<>();
+        if (a == null) return new ArrayList<>(b);
+        if (b == null) return new ArrayList<>(a);
+        ArrayList<E> list = new ArrayList<>();
+        Map<Object, Integer> mapA = getCardinalityMap(a);
+        Map<Object, Integer> mapB = getCardinalityMap(b);
+        Set<E> elts = new HashSet<E>(a);
         elts.addAll(b);
-        for (Object obj : elts) {
+        for (E obj : elts) {
             for (int i = 0, m = ((Math.max(getFreq(obj, mapA), getFreq(obj, mapB)))
                     - (Math.min(getFreq(obj, mapA), getFreq(obj, mapB)))); i < m; i++) {
                 list.add(obj);
@@ -265,10 +265,10 @@ public final class CollectionUtils {
      * @return a new collection with the results
      * @see Collection#removeAll
      */
-    public static Collection subtract(final Collection a, final Collection b) {
-        if (a == null) return new ArrayList();
-        if (b == null) return new ArrayList<Object>(a);
-        ArrayList<Object> list = new ArrayList<Object>(a);
+    public static <E> Collection<E> subtract(final Collection<E> a, final Collection<? extends E> b) {
+        if (a == null) return new ArrayList<>();
+        if (b == null) return new ArrayList<>(a);
+        ArrayList<E> list = new ArrayList<>(a);
         for (Object o : b) {
             list.remove(o);
         }
@@ -286,7 +286,7 @@ public final class CollectionUtils {
      * @return <code>true</code> iff the intersection of the collections is non-empty
      * @see #intersection
      */
-    public static boolean containsAny(final Collection coll1, final Collection coll2) {
+    public static boolean containsAny(final Collection<?> coll1, final Collection<?> coll2) {
         if (coll1 == null || coll2 == null) return false;
         if (coll1.size() < coll2.size()) {
             for (Object o : coll1) {
@@ -316,7 +316,7 @@ public final class CollectionUtils {
      * @param coll the collection to get the cardinality map for, must not be null
      * @return the populated cardinality map
      */
-    public static Map<Object, Integer> getCardinalityMap(final Collection coll) {
+    public static Map<Object, Integer> getCardinalityMap(final Collection<?> coll) {
         Map<Object, Integer> count = new HashMap<>();
         if (coll == null) return count;
         for (Object obj : coll) {
@@ -342,10 +342,10 @@ public final class CollectionUtils {
      * @see #isProperSubCollection
      * @see Collection#containsAll
      */
-    public static boolean isSubCollection(final Collection a, final Collection b) {
+    public static boolean isSubCollection(final Collection<?> a, final Collection<?> b) {
         if (a == null || b == null) return false;
-        Map mapA = getCardinalityMap(a);
-        Map mapB = getCardinalityMap(b);
+        Map<Object, Integer> mapA = getCardinalityMap(a);
+        Map<Object, Integer> mapB = getCardinalityMap(b);
         for (Object obj : a) {
             if (getFreq(obj, mapA) > getFreq(obj, mapB)) {
                 return false;
@@ -375,7 +375,7 @@ public final class CollectionUtils {
      * @see #isSubCollection
      * @see Collection#containsAll
      */
-    public static boolean isProperSubCollection(final Collection a, final Collection b) {
+    public static boolean isProperSubCollection(final Collection<?> a, final Collection<?> b) {
         if (a == null || b == null) return false;
         return a.size() < b.size() && isSubCollection(a, b);
     }
@@ -392,13 +392,13 @@ public final class CollectionUtils {
      * @param b the second collection
      * @return <code>true</code> iff the collections contain the same elements with the same cardinalities.
      */
-    public static boolean isEqualCollection(final Collection a, final Collection b) {
+    public static boolean isEqualCollection(final Collection<?> a, final Collection<?> b) {
         if (a == null || b == null) return false;
         if (a.size() != b.size()) {
             return false;
         } else {
-            Map mapA = getCardinalityMap(a);
-            Map mapB = getCardinalityMap(b);
+            Map<Object, Integer> mapA = getCardinalityMap(a);
+            Map<Object, Integer> mapB = getCardinalityMap(b);
             if (mapA.size() != mapB.size()) {
                 return false;
             } else {
@@ -421,7 +421,7 @@ public final class CollectionUtils {
      */
     public static <E> int cardinality(E obj, final Collection<E> coll) {
         if (coll == null) return 0;
-        if (coll instanceof Set) {
+        if (coll instanceof Set<?>) {
             return (coll.contains(obj) ? 1 : 0);
         }
         int count = 0;
@@ -488,8 +488,8 @@ public final class CollectionUtils {
      */
     public static <E> void filter(Collection<E> collection, Predicate<E> predicate) {
         if (collection == null || predicate == null) return;
-        for (Iterator it = collection.iterator(); it.hasNext(); ) {
-            if (!predicate.evaluate((E) it.next())) {
+        for (Iterator<E> it = collection.iterator(); it.hasNext(); ) {
+            if (!predicate.evaluate(it.next())) {
                 it.remove();
             }
         }
@@ -555,15 +555,19 @@ public final class CollectionUtils {
      * @param collection  the collection to get the input from, may be null
      * @param transformer the transformer to perform, may be null
      */
-    public static <E1, E2> void transform(Collection<E1> collection, Transformer<E1, E2> transformer) {
+    // 第二型参写成 E2 extends E1：非 List 分支要把转换后的 E2 元素 addAll 回原集合，
+    // 只有 E2 是 E1 的子类型时该操作才成立（commons-collections 的原始签名靠裸类型绕过了这一点）。
+    public static <E1, E2 extends E1> void transform(Collection<E1> collection, Transformer<E1, E2> transformer) {
         if (collection == null || transformer == null) return;
-        if (collection instanceof List) {
-            List list = (List) collection;
-            for (ListIterator it = list.listIterator(); it.hasNext(); ) {
-                it.set(transformer.transform((E1) it.next()));
+        if (collection instanceof List<?>) {
+            // instanceof 只能证明它是 List，证明不了元素类型就是 E1，故此处为 unchecked 转换
+            @SuppressWarnings("unchecked")
+            List<E1> list = (List<E1>) collection;
+            for (ListIterator<E1> it = list.listIterator(); it.hasNext(); ) {
+                it.set(transformer.transform(it.next()));
             }
         } else {
-            Collection resultCollection = collect(collection, transformer);
+            Collection<E2> resultCollection = collect(collection, transformer);
             collection.clear();
             collection.addAll(resultCollection);
         }
@@ -713,16 +717,16 @@ public final class CollectionUtils {
         if (index < 0) {
             throw new IndexOutOfBoundsException("Index cannot be negative: " + index);
         }
-        if (object instanceof Map) {
-            Map map = (Map) object;
-            Iterator iterator = map.entrySet().iterator();
+        if (object instanceof Map<?, ?>) {
+            Map<?, ?> map = (Map<?, ?>) object;
+            Iterator<?> iterator = map.entrySet().iterator();
             return get(iterator, index);
-        } else if (object instanceof List) {
-            return ((List) object).get(index);
+        } else if (object instanceof List<?>) {
+            return ((List<?>) object).get(index);
         } else if (object instanceof Object[]) {
             return ((Object[]) object)[index];
-        } else if (object instanceof Iterator) {
-            Iterator it = (Iterator) object;
+        } else if (object instanceof Iterator<?>) {
+            Iterator<?> it = (Iterator<?>) object;
             while (it.hasNext()) {
                 index--;
                 if (index == -1) {
@@ -732,11 +736,11 @@ public final class CollectionUtils {
                 }
             }
             throw new IndexOutOfBoundsException("Entry does not exist: " + index);
-        } else if (object instanceof Collection) {
-            Iterator iterator = ((Collection) object).iterator();
+        } else if (object instanceof Collection<?>) {
+            Iterator<?> iterator = ((Collection<?>) object).iterator();
             return get(iterator, index);
-        } else if (object instanceof Enumeration) {
-            Enumeration it = (Enumeration) object;
+        } else if (object instanceof Enumeration<?>) {
+            Enumeration<?> it = (Enumeration<?>) object;
             while (it.hasMoreElements()) {
                 index--;
                 if (index == -1) {
@@ -774,20 +778,20 @@ public final class CollectionUtils {
     public static int size(Object object) {
         if (object == null) return 0;
         int total = 0;
-        if (object instanceof Map) {
-            total = ((Map) object).size();
-        } else if (object instanceof Collection) {
-            total = ((Collection) object).size();
+        if (object instanceof Map<?, ?>) {
+            total = ((Map<?, ?>) object).size();
+        } else if (object instanceof Collection<?>) {
+            total = ((Collection<?>) object).size();
         } else if (object instanceof Object[]) {
             total = ((Object[]) object).length;
-        } else if (object instanceof Iterator) {
-            Iterator it = (Iterator) object;
+        } else if (object instanceof Iterator<?>) {
+            Iterator<?> it = (Iterator<?>) object;
             while (it.hasNext()) {
                 total++;
                 it.next();
             }
-        } else if (object instanceof Enumeration) {
-            Enumeration it = (Enumeration) object;
+        } else if (object instanceof Enumeration<?>) {
+            Enumeration<?> it = (Enumeration<?>) object;
             while (it.hasMoreElements()) {
                 total++;
                 it.nextElement();
@@ -823,16 +827,16 @@ public final class CollectionUtils {
      */
     public static boolean sizeIsEmpty(Object object) {
         if (object == null) return true;
-        if (object instanceof Collection) {
-            return ((Collection) object).isEmpty();
-        } else if (object instanceof Map) {
-            return ((Map) object).isEmpty();
+        if (object instanceof Collection<?>) {
+            return ((Collection<?>) object).isEmpty();
+        } else if (object instanceof Map<?, ?>) {
+            return ((Map<?, ?>) object).isEmpty();
         } else if (object instanceof Object[]) {
             return ((Object[]) object).length == 0;
-        } else if (object instanceof Iterator) {
-            return !((Iterator) object).hasNext();
-        } else if (object instanceof Enumeration) {
-            return !((Enumeration) object).hasMoreElements();
+        } else if (object instanceof Iterator<?>) {
+            return !((Iterator<?>) object).hasNext();
+        } else if (object instanceof Enumeration<?>) {
+            return !((Enumeration<?>) object).hasMoreElements();
         } else {
             try {
                 return Array.getLength(object) == 0;
@@ -850,7 +854,7 @@ public final class CollectionUtils {
      * @param coll the collection to check, may be null
      * @return true if empty or null
      */
-    public static boolean isEmpty(Collection coll) {
+    public static boolean isEmpty(Collection<?> coll) {
         return coll == null || coll.size() == 0;
     }
 
@@ -862,7 +866,7 @@ public final class CollectionUtils {
      * @param coll the collection to check, may be null
      * @return true if non-null and non-empty
      */
-    public static boolean isNotEmpty(Collection coll) {
+    public static boolean isNotEmpty(Collection<?> coll) {
         return !isEmpty(coll);
     }
 
@@ -934,7 +938,7 @@ public final class CollectionUtils {
      * @param collection The collection.
      * @return the string of collection
      */
-    public static String toString(Collection collection) {
+    public static String toString(Collection<?> collection) {
         if (collection == null) return "null";
         return collection.toString();
     }

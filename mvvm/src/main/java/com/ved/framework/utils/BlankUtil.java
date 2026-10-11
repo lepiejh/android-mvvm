@@ -29,7 +29,7 @@ public class BlankUtil {
      * @param list
      * @return
      */
-    public static boolean isEmptyList(List list) {
+    public static boolean isEmptyList(List<?> list) {
         if (list == null || list.size() == 0) {
             return true;
         }

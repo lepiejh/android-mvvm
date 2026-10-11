@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.util.Locale;
 import java.util.Properties;
 
 public final class RomUtils {
@@ -337,7 +338,7 @@ public final class RomUtils {
         try {
             String manufacturer = Build.MANUFACTURER;
             if (!TextUtils.isEmpty(manufacturer)) {
-                return manufacturer.toLowerCase();
+                return manufacturer.toLowerCase(Locale.getDefault());
             }
         } catch (Throwable ignore) {/**/}
         return UNKNOWN;
@@ -347,7 +348,7 @@ public final class RomUtils {
         try {
             String brand = Build.BRAND;
             if (!TextUtils.isEmpty(brand)) {
-                return brand.toLowerCase();
+                return brand.toLowerCase(Locale.getDefault());
             }
         } catch (Throwable ignore) {/**/}
         return UNKNOWN;
@@ -362,7 +363,7 @@ public final class RomUtils {
             try {
                 String display = Build.DISPLAY;
                 if (!TextUtils.isEmpty(display)) {
-                    ret = display.toLowerCase();
+                    ret = display.toLowerCase(Locale.getDefault());
                 }
             } catch (Throwable ignore) {/**/}
         }

@@ -168,7 +168,7 @@ public class Messenger {
     private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
         HashMap<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
 
-        List<WeakActionAndToken> list = recipients.computeIfAbsent(messageType, k -> new ArrayList<WeakActionAndToken>());
+        List<WeakActionAndToken> list = recipients.computeIfAbsent(messageType, k -> new ArrayList<>());
 
         list.add(new WeakActionAndToken(weakAction, token));
         cleanup();
@@ -181,12 +181,12 @@ public class Messenger {
         HashMap<Type, List<WeakActionAndToken>> recipients;
         if (receiveDerivedMessagesToo) {
             if (recipientsOfSubclassesAction == null) {
-                recipientsOfSubclassesAction = new HashMap<Type, List<WeakActionAndToken>>();
+                recipientsOfSubclassesAction = new HashMap<>();
             }
             recipients = recipientsOfSubclassesAction;
         } else {
             if (recipientsStrictAction == null) {
-                recipientsStrictAction = new HashMap<Type, List<WeakActionAndToken>>();
+                recipientsStrictAction = new HashMap<>();
             }
             recipients = recipientsStrictAction;
         }

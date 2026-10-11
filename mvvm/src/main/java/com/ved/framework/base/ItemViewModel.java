@@ -8,7 +8,7 @@ import androidx.annotation.NonNull;
  * Created by ved on 2018/10/3.
  */
 
-public class ItemViewModel<VM extends BaseViewModel> {
+public class ItemViewModel<VM extends BaseViewModel<?>> {
     protected VM viewModel;
 
     public ItemViewModel(@NonNull VM viewModel) {
