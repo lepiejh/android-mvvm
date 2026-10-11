@@ -67,6 +67,6 @@ final class GsonRequestBodyConverter<T> implements Converter<T, RequestBody> {
         JsonWriter jsonWriter = gson.newJsonWriter(writer);
         adapter.write(jsonWriter, value);
         jsonWriter.close();
-        return RequestBody.create(MEDIA_TYPE, buffer.readByteString());
+        return RequestBody.create(buffer.readByteString(), MEDIA_TYPE);
     }
 }
