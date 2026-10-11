@@ -609,7 +609,7 @@ public final class StringUtils {
         return s + getCRC(s,"2X");
     }
 
-    private static String getCRC(String str,String n) {
+    public static String getCRC(String str,String n) {
         int[] byteArrayFromString = getByteArrayFromString(str);
         @SuppressLint("RestrictedApi") int i = SupportMenu.USER_MASK;
         int i2 = 0;
@@ -635,7 +635,7 @@ public final class StringUtils {
         return iArr;
     }
 
-    private static String[] splitByNumber(String str, int i) {
+    public static String[] splitByNumber(String str, int i) {
         if (str == null || i <= 0) {
             return new String[0];
         }
