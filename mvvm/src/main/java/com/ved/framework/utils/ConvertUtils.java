@@ -29,6 +29,8 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +46,7 @@ public final class ConvertUtils {
         throw new UnsupportedOperationException("u can't instantiate me...");
     }
 
-    private static final char hexDigits[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+    private static final char[] hexDigits = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     /**
      * byteArr转hexString
@@ -292,16 +294,18 @@ public final class ConvertUtils {
         int byteLen = bits.length() / 8;
         // 不是8的倍数前面补0
         if (lenMod != 0) {
+            StringBuilder bitsBuilder = new StringBuilder(bits);
             for (int i = lenMod; i < 8; i++) {
-                bits = "0" + bits;
+                bitsBuilder.insert(0, "0");
             }
+            bits = bitsBuilder.toString();
             byteLen++;
         }
         byte[] bytes = new byte[byteLen];
         for (int i = 0; i < byteLen; ++i) {
             for (int j = 0; j < 8; ++j) {
                 bytes[i] <<= 1;
-                bytes[i] |= bits.charAt(i * 8 + j) - '0';
+                bytes[i] |= (byte) (bits.charAt(i * 8 + j) - '0');
             }
         }
         return bytes;
@@ -723,22 +727,17 @@ public final class ConvertUtils {
      */
     public static Object bytes2Object(final byte[] bytes) {
         if (bytes == null) return null;
-        ObjectInputStream ois = null;
-        try {
-            ois = new ObjectInputStream(new ByteArrayInputStream(bytes));
-            return ois.readObject();
-        } catch (Exception e) {
-            KLog.e(e.getMessage());
-            return null;
-        } finally {
+        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(bytes))) {
             try {
-                if (ois != null) {
-                    ois.close();
-                }
-            } catch (IOException e) {
+                return ois.readObject();
+            } catch (Exception e) {
                 KLog.e(e.getMessage());
+                return null;
             }
+        } catch (IOException e) {
+            KLog.e(e.getMessage());
         }
+        return null;
     }
 
     /**
@@ -747,23 +746,18 @@ public final class ConvertUtils {
     public static byte[] serializable2Bytes(final Serializable serializable) {
         if (serializable == null) return null;
         ByteArrayOutputStream baos;
-        ObjectOutputStream oos = null;
-        try {
-            oos = new ObjectOutputStream(baos = new ByteArrayOutputStream());
-            oos.writeObject(serializable);
-            return baos.toByteArray();
-        } catch (Exception e) {
-            KLog.e(e.getMessage());
-            return null;
-        } finally {
+        try (ObjectOutputStream oos = new ObjectOutputStream(baos = new ByteArrayOutputStream())) {
             try {
-                if (oos != null) {
-                    oos.close();
-                }
-            } catch (IOException e) {
+                oos.writeObject(serializable);
+                return baos.toByteArray();
+            } catch (Exception e) {
                 KLog.e(e.getMessage());
+                return null;
             }
+        } catch (IOException e) {
+            KLog.e(e.getMessage());
         }
+        return new byte[0];
     }
 
     /**
@@ -804,22 +798,31 @@ public final class ConvertUtils {
      * @param precision The precision
      * @return fit size of memory
      */
-    @SuppressLint("DefaultLocale")
     public static String byte2FitMemorySize(final long byteSize, int precision) {
         if (precision < 0) {
             throw new IllegalArgumentException("precision shouldn't be less than zero!");
         }
         if (byteSize < 0) {
             throw new IllegalArgumentException("byteSize shouldn't be less than zero!");
-        } else if (byteSize < MemoryConstants.KB) {
-            return String.format("%." + precision + "fB", (double) byteSize);
-        } else if (byteSize < MemoryConstants.MB) {
-            return String.format("%." + precision + "fKB", (double) byteSize / MemoryConstants.KB);
-        } else if (byteSize < MemoryConstants.GB) {
-            return String.format("%." + precision + "fMB", (double) byteSize / MemoryConstants.MB);
-        } else {
-            return String.format("%." + precision + "fGB", (double) byteSize / MemoryConstants.GB);
         }
+        String unit;
+        double value;
+        if (byteSize < MemoryConstants.KB) {
+            unit = "B";
+            value = byteSize;
+        } else if (byteSize < MemoryConstants.MB) {
+            unit = "KB";
+            value = (double) byteSize / MemoryConstants.KB;
+        } else if (byteSize < MemoryConstants.GB) {
+            unit = "MB";
+            value = (double) byteSize / MemoryConstants.MB;
+        } else {
+            unit = "GB";
+            value = (double) byteSize / MemoryConstants.GB;
+        }
+        // 用 BigDecimal 指定精度，避免动态格式串
+        BigDecimal bd = BigDecimal.valueOf(value).setScale(precision, RoundingMode.HALF_UP);
+        return bd.toPlainString() + unit;
     }
 
     /**

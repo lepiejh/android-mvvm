@@ -16,6 +16,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Random;
 
 /**
@@ -54,7 +55,7 @@ public final class BitmapUtil {
         if (height > reqHeight || width > reqWidth) {
             final int heightRatio = Math.round((float) height / (float) reqHeight);
             final int widthRatio = Math.round((float) width / (float) reqWidth);
-            inSampleSize = heightRatio < widthRatio ? heightRatio : widthRatio;
+            inSampleSize = Math.min(heightRatio, widthRatio);
         }
         return inSampleSize;
     }
@@ -127,13 +128,10 @@ public final class BitmapUtil {
         if (path == null) {
             return null;
         }
-        BufferedInputStream in = new BufferedInputStream(new FileInputStream(
-                new File(path)));
+        BufferedInputStream in = new BufferedInputStream(Files.newInputStream(new File(path).toPath()));
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        //noinspection deprecation
         options.inInputShareable = true;
-        //noinspection deprecation
         options.inPurgeable = true;
         BitmapFactory.decodeStream(in, null, options);
         in.close();
@@ -143,7 +141,7 @@ public final class BitmapUtil {
             if ((options.outWidth >> i <= 1000)
                     && (options.outHeight >> i <= 1000)) {
                 in = new BufferedInputStream(
-                        new FileInputStream(new File(path)));
+                        Files.newInputStream(new File(path).toPath()));
                 try {
                     options.inSampleSize = (int) Math.pow(2.0D, i);
                     options.inJustDecodeBounds = false;
@@ -204,9 +202,7 @@ public final class BitmapUtil {
         newOpts.inSampleSize = be;//设置采样率
 
         newOpts.inPreferredConfig = Bitmap.Config.ARGB_8888;//该模式是默认的,可不设
-        //noinspection deprecation
         newOpts.inPurgeable = true;// 同时设置才会有效
-        //noinspection deprecation
         newOpts.inInputShareable = true;//。当系统内存不够时候图片自动被回收
 
         bitmap = BitmapFactory.decodeStream(act.getContentResolver().openInputStream(uri), null,
@@ -241,22 +237,12 @@ public final class BitmapUtil {
             String filePath = PathUtil.getCacheDir() + "/img";
             FileUtils.createDir(filePath);
             File file = new File(filePath, fileName);//将要保存图片的路径
-            BufferedOutputStream bos = null;
-            try {
-                bos = new BufferedOutputStream(new FileOutputStream(file));
+            try (BufferedOutputStream bos = new BufferedOutputStream(Files.newOutputStream(file.toPath()))) {
                 bitmap.compress(Bitmap.CompressFormat.PNG, 100, bos);
                 bos.flush();
                 return file.getAbsolutePath();
             } catch (IOException e) {
                 KLog.e(e.getMessage());
-            } finally {
-                if (bos != null) {
-                    try {
-                        bos.close();
-                    } catch (IOException e) {
-                        KLog.e(e.getMessage());
-                    }
-                }
             }
         }
         return "";

@@ -164,9 +164,7 @@ public class CacheUtil {
         if (!file.exists())
             return null;
         boolean removeFile = false;
-        BufferedReader in = null;
-        try {
-            in = new BufferedReader(new FileReader(file));
+        try (BufferedReader in = new BufferedReader(new FileReader(file))) {
             // 用 char 缓冲读取, 保留原始内容中的换行符(readLine 会丢弃换行)
             StringBuilder readString = new StringBuilder();
             char[] buf = new char[1024];
@@ -185,13 +183,6 @@ public class CacheUtil {
             KLog.e(e.getMessage());
             return null;
         } finally {
-            if (in != null) {
-                try {
-                    in.close();
-                } catch (IOException e) {
-                    KLog.e(e.getMessage());
-                }
-            }
             if (removeFile)
                 remove(key);
         }
@@ -231,8 +222,7 @@ public class CacheUtil {
     public JSONObject getAsJSONObject(String key) {
         String JSONString = getAsString(key);
         try {
-            JSONObject obj = new JSONObject(JSONString);
-            return obj;
+            return new JSONObject(JSONString);
         } catch (Exception e) {
             KLog.e(e.getMessage());
             return null;
@@ -273,8 +263,7 @@ public class CacheUtil {
     public JSONArray getAsJSONArray(String key) {
         String JSONString = getAsString(key);
         try {
-            JSONArray obj = new JSONArray(JSONString);
-            return obj;
+            return new JSONArray(JSONString);
         } catch (Exception e) {
             KLog.e(e.getMessage());
             return null;
@@ -326,7 +315,6 @@ public class CacheUtil {
     /**
      * 获取 byte 数据
      *
-     * @param key
      * @return byte 数据
      */
     public byte[] getAsBinary(String key) {
@@ -402,7 +390,7 @@ public class CacheUtil {
                 if (oos != null) {
                     oos.close();
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
             }
         }
     }
@@ -410,7 +398,6 @@ public class CacheUtil {
     /**
      * 读取 Serializable数据
      *
-     * @param key
      * @return Serializable 数据
      */
     public Object getAsObject(String key) {
@@ -421,8 +408,7 @@ public class CacheUtil {
             try {
                 bais = new ByteArrayInputStream(data);
                 ois = new ObjectInputStream(bais);
-                Object reObject = ois.readObject();
-                return reObject;
+                return ois.readObject();
             } catch (Exception e) {
                 KLog.e(e.getMessage());
                 return null;
@@ -473,7 +459,6 @@ public class CacheUtil {
     /**
      * 读取 signBitmap 数据
      *
-     * @param key
      * @return signBitmap 数据
      */
     public Bitmap getAsBitmap(String key) {
@@ -512,7 +497,6 @@ public class CacheUtil {
     /**
      * 读取 Drawable 数据
      *
-     * @param key
      * @return Drawable 数据
      */
     public Drawable getAsDrawable(String key) {
@@ -526,7 +510,6 @@ public class CacheUtil {
     /**
      * 获取缓存文件
      *
-     * @param key
      * @return title 缓存的文件
      */
     public File file(String key) {
@@ -539,7 +522,6 @@ public class CacheUtil {
     /**
      * 移除某个key
      *
-     * @param key
      * @return 是否移除成功
      */
     public boolean remove(String key) {
@@ -556,9 +538,8 @@ public class CacheUtil {
     /**
      * @author 杨福海（michael） www.yangfuhai.com
      * @version 1.0
-     * @title 缓存管理器
      */
-    public class ACacheManager {
+    public static class ACacheManager {
         private final AtomicLong cacheSize;
         private final AtomicInteger cacheCount;
         private final long sizeLimit;
@@ -588,7 +569,7 @@ public class CacheUtil {
                     File[] cachedFiles = cacheDir.listFiles();
                     if (cachedFiles != null) {
                         for (File cachedFile : cachedFiles) {
-                            size += calculateSize(cachedFile);
+                            size += (int) calculateSize(cachedFile);
                             count += 1;
                             lastUsageDates.put(cachedFile,
                                     cachedFile.lastModified());
@@ -618,17 +599,22 @@ public class CacheUtil {
             }
             cacheSize.addAndGet(valueSize);
 
-            Long currentTime = System.currentTimeMillis();
-            file.setLastModified(currentTime);
+            long currentTime = System.currentTimeMillis();
+            boolean updated = file.setLastModified(currentTime);
+            if (!updated) {
+                KLog.e("CacheUtil", "Failed to set last modified time for file: " + file.getAbsolutePath());
+            }
             lastUsageDates.put(file, currentTime);
         }
 
         private File get(String key) {
             File file = newFile(key);
-            Long currentTime = System.currentTimeMillis();
-            file.setLastModified(currentTime);
+            long currentTime = System.currentTimeMillis();
+            boolean updated = file.setLastModified(currentTime);
+            if (!updated) {
+                KLog.e("CacheUtil", "Failed to set last modified time for file: " + file.getAbsolutePath());
+            }
             lastUsageDates.put(file, currentTime);
-
             return file;
         }
 
@@ -647,15 +633,15 @@ public class CacheUtil {
             File[] files = cacheDir.listFiles();
             if (files != null) {
                 for (File f : files) {
-                    f.delete();
+                    if (!f.delete()) {
+                        KLog.e("CacheUtil", "Failed to delete cache file: " + f.getAbsolutePath());
+                    }
                 }
             }
         }
 
         /**
          * 移除旧的文件
-         *
-         * @return
          */
         private long removeNext() {
             if (lastUsageDates.isEmpty()) {
@@ -680,6 +666,9 @@ public class CacheUtil {
                 }
             }
 
+            if(mostLongUsedFile == null){
+                return 0;
+            }
             long fileSize = calculateSize(mostLongUsedFile);
             if (mostLongUsedFile.delete()) {
                 lastUsageDates.remove(mostLongUsedFile);
@@ -695,14 +684,12 @@ public class CacheUtil {
     /**
      * @author 杨福海（michael） www.yangfuhai.com
      * @version 1.0
-     * @title 时间计算工具类
      */
     private static class Utils {
 
         /**
          * 判断缓存的String数据是否到期
          *
-         * @param str
          * @return true：到期了 false：还没有到期
          */
         private static boolean isDue(String str) {
@@ -712,7 +699,6 @@ public class CacheUtil {
         /**
          * 判断缓存的byte数据是否到期
          *
-         * @param data
          * @return true：到期了 false：还没有到期
          */
         private static boolean isDue(byte[] data) {
@@ -721,13 +707,11 @@ public class CacheUtil {
                 String saveTimeStr = strs[0];
                 while (saveTimeStr.startsWith("0")) {
                     saveTimeStr = saveTimeStr
-                            .substring(1, saveTimeStr.length());
+                            .substring(1);
                 }
-                long saveTime = Long.valueOf(saveTimeStr);
-                long deleteAfter = Long.valueOf(strs[1]);
-                if (System.currentTimeMillis() > saveTime + deleteAfter * 1000) {
-                    return true;
-                }
+                long saveTime = Long.parseLong(saveTimeStr);
+                long deleteAfter = Long.parseLong(strs[1]);
+                return System.currentTimeMillis() > saveTime + deleteAfter * 1000;
             }
             return false;
         }
@@ -746,15 +730,15 @@ public class CacheUtil {
 
         private static String clearDateInfo(String strInfo) {
             if (strInfo != null && hasDateInfo(strInfo.getBytes())) {
-                strInfo = strInfo.substring(strInfo.indexOf(mSeparator) + 1,
-                        strInfo.length());
+                strInfo = strInfo.substring(strInfo.indexOf(mSeparator) + 1
+                );
             }
             return strInfo;
         }
 
         private static byte[] clearDateInfo(byte[] data) {
             if (hasDateInfo(data)) {
-                return copyOfRange(data, indexOf(data, mSeparator) + 1,
+                return copyOfRange(data, indexOf(data) + 1,
                         data.length);
             }
             return data;
@@ -762,22 +746,22 @@ public class CacheUtil {
 
         private static boolean hasDateInfo(byte[] data) {
             return data != null && data.length > 15 && data[13] == '-'
-                    && indexOf(data, mSeparator) > 14;
+                    && indexOf(data) > 14;
         }
 
         private static String[] getDateInfoFromDate(byte[] data) {
             if (hasDateInfo(data)) {
                 String saveDate = new String(copyOfRange(data, 0, 13));
                 String deleteAfter = new String(copyOfRange(data, 14,
-                        indexOf(data, mSeparator)));
+                        indexOf(data)));
                 return new String[]{saveDate, deleteAfter};
             }
             return null;
         }
 
-        private static int indexOf(byte[] data, char c) {
+        private static int indexOf(byte[] data) {
             for (int i = 0; i < data.length; i++) {
-                if (data[i] == c) {
+                if (data[i] == Utils.mSeparator) {
                     return i;
                 }
             }
@@ -797,9 +781,9 @@ public class CacheUtil {
         private static final char mSeparator = ' ';
 
         private static String createDateInfo(int second) {
-            String currentTime = System.currentTimeMillis() + "";
+            StringBuilder currentTime = new StringBuilder(System.currentTimeMillis() + "");
             while (currentTime.length() < 13) {
-                currentTime = "0" + currentTime;
+                currentTime.insert(0, "0");
             }
             return currentTime + "-" + second + mSeparator;
         }

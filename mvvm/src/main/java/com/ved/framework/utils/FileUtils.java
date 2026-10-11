@@ -1,5 +1,6 @@
 package com.ved.framework.utils;
 
+import android.annotation.SuppressLint;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 
 import androidx.annotation.RequiresApi;
@@ -1853,41 +1855,65 @@ public class FileUtils {
 
     /**
      * 递归创建文件夹
-     *
-     * @param dirPath
-     * @return 创建失败返回""
      */
-    public static String createDir(String dirPath) {
+    public static void createDir(String dirPath) {
         try {
             File file = new File(dirPath);
-            if (file.getParentFile().exists()) {
-                file.mkdir();
-                return file.getAbsolutePath();
-            } else {
-                createDir(file.getParentFile().getAbsolutePath());
-                file.mkdir();
+            File parent = file.getParentFile();
+
+            // 1. 父目录为 null（相对路径无父目录），直接尝试创建
+            if (parent == null) {
+                if (file.mkdir() || file.exists()) {
+                    file.getAbsolutePath();
+                    return;
+                }
+                return;
             }
+
+            // 2. 父目录不存在，递归创建父目录
+            if (!parent.exists()) {
+                createDir(parent.getAbsolutePath());
+            }
+
+            // 3. 尝试创建当前目录，mkdir 返回 false 时可能是已存在，用 exists 兜底
+            if (file.mkdir() || file.exists()) {
+                file.getAbsolutePath();
+            }
+
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
-        return dirPath;
     }
 
     /**
      * 创建文件
      *
-     * @param file
      * @return 创建失败返回""
      */
     public static String createFile(File file) {
         try {
-            if (file.getParentFile().exists()) {
-                file.createNewFile();
-                return file.getAbsolutePath();
-            } else {
-                createDir(file.getParentFile().getAbsolutePath());
-                file.createNewFile();
+            File parent = file.getParentFile();
+            if (parent == null) {
+                // 没有父目录，直接尝试创建文件
+                if (file.createNewFile()) {
+                    return file.getAbsolutePath();
+                }
+                // createNewFile 返回 false：文件已存在，视为成功
+                return file.exists() ? file.getAbsolutePath() : "";
             }
+
+            if (!parent.exists()) {
+                // 父目录不存在，先创建父目录
+                createDir(parent.getAbsolutePath());
+            }
+
+            if (file.createNewFile()) {
+                // 创建成功
+                return file.getAbsolutePath();
+            }
+            // createNewFile 返回 false：文件已存在，视为成功
+            return file.exists() ? file.getAbsolutePath() : "";
+
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
@@ -1896,24 +1922,26 @@ public class FileUtils {
 
     /**
      * 返回根缓存目录
-     *
-     * @return
      */
     public static String createRootPath() {
         String cacheRootPath = "";
         if (isSdCardAvailable()) {
-            cacheRootPath = Utils.getContext().getExternalCacheDir().getPath();
-        } else {
-            cacheRootPath = Utils.getContext().getCacheDir().getPath();
+            File externalCacheDir = Utils.getContext().getExternalCacheDir();
+            if (externalCacheDir != null) {
+                cacheRootPath = externalCacheDir.getPath();
+            }
+        }
+        if (TextUtils.isEmpty(cacheRootPath)) {
+            File cacheDir = Utils.getContext().getCacheDir();
+            if (cacheDir != null) {
+                cacheRootPath = cacheDir.getPath();
+            }
         }
         return cacheRootPath;
     }
 
     /**
      * 获取文件名
-     *
-     * @param fileName
-     * @return
      */
     public static String[] splitFileName(String fileName) {
         String name = fileName;
@@ -1929,28 +1957,22 @@ public class FileUtils {
 
     /**
      * 根据uri获取文件路径
-     *
-     * @param uri
-     * @return
      */
+    @SuppressLint("Range")
     public static String getFileName(Uri uri) {
         String result = null;
-        if (uri.getScheme().equals("content")) {
-            Cursor cursor = Utils.getContext().getContentResolver().query(uri, null, null, null, null);
-            try {
+        if (Objects.equals(uri.getScheme(), "content")) {
+            try (Cursor cursor = Utils.getContext().getContentResolver().query(uri, null, null, null, null)) {
                 if (cursor != null && cursor.moveToFirst()) {
                     result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
                 }
             } catch (Exception e) {
                 KLog.e(e.getMessage());
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
             }
         }
         if (result == null) {
             result = uri.getPath();
+            if(result == null) return result;
             int cut = result.lastIndexOf(File.separator);
             if (cut != -1) {
                 result = result.substring(cut + 1);
@@ -1961,9 +1983,6 @@ public class FileUtils {
 
     /**
      * 根据uri获取真文件路径
-     *
-     * @param contentUri
-     * @return
      */
     public static String getRealPathFromURI(Uri contentUri) {
         Cursor cursor = Utils.getContext().getContentResolver().query(contentUri, null, null, null, null);
@@ -1980,9 +1999,6 @@ public class FileUtils {
 
     /**
      * 文件是否存在
-     *
-     * @param path
-     * @return
      */
     public static boolean fileIsExists(String path) {
         try {

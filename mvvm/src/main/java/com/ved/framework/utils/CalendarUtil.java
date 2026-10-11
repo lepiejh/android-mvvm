@@ -89,13 +89,11 @@ public class CalendarUtil {
     }
 
     public static String getTime(Calendar calendar) {
-        String time = format.format(calendar.getTime());
-        return time;
+        return format.format(calendar.getTime());
     }
 
     public static String getTime(Date calendar) {
-        String time = format.format(calendar.getTime());
-        return time;
+        return format.format(calendar.getTime());
     }
 
     public static String getTime(String mills, int type) {
@@ -117,6 +115,7 @@ public class CalendarUtil {
         if (!isEmpty(datee)) {
             try {
                 Date date = getFormat(1).parse(datee);
+                if(date == null) return time;
                 time = date.getTime() / 1000 + "";
             } catch (ParseException e) {
                 KLog.e(e.getMessage());
@@ -126,43 +125,31 @@ public class CalendarUtil {
     }
 
     public static String getTime2(Calendar calendar) {
-        String time = format2.format(calendar.getTime());
-        return time;
+        return format2.format(calendar.getTime());
     }
 
     public static String getTime2(Date calendar) {
-        String time = format2.format(calendar.getTime());
-        return time;
+        return format2.format(calendar.getTime());
     }
 
     public static String getTime3(Calendar calendar) {
-        String time = format3.format(calendar.getTime());
-        return time;
+        return format3.format(calendar.getTime());
     }
 
     public static String getTime4(Calendar calendar) {
-        String time = format4.format(calendar.getTime());
-        return time;
+        return format4.format(calendar.getTime());
     }
 
     //包括今天
     public static boolean isYouXiaoDate(Calendar calendar) {
         Calendar calendarnow = Calendar.getInstance();
         //给出的时间在今天之前
-        if (!calendar.before(calendarnow)) {
-            return true;
-        } else {
-            return false;
-        }
+        return !calendar.before(calendarnow);
     }
 
     //今天大于传入的日期为过期日期
     public static boolean isYouXiaoDate2(Calendar calendar) {
-        if (calendar.compareTo(Calendar.getInstance()) == 1) {
-            return true;
-        } else {
-            return false;
-        }
+        return calendar.compareTo(Calendar.getInstance()) > 0;
     }
 
     public static boolean sameDate(Calendar cal, Calendar selectedDate) {
@@ -220,10 +207,6 @@ public class CalendarUtil {
 
     /**
      * 获取指定日期之前，之后的时间戳
-     *
-     * @param date
-     * @param amount
-     * @return
      */
     public static int addDay(Date date, int amount) {
         Calendar calendar = Calendar.getInstance();
@@ -235,9 +218,6 @@ public class CalendarUtil {
 
     /**
      * 返回明天
-     *
-     * @param today
-     * @return
      */
     public static Date tomorrow(Date today) {
         Calendar calendar = Calendar.getInstance();
@@ -248,8 +228,6 @@ public class CalendarUtil {
 
     /**
      * 获取今天是几号
-     *
-     * @return
      */
     public static int getCurrentDay() {
         return Calendar.getInstance().get(Calendar.DATE);
@@ -257,8 +235,6 @@ public class CalendarUtil {
 
     /**
      * 获取今天是几月份
-     *
-     * @return
      */
     public static int getCurrentMonth() {
         return Calendar.getInstance().get(Calendar.MONTH) + 1;
@@ -266,8 +242,6 @@ public class CalendarUtil {
 
     /**
      * 获取今天是哪年
-     *
-     * @return
      */
     public static int getCurrentYear() {
         return Calendar.getInstance().get(Calendar.YEAR);
@@ -287,13 +261,10 @@ public class CalendarUtil {
 
     /**
      * 返回文字描述的日期
-     *
-     * @param date
-     * @return
      */
     public static String getTimeFormatText(Date date) {
         long delta = System.currentTimeMillis() - date.getTime();
-        if (delta < 1L * ONE_MINUTE) {
+        if (delta < ONE_MINUTE) {
 //            long seconds = toSeconds(delta);
 //            return (seconds <= 0 ? 1 : seconds) + ONE_SECOND_AGO;
             return ONE_SECOND_AGO;
@@ -349,9 +320,6 @@ public class CalendarUtil {
 
     /**
      * 根据毫秒获取时分秒
-     *
-     * @param milliseconds
-     * @return
      */
     public static String formatDateTime(long milliseconds) {
         StringBuilder sb = new StringBuilder();
@@ -366,9 +334,9 @@ public class CalendarUtil {
         }else
         if (hours > 0) {
             sb.append(format.format(hours)).append("时").append(format.format(minutes)).append("分").append(format.format(seconds)).append("秒");
-        } else if (hours <= 0 && minutes > 0) {
+        } else if (minutes > 0) {
             sb.append(format.format(minutes)).append("分").append(format.format(seconds)).append("秒");
-        } else if (hours <= 0 && minutes <= 0) {
+        } else {
             sb.append(format.format(seconds)).append("秒");
         }
         return sb.toString();
@@ -376,12 +344,8 @@ public class CalendarUtil {
 
     /**
      * 根据毫秒获取时分秒
-     *
-     * @param milliseconds
-     * @return
      */
     public static String formatDateTime1(long milliseconds) {
-        StringBuilder sb = new StringBuilder();
         long mss = milliseconds / 1000;
         //long days = mss / (60 * 60 * 24);
         //long hours = (mss % (60 * 60 * 24)) / (60 * 60);
@@ -389,7 +353,6 @@ public class CalendarUtil {
         long minutes = (mss % (60 * 60)) / 60;
         long seconds = mss % 60;
         DecimalFormat format = new DecimalFormat("00");
-        sb.append(format.format(hours)).append(":").append(format.format(minutes)).append(":").append(format.format(seconds));
-        return sb.toString();
+        return format.format(hours) + ":" + format.format(minutes) + ":" + format.format(seconds);
     }
 }

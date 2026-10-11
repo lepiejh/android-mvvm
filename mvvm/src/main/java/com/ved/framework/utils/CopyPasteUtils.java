@@ -33,8 +33,9 @@ public class CopyPasteUtils {
      */
     public static String getClipContent() {
         if (manager != null) {
-            if (manager.hasPrimaryClip() && manager.getPrimaryClip().getItemCount() > 0) {
-                CharSequence addedText = manager.getPrimaryClip().getItemAt(0).getText();
+            ClipData clipData = manager.getPrimaryClip();
+            if (manager.hasPrimaryClip() && clipData != null && clipData.getItemCount() > 0) {
+                CharSequence addedText = clipData.getItemAt(0).getText();
                 String addedTextString = String.valueOf(addedText);
                 if (!TextUtils.isEmpty(addedTextString)) {
                     return addedTextString;

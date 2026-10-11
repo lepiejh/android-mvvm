@@ -57,42 +57,30 @@ public class FileSizeUtils {
 
     /**
      * 获取指定文件大小
-     *
-     * @return
-     * @throws Exception
      */
     private static long getFileSize(File file) throws Exception {
         long size = 0;
         if (file.exists()) {
-            FileInputStream fis = null;
-            try {
-                fis = new FileInputStream(file);
+            try (FileInputStream fis = new FileInputStream(file)) {
                 size = fis.available();
-            } finally {
-                if (fis != null) {
-                    try {
-                        fis.close();
-                    } catch (Exception ignored) {
-                    }
-                }
             }
         } else {
-            file.createNewFile();
-            KLog.e("获取文件大小", "文件不存在!");
+            boolean created = file.createNewFile();
+            if (!created) {
+                KLog.e("获取文件大小", "文件不存在且创建失败!");
+            } else {
+                KLog.e("获取文件大小", "文件不存在，已创建空文件!");
+            }
         }
         return size;
     }
 
     /**
      * 获取指定文件夹
-     *
-     * @param f
-     * @return
-     * @throws Exception
      */
     private static long getFileSizes(File f) throws Exception {
         long size = 0;
-        File flist[] = f.listFiles();
+        File[] flist = f.listFiles();
         if (flist == null) {
             return 0;
         }
@@ -108,9 +96,6 @@ public class FileSizeUtils {
 
     /**
      * 转换文件大小
-     *
-     * @param fileS
-     * @return
      */
     private static String FormetFileSize(long fileS) {
         DecimalFormat df = new DecimalFormat("#.00");
@@ -133,26 +118,22 @@ public class FileSizeUtils {
 
     /**
      * 转换文件大小,指定转换的类型
-     *
-     * @param fileS
-     * @param sizeType
-     * @return
      */
     private static double formatFileSize(long fileS, int sizeType) {
         DecimalFormat df = new DecimalFormat("#.00");
         double fileSizeLong = 0;
         switch (sizeType) {
             case SIZETYPE_B:
-                fileSizeLong = Double.valueOf(df.format((double) fileS));
+                fileSizeLong = Double.parseDouble(df.format((double) fileS));
                 break;
             case SIZETYPE_KB:
-                fileSizeLong = Double.valueOf(df.format((double) fileS / 1024));
+                fileSizeLong = Double.parseDouble(df.format((double) fileS / 1024));
                 break;
             case SIZETYPE_MB:
-                fileSizeLong = Double.valueOf(df.format((double) fileS / 1048576));
+                fileSizeLong = Double.parseDouble(df.format((double) fileS / 1048576));
                 break;
             case SIZETYPE_GB:
-                fileSizeLong = Double.valueOf(df.format((double) fileS / 1073741824));
+                fileSizeLong = Double.parseDouble(df.format((double) fileS / 1073741824));
                 break;
             default:
                 break;

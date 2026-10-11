@@ -134,23 +134,29 @@ public class BigDecimalUtils {
      * @return 两个参数的商
      */
     public static double div(String value1, String value2, int scale) throws IllegalAccessException {
+        return div(value1, value2, scale, RoundingMode.HALF_UP);
+    }
+
+    public static double div(String value1, String value2, int scale, RoundingMode roundingMode) throws IllegalAccessException {
         //如果精确范围小于0，抛出异常信息
         if (scale < 0) {
             throw new IllegalAccessException("精确度不能小于0");
         }
         BigDecimal b1 = new BigDecimal(value1);
         BigDecimal b2 = new BigDecimal(value2);
-        return b1.divide(b2, scale).doubleValue();
+        return b1.divide(b2, scale, roundingMode).doubleValue();
     }
 
     public static double div(BigDecimal value1, BigDecimal value2, int scale) throws IllegalAccessException {
+        return div(value1, value2, scale, RoundingMode.HALF_UP);
+    }
+
+    public static double div(BigDecimal value1, BigDecimal value2, int scale, RoundingMode roundingMode) throws IllegalAccessException {
         //如果精确范围小于0，抛出异常信息
         if (scale < 0) {
             throw new IllegalAccessException("精确度不能小于0");
         }
-        BigDecimal b1 = value1;
-        BigDecimal b2 = value2;
-        return b1.divide(b2, scale).doubleValue();
+        return value1.divide(value2, scale, roundingMode).doubleValue();
     }
 
     public static double round(double d, int i, RoundingMode roundingMode) {
@@ -175,7 +181,6 @@ public class BigDecimalUtils {
      * <p>{@code @SuppressWarnings("deprecation")} 只能加在这里：本方法存在的唯一目的
      * 就是读这些已废弃的常量，把废弃面收拢到一个私有方法里。
      */
-    @SuppressWarnings("deprecation")
     private static RoundingMode toRoundingMode(int roundingMode) {
         switch (roundingMode) {
             case BigDecimal.ROUND_UP:

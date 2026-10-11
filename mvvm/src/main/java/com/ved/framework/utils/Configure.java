@@ -26,7 +26,7 @@ public class Configure {
     }
 
     public static List<String> getUrl() {
-        if (url != null && url.size() > 0) {
+        if (url != null && !url.isEmpty()) {
             return url;
         }
         throw new NullPointerException("should be set in net url");

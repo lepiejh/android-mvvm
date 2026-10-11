@@ -5,6 +5,7 @@ package com.ved.framework.utils;
 
 
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 
 /**
@@ -43,15 +44,14 @@ public class ByteUtil {
         if (src == null || src.length == 0) {
             return "";
         }
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < src.length; i++) {
-            byte byteNumber = src[i];
+        StringBuilder sb = new StringBuilder();
+        for (byte byteNumber : src) {
             sb.append(hexString(byteNumber));
             sb.append(delim);
         }
         String toPrint = sb.toString();
         int start = toPrint.length() - delim.length();
-        if (start >= 0 && delim.equals(toPrint.substring(start, toPrint.length()))) {
+        if (start >= 0 && delim.equals(toPrint.substring(start))) {
             toPrint = toPrint.substring(0, start);
         }
         return toPrint;
@@ -98,7 +98,7 @@ public class ByteUtil {
 
     public static byte[] asciiToBcd(String input) throws UnsupportedEncodingException {
         byte[] ascii = null, bcd = null;
-        ascii = input.getBytes("US-ASCII");
+        ascii = input.getBytes(StandardCharsets.US_ASCII);
         if (ascii.length % two != 0) {
             throw new IllegalArgumentException();
         }
@@ -123,7 +123,7 @@ public class ByteUtil {
         for (int i = 0; i < bcd.length; i++) {
             byte hi = (byte) (bcd[i] >> 4);
             byte lo = (byte) (bcd[i] & 0x0F);
-            if (hi < 0x00 || hi > 0x09 || lo < 0x00 || lo > 0x09) {
+            if (hi < 0x00 || lo > 0x09) {
                 throw new IllegalArgumentException();
             }
             ascii[2 * i] = ((byte) (hi + 0x30));
@@ -153,9 +153,6 @@ public class ByteUtil {
             return null;
         }
         byte[] paddingBytes = new byte[paddingByteCount];
-        for (int i = 0; i < paddingBytes.length; i++) {
-            paddingBytes[i] = 0x00;
-        }
         byte[] unpaddingBytes = new byte[hexStr.length() / 2];
         for (int i = 0; i < unpaddingBytes.length; i++) {
             String byteHex = hexStr.substring(2 * i, 2 * i + 2);
@@ -191,9 +188,6 @@ public class ByteUtil {
             return null;
         }
         byte[] paddingBytes = new byte[paddingByteCount];
-        for (int i = 0; i < paddingBytes.length; i++) {
-            paddingBytes[i] = 0x00;
-        }
         byte[] unpaddingBytes = new byte[hexStr.length() / two];
         for (int i = 0; i < unpaddingBytes.length; i++) {
             String byteHex = hexStr.substring(two * i, two * i + two);
@@ -206,13 +200,13 @@ public class ByteUtil {
      * toHexString 字符串转16进制字符串
      */
     public static String toHexString(String s) {
-        String str = "";
+        StringBuilder str = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             int ch = (int) s.charAt(i);
             String s4 = Integer.toHexString(ch);
-            str = str + s4;
+            str.append(s4);
         }
-        return str;
+        return str.toString();
     }
 
     /**
@@ -224,16 +218,16 @@ public class ByteUtil {
             baKeyword[i] = (byte) (0xff & Integer.parseInt(
                     s.substring(i * two, i * two + two), 16));
         }
-        s = new String(baKeyword, "utf-8");// UTF-16le:Not
+        s = new String(baKeyword, StandardCharsets.UTF_8);// UTF-16le:Not
         return s;
     }
 
     public static String bcd2String(byte[] byt) {
-        String src = "";
-        for (int i = 0; i < byt.length; i++) {
-            src = src + byt[i];
+        StringBuilder src = new StringBuilder();
+        for (byte b : byt) {
+            src.append(b);
         }
-        return src;
+        return src.toString();
     }
 
 }

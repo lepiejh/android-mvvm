@@ -24,7 +24,6 @@ public final class DesUtil {
      * DES加密
      *
      * @param base64Key : 经BASE64二次加密的密钥
-     * @return
      */
     public static byte[] encryptByDES(String base64Key, byte[] dataBytes)
             throws Exception {
@@ -45,7 +44,6 @@ public final class DesUtil {
      * @param base64Key        ： 经过BASE64编码且SecretKey加密的密钥
      * @param encryptDataBytes ：经过加密的数据
      * @return ：译码之后的字节数组
-     * @throws Exception
      */
     public static byte[] decryptByDES(String base64Key,
                                       byte[] encryptDataBytes) throws Exception {
@@ -99,9 +97,9 @@ public final class DesUtil {
         } catch (NoSuchAlgorithmException e) {
             KLog.e(e.getMessage());
         }
+        if(generator == null) return "";
         SecretKey key = generator.generateKey();
         byte[] encodeKey = key.getEncoded();
-        String base64Key = Base64Util.encryptBASE64(encodeKey);
-        return base64Key;
+        return Base64Util.encryptBASE64(encodeKey);
     }
 }
