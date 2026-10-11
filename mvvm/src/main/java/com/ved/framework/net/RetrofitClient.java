@@ -229,10 +229,6 @@ class RetrofitClient {
                         long endTime = System.currentTimeMillis();
                         long duration = endTime - startTime;
                         ResponseBody body = response.body();
-                        if (body == null) {
-                            // 空 body（如 204 No Content）直接返回，避免后续 NPE
-                            return response;
-                        }
                         MediaType mediaType = body.contentType();
                         String content = body.string();
                         CorpseUtils.INSTANCE.inspectRequestBody(request);
