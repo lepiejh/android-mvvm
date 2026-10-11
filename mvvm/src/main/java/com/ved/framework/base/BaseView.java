@@ -99,7 +99,8 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
         viewModel.getUC().getStartActivityForResultEvent().observe(owner, params -> {
             Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
             Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            int requestCode = (int) params.get(ParameterField.REQUEST_CODE);
+            Integer requestCodeObj = (Integer) params.get(ParameterField.REQUEST_CODE);
+            int requestCode = requestCodeObj != null ? requestCodeObj : 0;
             startActivityForResult(clz, requestCode, bundle);
         });
 
