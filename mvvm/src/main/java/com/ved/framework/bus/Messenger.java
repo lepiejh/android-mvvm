@@ -308,8 +308,7 @@ public class Messenger {
         if (list != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0004.007
-            ArrayList<WeakActionAndToken> listClone = new ArrayList<>();
-            listClone.addAll(list);
+            ArrayList<WeakActionAndToken> listClone = new ArrayList<>(list);
 
             for (WeakActionAndToken item : listClone) {
                 WeakAction<Object> executeAction = item.getAction();
