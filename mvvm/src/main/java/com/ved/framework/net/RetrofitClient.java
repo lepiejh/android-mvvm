@@ -247,7 +247,7 @@ class RetrofitClient {
                                 KLog.e(e.getMessage());
                             }
                         }
-                        return response.newBuilder().body(ResponseBody.create(mediaType, content)).build();
+                        return response.newBuilder().body(ResponseBody.create(content, mediaType)).build();
                     });
             // 兼容 Builder 预留的个性化配置（默认值与全局 baseClient 一致时无需重复设置）
             if (connectTimeout != Constant.DEFAULT_TIMEOUT) {
