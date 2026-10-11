@@ -7,12 +7,10 @@ package com.ved.framework.base;
  */
 final class ViewModelDelegate<VM extends BaseViewModel<?>> {
 
-    private final Object owner;
     private final ViewModelProxy<VM> viewModelProxy;
     private VM viewModel;
 
     public ViewModelDelegate(Object owner) {
-        this.owner = owner;
         this.viewModelProxy = new ViewModelProxyImpl<>(owner);
     }
 
