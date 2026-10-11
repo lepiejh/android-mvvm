@@ -27,9 +27,11 @@ public class Messenger {
      */
     private static volatile Messenger defaultInstance;
 
-    private HashMap<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction;
+    private Map<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction;
 
-    private HashMap<Type, List<WeakActionAndToken>> recipientsStrictAction;
+    private Map<Type, List<WeakActionAndToken>> recipientsStrictAction;
+
+    private static final Object LOCK = new Object();
 
     public static Messenger getDefault() {
         if (defaultInstance == null) {
@@ -102,54 +104,46 @@ public class Messenger {
     }
 
     /**
-     * @param recipient {}
-     * @param tClass    class of T
-     * @param action    this action has one params that type of tClass
-     * @param <T>       message data type
+     * @param recipient 消息接收者，在 Activity 中通常传 "this"，并在 onDestroy 中调用
+     *                  {@code Messenger.getDefault().unregister(this)}；在 ViewModel 中
+     *                  也可以用 Activity 作为 recipient，同样在 onDestroy 中注销。
+     * @param tClass    消息数据类型
+     * @param action    收到消息时执行的回调，该回调接收一个 tClass 类型的参数
+     * @param <T>       消息数据类型
      */
     public <T> void register(Object recipient, Class<T> tClass, BindingConsumer<T> action) {
         register(recipient, null, false, action, tClass);
     }
 
     /**
-     * see {}
-     *
-     * @param recipient                 receiver of message
-     * @param receiveDerivedMessagesToo whether derived class of recipient can receive the message
-     * @param tClass                    class of T
-     * @param action                    this action has one params that type of tClass
-     * @param <T>                       message data type
+     * @param recipient                 消息接收者
+     * @param receiveDerivedMessagesToo 是否允许 recipient 的派生类也收到消息
+     * @param tClass                    消息数据类型
+     * @param action                    收到消息时执行的回调，该回调接收一个 tClass 类型的参数
+     * @param <T>                       消息数据类型
      */
     public <T> void register(Object recipient, boolean receiveDerivedMessagesToo, Class<T> tClass, BindingConsumer<T> action) {
         register(recipient, null, receiveDerivedMessagesToo, action, tClass);
     }
 
     /**
-     * see {}
-     *
-     * @param recipient receiver of message
-     * @param token     register with a unique token,when a messenger send a msg with same token,it
-     *                  will
-     *                  receive this msg
-     * @param tClass    class of T for BindingConsumer
-     * @param action    this action has one params that type of tClass
-     * @param <T>       message data type
+     * @param recipient 消息接收者
+     * @param token     注册的 token，发送方用相同 token 发送时，该订阅者才会收到消息
+     * @param tClass    消息数据类型
+     * @param action    收到消息时执行的回调，该回调接收一个 tClass 类型的参数
+     * @param <T>       消息数据类型
      */
     public <T> void register(Object recipient, Object token, Class<T> tClass, BindingConsumer<T> action) {
         register(recipient, token, false, action, tClass);
     }
 
     /**
-     * see {}
-     *
-     * @param recipient                 receiver of message
-     * @param token                     register with a unique token,when a messenger send a msg with same token,it
-     *                                  will
-     *                                  receive this msg
-     * @param receiveDerivedMessagesToo whether derived class of recipient can receive the message
-     * @param action                    this action has one params that type of tClass
-     * @param tClass                    class of T for BindingConsumer
-     * @param <T>                       message data type
+     * @param recipient                 消息接收者
+     * @param token                     注册的 token，发送方用相同 token 发送时，该订阅者才会收到消息
+     * @param receiveDerivedMessagesToo 是否允许 recipient 的派生类也收到消息
+     * @param action                    收到消息时执行的回调，该回调接收一个 tClass 类型的参数
+     * @param tClass                    消息数据类型
+     * @param <T>                       消息数据类型
      */
     public <T> void register(Object recipient, Object token, boolean receiveDerivedMessagesToo, BindingConsumer<T> action, Class<T> tClass) {
         // 为什么把 WeakAction<T> 收敛成 WeakAction<Object>：本类是个异构消息分发器，
@@ -168,7 +162,7 @@ public class Messenger {
      * 根据 receiveDerivedMessagesToo 选择对应的接收者容器，再写入消息订阅。
      */
     private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
-        HashMap<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
+        Map<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
 
         List<WeakActionAndToken> list;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -188,8 +182,8 @@ public class Messenger {
     /**
      * 根据是否接收派生类消息，返回对应的接收者容器（懒加载）
      */
-    private HashMap<Type, List<WeakActionAndToken>> getRecipients(boolean receiveDerivedMessagesToo) {
-        HashMap<Type, List<WeakActionAndToken>> recipients;
+    private Map<Type, List<WeakActionAndToken>> getRecipients(boolean receiveDerivedMessagesToo) {
+        Map<Type, List<WeakActionAndToken>> recipients;
         if (receiveDerivedMessagesToo) {
             if (recipientsOfSubclassesAction == null) {
                 recipientsOfSubclassesAction = new HashMap<>();
@@ -293,9 +287,9 @@ public class Messenger {
     }
 
 
-    public <T> void unregister(Object recipient, Object token) {
-        unregisterFromLists(recipient, token, null, recipientsStrictAction);
-        unregisterFromLists(recipient, token, null, recipientsOfSubclassesAction);
+    public void unregister(Object recipient, Object token) {
+        unregisterFromLists(recipient, token, recipientsStrictAction);
+        unregisterFromLists(recipient, token, recipientsOfSubclassesAction);
         cleanup();
     }
 
@@ -326,15 +320,16 @@ public class Messenger {
         }
     }
 
-    private static void unregisterFromLists(Object recipient, HashMap<Type, List<WeakActionAndToken>> lists) {
+    private static void unregisterFromLists(Object recipient, Map<Type, List<WeakActionAndToken>> lists) {
         if (recipient == null
                 || lists == null
-                || lists.size() == 0) {
+                || lists.isEmpty()) {
             return;
         }
-        synchronized (lists) {
-            for (Type messageType : lists.keySet()) {
-                for (WeakActionAndToken item : lists.get(messageType)) {
+        synchronized (LOCK) {
+            // 直接遍历 entrySet，避免 keySet + get 的二次查找
+            for (Map.Entry<Type, List<WeakActionAndToken>> entry : lists.entrySet()) {
+                for (WeakActionAndToken item : entry.getValue()) {
                     WeakAction<Object> weakAction = item.getAction();
 
                     if (weakAction != null
@@ -343,50 +338,41 @@ public class Messenger {
                     }
                 }
             }
+            // 把清理放到同步块内，确保线程安全
+            cleanupList(lists);
         }
-        cleanupList(lists);
     }
 
     /**
-     * 模板方法：按 messageType 定位订阅列表，统一匹配 recipient/token/action 并标记待删除。
-     * action 支持 {@link BindingAction} 与 {@link BindingConsumer} 两种回调，null 表示不限定回调。
+     * 模板方法：按 token 注销无消息类型（{@link NotMsgType}）订阅。
      */
     private static void unregisterFromLists(
             Object recipient,
             Object token,
-            Object action,
-            HashMap<Type, List<WeakActionAndToken>> lists,
-            Type messageType) {
+            Map<Type, List<WeakActionAndToken>> lists) {
         if (recipient == null
                 || lists == null
-                || lists.size() == 0
-                || !lists.containsKey(messageType)) {
+                || lists.isEmpty()
+                || !lists.containsKey(NotMsgType.class)) {
             return;
         }
 
-        synchronized (lists) {
-            for (WeakActionAndToken item : lists.get(messageType)) {
+        synchronized (LOCK) {
+            List<WeakActionAndToken> targetList = lists.get(NotMsgType.class);
+            if (targetList == null) {
+                return;
+            }
+            for (WeakActionAndToken item : targetList) {
                 WeakAction<Object> weakAction = item.getAction();
 
                 if (weakAction != null
                         && recipient == weakAction.getTarget()
-                        && (action == null
-                        || action == weakAction.getBindingConsumer()
-                        || action == weakAction.getBindingAction())
                         && (token == null
                         || token.equals(item.getToken()))) {
                     weakAction.markForDeletion();
                 }
             }
         }
-    }
-
-    private static void unregisterFromLists(
-            Object recipient,
-            Object token,
-            Object action,
-            HashMap<Type, List<WeakActionAndToken>> lists) {
-        unregisterFromLists(recipient, token, action, lists, NotMsgType.class);
     }
 
     private static boolean classImplements(Type instanceType, Type interfaceType) {
@@ -404,7 +390,7 @@ public class Messenger {
         return false;
     }
 
-    private static void cleanupList(HashMap<Type, List<WeakActionAndToken>> lists) {
+    private static void cleanupList(Map<Type, List<WeakActionAndToken>> lists) {
         if (lists == null) {
             return;
         }
@@ -422,7 +408,7 @@ public class Messenger {
                         itemIterator.remove();
                     }
                 }
-                if (itemList.size() == 0) {
+                if (itemList.isEmpty()) {
                     iterator.remove();
                 }
             }
@@ -434,9 +420,7 @@ public class Messenger {
         if (recipientsOfSubclassesAction != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0008.002
-//            var listClone = recipientsOfSubclassesAction.Keys.Take(_recipientsOfSubclassesAction.Count()).ToList();
-            List<Type> listClone = new ArrayList<>();
-            listClone.addAll(recipientsOfSubclassesAction.keySet());
+            List<Type> listClone = new ArrayList<>(recipientsOfSubclassesAction.keySet());
             for (Type type : listClone) {
                 List<WeakActionAndToken> list = null;
 
@@ -467,8 +451,7 @@ public class Messenger {
         if (list != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0004.007
-            ArrayList<WeakActionAndToken> listClone = new ArrayList<>();
-            listClone.addAll(list);
+            ArrayList<WeakActionAndToken> listClone = new ArrayList<>(list);
 
             for (WeakActionAndToken item : listClone) {
                 WeakAction<Object> executeAction = item.getAction();
@@ -493,9 +476,7 @@ public class Messenger {
         if (recipientsOfSubclassesAction != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0008.002
-//            var listClone = recipientsOfSubclassesAction.Keys.Take(_recipientsOfSubclassesAction.Count()).ToList();
-            List<Type> listClone = new ArrayList<>();
-            listClone.addAll(recipientsOfSubclassesAction.keySet());
+            List<Type> listClone = new ArrayList<>(recipientsOfSubclassesAction.keySet());
             for (Type type : listClone) {
                 List<WeakActionAndToken> list = null;
 
@@ -523,11 +504,12 @@ public class Messenger {
      * 订阅条目：把一个 {@code WeakAction} 与可选的 token 绑在一起。
      * <p>存储类型统一用 {@code WeakAction<Object>}：本类是异构分发器，同一个列表里
      * 混存了不同消息类型的订阅，无法用单一泛型实参描述（详见 register 处的说明）。
-     * <p>本类是 private 内部类，不对外暴露，因此收紧泛型不影响任何公开 API。
+     * <p>本类是 private 静态内部类，不对外暴露，因此收紧泛型不影响任何公开 API；
+     * 声明为 static 避免每个订阅条目隐式持有外部 Messenger 实例。
      */
-    private class WeakActionAndToken {
-        private WeakAction<Object> action;
-        private Object token;
+    private static class WeakActionAndToken {
+        private final WeakAction<Object> action;
+        private final Object token;
 
         public WeakActionAndToken(WeakAction<Object> action, Object token) {
             this.action = action;
@@ -538,16 +520,8 @@ public class Messenger {
             return action;
         }
 
-        public void setAction(WeakAction<Object> action) {
-            this.action = action;
-        }
-
         public Object getToken() {
             return token;
-        }
-
-        public void setToken(Object token) {
-            this.token = token;
         }
     }
 
