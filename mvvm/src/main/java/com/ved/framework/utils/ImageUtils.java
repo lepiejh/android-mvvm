@@ -1,5 +1,6 @@
 package com.ved.framework.utils;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -50,6 +51,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.ObservableSource;
 import io.reactivex.rxjava3.core.Observer;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.functions.Consumer;
 import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.functions.Predicate;
@@ -64,6 +66,7 @@ public class ImageUtils {
     private static final float MAX_SIZE = 200;//接受的最大图片尺寸为200k，200k以上的图片压缩到200k一下
 
     public final static String SDCARD_MNT = "/mnt/sdcard";
+    @SuppressLint("SdCardPath")
     public final static String SDCARD = "/sdcard";
 
     /** 请求相册 */
@@ -81,7 +84,6 @@ public class ImageUtils {
     /**
      * 写图片文件 在Android系统中，文件保存在 /data/data/PACKAGE_NAME/files 目录下
      * 
-     * @throws IOException
      */
     public static void saveImage(Context context, String fileName, Bitmap bitmap)
             throws IOException {
@@ -105,15 +107,20 @@ public class ImageUtils {
     /**
      * 写图片文件到SD卡
      * 
-     * @throws IOException
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static void saveImageToSD(Context ctx, String filePath,
                                      Bitmap bitmap, int quality) throws IOException {
         if (bitmap != null) {
             File file = new File(filePath.substring(0,
                     filePath.lastIndexOf(File.separator)));
             if (!file.exists()) {
-                file.mkdirs();
+                boolean b = file.mkdirs();//创建目录
+                if (b){
+                    KLog.i("文件目录创建成功");
+                }else {
+                    KLog.i("文件目录创建失败");
+                }
             }
             BufferedOutputStream bos = new BufferedOutputStream(
                     new FileOutputStream(filePath));
@@ -126,13 +133,19 @@ public class ImageUtils {
         }
     }
 
+    @SuppressWarnings("IOStreamConstructor")
     public static void saveBackgroundImage(Context ctx, String filePath,
                                            Bitmap bitmap, int quality) throws IOException {
         if (bitmap != null) {
             File file = new File(filePath.substring(0,
                     filePath.lastIndexOf(File.separator)));
             if (!file.exists()) {
-                file.mkdirs();
+                boolean b = file.mkdirs();//创建目录
+                if (b){
+                    KLog.i("文件目录创建成功");
+                }else {
+                    KLog.i("文件目录创建失败");
+                }
             }
             BufferedOutputStream bos = new BufferedOutputStream(
                     new FileOutputStream(filePath));
@@ -159,10 +172,6 @@ public class ImageUtils {
 
     /**
      * 获取bitmap
-     * 
-     * @param context
-     * @param fileName
-     * @return
      */
     public static Bitmap getBitmap(Context context, String fileName) {
         FileInputStream fis = null;
@@ -170,14 +179,14 @@ public class ImageUtils {
         try {
             fis = context.openFileInput(fileName);
             bitmap = BitmapFactory.decodeStream(fis);
-        } catch (FileNotFoundException e) {
-            KLog.e(e.getMessage());
-        } catch (OutOfMemoryError e) {
+        } catch (FileNotFoundException | OutOfMemoryError e) {
             KLog.e(e.getMessage());
         } finally {
             try {
-                fis.close();
-            } catch (Exception e) {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception ignored) {
             }
         }
         return bitmap;
@@ -185,9 +194,6 @@ public class ImageUtils {
 
     /**
      * 获取bitmap
-     * 
-     * @param filePath
-     * @return
      */
     public static Bitmap getBitmapByPath(String filePath) {
         return getBitmapByPath(filePath, null);
@@ -201,14 +207,14 @@ public class ImageUtils {
             File file = new File(filePath);
             fis = new FileInputStream(file);
             bitmap = BitmapFactory.decodeStream(fis, null, opts);
-        } catch (FileNotFoundException e) {
-            KLog.e(e.getMessage());
-        } catch (OutOfMemoryError e) {
+        } catch (FileNotFoundException | OutOfMemoryError e) {
             KLog.e(e.getMessage());
         } finally {
             try {
-                fis.close();
-            } catch (Exception e) {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception ignored) {
             }
         }
         return bitmap;
@@ -216,9 +222,6 @@ public class ImageUtils {
 
     /**
      * 获取bitmap
-     * 
-     * @param file
-     * @return
      */
     public static Bitmap getBitmapByFile(File file) {
         FileInputStream fis = null;
@@ -226,14 +229,14 @@ public class ImageUtils {
         try {
             fis = new FileInputStream(file);
             bitmap = BitmapFactory.decodeStream(fis);
-        } catch (FileNotFoundException e) {
-            KLog.e(e.getMessage());
-        } catch (OutOfMemoryError e) {
+        } catch (FileNotFoundException | OutOfMemoryError e) {
             KLog.e(e.getMessage());
         } finally {
             try {
-                fis.close();
-            } catch (Exception e) {
+                if (fis != null) {
+                    fis.close();
+                }
+            } catch (Exception ignored) {
             }
         }
         return bitmap;
@@ -241,21 +244,15 @@ public class ImageUtils {
 
     /**
      * 使用当前时间戳拼接一个唯一的文件名
-     * 
-     * @param
-     * @return
      */
     public static String getTempFileName() {
-        SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss_SS");
-        String fileName = format.format(new Timestamp(System
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss_SS");
+        return format.format(new Timestamp(System
                 .currentTimeMillis()));
-        return fileName;
     }
 
     /**
      * 获取照相机使用的目录
-     *
-     * @return
      */
     public static String getCamerPath() {
         return Environment.getExternalStorageDirectory() + File.separator
@@ -264,9 +261,6 @@ public class ImageUtils {
 
     /**
      * 判断当前Url是否标准的content://样式，如果不是，则返回绝对路径
-     *
-     * @param
-     * @return
      */
     public static String getAbsolutePathFromNoStandardUri(Uri mUri) {
         String filePath = null;
@@ -289,9 +283,6 @@ public class ImageUtils {
 
     /**
      * 通过uri获取文件的绝对路径
-     *
-     * @param uri
-     * @return
      */
     @SuppressWarnings("deprecation")
     public static String getAbsoluteImagePath(Activity context, Uri uri) {
@@ -317,10 +308,8 @@ public class ImageUtils {
     /**
      * 获取图片缩略图 只有Android2.1以上版本支持
      *
-     * @param imgName
      * @param kind
      *            MediaStore.Images.Thumbnails.MICRO_KIND
-     * @return
      */
     @SuppressWarnings("deprecation")
     public static Bitmap loadImgThumbnail(Activity context, String imgName,
@@ -352,35 +341,24 @@ public class ImageUtils {
 
     /**
      * 获取SD卡中最新图片路径
-     *
-     * @return
      */
     public static String getLatestImage(Activity context) {
         String latestImage = null;
-        String[] items = { MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.DATA };
-        Cursor cursor = context.managedQuery(
+        String[] items = { MediaStore.Images.Media._ID, MediaStore.Images.Media.DATA };
+        try (Cursor cursor = context.getContentResolver().query(
                 MediaStore.Images.Media.EXTERNAL_CONTENT_URI, items, null,
-                null, MediaStore.Images.Media._ID + " desc");
-
-        if (cursor != null && cursor.getCount() > 0) {
-            cursor.moveToFirst();
-            for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor
-                    .moveToNext()) {
+                null, MediaStore.Images.Media._ID + " desc")) {
+            if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst()) {
                 latestImage = cursor.getString(1);
-                break;
             }
+        } catch (Exception e) {
+            KLog.e(e.getMessage());
         }
-
         return latestImage;
     }
 
     /**
      * 计算缩放图片的宽高
-     *
-     * @param img_size
-     * @param square_size
-     * @return
      */
     public static int[] scaleImageSize(int[] img_size, int square_size) {
         if (img_size[0] <= square_size && img_size[1] <= square_size)
@@ -394,7 +372,6 @@ public class ImageUtils {
     /**
      * 创建缩略图
      *
-     * @param context
      * @param largeImagePath
      *            原始大图路径
      * @param thumbfilePath
@@ -403,7 +380,6 @@ public class ImageUtils {
      *            输出图片宽度
      * @param quality
      *            输出图片质量
-     * @throws IOException
      */
     public static void createImageThumbnail(Context context,
                                             String largeImagePath, String thumbfilePath, int square_size,
@@ -430,11 +406,6 @@ public class ImageUtils {
 
     /**
      * 放大缩小图片
-     *
-     * @param bitmap
-     * @param w
-     * @param h
-     * @return
      */
     public static Bitmap zoomBitmap(Bitmap bitmap, int w, int h) {
         Bitmap newbmp = null;
@@ -468,9 +439,8 @@ public class ImageUtils {
         // 旋转图片 动作
         // matrix.postRotate(45);
         // 创建新的图片
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height,
+        return Bitmap.createBitmap(bitmap, 0, 0, width, height,
                 matrix, true);
-        return resizedBitmap;
     }
 
     /**
@@ -478,23 +448,15 @@ public class ImageUtils {
      *
      * @param context
      *            Activity
-     * @param bitmap
-     * @return
      */
     public static Bitmap reDrawBitMap(Activity context, Bitmap bitmap) {
         DisplayMetrics dm = new DisplayMetrics();
         context.getWindowManager().getDefaultDisplay().getMetrics(dm);
-        int rHeight = dm.heightPixels;
         int rWidth = dm.widthPixels;
-        // float rHeight=dm.heightPixels/dm.density+0.5f;
-        // float rWidth=dm.widthPixels/dm.density+0.5f;
-        // int height=bitmap.getScaledHeight(dm);
-        // int width = bitmap.getScaledWidth(dm);
         int height = bitmap.getHeight();
         int width = bitmap.getWidth();
         float zoomScale;
 
-        /** 方式3 **/
         if (width >= rWidth)
             zoomScale = ((float) rWidth) / width;
         else
@@ -503,16 +465,12 @@ public class ImageUtils {
         Matrix matrix = new Matrix();
         // 缩放图片动作
         matrix.postScale(zoomScale, zoomScale);
-        Bitmap resizedBitmap = Bitmap.createBitmap(bitmap, 0, 0,
+        return Bitmap.createBitmap(bitmap, 0, 0,
                 bitmap.getWidth(), bitmap.getHeight(), matrix, true);
-        return resizedBitmap;
     }
 
     /**
      * 将Drawable转化为Bitmap
-     *
-     * @param drawable
-     * @return
      */
     public static Bitmap drawableToBitmap(Drawable drawable) {
         int width = drawable.getIntrinsicWidth();
@@ -530,10 +488,8 @@ public class ImageUtils {
     /**
      * 获得圆角图片的方法
      *
-     * @param bitmap
      * @param roundPx
      *            一般设成14
-     * @return
      */
     public static Bitmap getRoundedCornerBitmap(Bitmap bitmap, float roundPx) {
 
@@ -559,9 +515,6 @@ public class ImageUtils {
 
     /**
      * 获得带倒影的图片方法
-     *
-     * @param bitmap
-     * @return
      */
     public static Bitmap createReflectionImageWithOrigin(Bitmap bitmap) {
         final int reflectionGap = 4;
@@ -600,47 +553,29 @@ public class ImageUtils {
 
     /**
      * 将bitmap转化为drawable
-     *
-     * @param bitmap
-     * @return
      */
+    @SuppressWarnings("deprecation")
     public static Drawable bitmapToDrawable(Bitmap bitmap) {
-        Drawable drawable = new BitmapDrawable(bitmap);
-        return drawable;
+        return new BitmapDrawable(bitmap);
     }
 
     /**
      * 获取图片类型
-     *
-     * @param file
-     * @return
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static String getImageType(File file) {
         if (file == null || !file.exists()) {
             return null;
         }
-        InputStream in = null;
-        try {
-            in = new FileInputStream(file);
-            String type = getImageType(in);
-            return type;
-        } catch (IOException e) {
-            return null;
-        } finally {
-            try {
-                if (in != null) {
-                    in.close();
-                }
-            } catch (IOException e) {
-            }
+        try (InputStream in = new FileInputStream(file)) {
+            return getImageType(in);
+        } catch (IOException ignored) {
         }
+        return "";
     }
 
     /**
      * 获取图片的类型信息
-     *
-     * @param in
-     * @return
      * @see #getImageType(byte[])
      */
     public static String getImageType(InputStream in) {
@@ -649,7 +584,8 @@ public class ImageUtils {
         }
         try {
             byte[] bytes = new byte[8];
-            in.read(bytes);
+            int i = in.read(bytes);
+            KLog.i("读取到了 "+i+" 个字节");
             return getImageType(bytes);
         } catch (IOException e) {
             return null;
@@ -712,9 +648,6 @@ public class ImageUtils {
 
     /**
      * 获取图片路径
-     *
-     * @param uri
-     * @param
      */
     public static String getImagePath(Uri uri, Activity context) {
 
@@ -751,8 +684,6 @@ public class ImageUtils {
                     return MediaStore.Images.Media
                             .getBitmap(context.getContentResolver(),
                                     uri);
-                } catch (FileNotFoundException e) {
-                    KLog.e(e.getMessage());
                 } catch (IOException e) {
                     KLog.e(e.getMessage());
                 }
@@ -761,13 +692,11 @@ public class ImageUtils {
         return null;
     }
 
-    /******************************************************************/
 
     /**
      * 压缩Bitmap,同时使用两种策略压缩,先压缩宽高，再压缩质量
      *
      * @return 存储Bitmap的文件
-     * @throws IOException
      */
     public static File compressBitmap(String url, String storageDir, String prefix) throws IOException {
         if (!TextUtils.isEmpty(url)) {
@@ -807,12 +736,12 @@ public class ImageUtils {
         }
         // 缩放图片动作
         matrix.postScale(scaleWidth, scaleHeight);
-        Bitmap bitmap = Bitmap.createBitmap(source, 0, 0, (int) width,
+        return Bitmap.createBitmap(source, 0, 0, (int) width,
                 (int) height, matrix, true);
-        return bitmap;
     }
 
     //压缩图片大小
+    @SuppressWarnings("IOStreamConstructor")
     public static Bitmap revitionImageSize(File file) throws IOException {
         // 流全部用 try-finally 关闭，避免文件句柄泄漏
         BitmapFactory.Options options = new BitmapFactory.Options();
@@ -844,7 +773,7 @@ public class ImageUtils {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         image.compress(CompressFormat.JPEG, 100, baos);//质量压缩方法，这里100表示不压缩，把压缩后的数据存放到baos中
         int offset = 100;
-        while (baos.toByteArray().length / 1024 > MAX_SIZE) {  //循环判断如果压缩后图片是否大于200kb,大于继续压缩
+        while ((float) baos.toByteArray().length / 1024 > MAX_SIZE) {  //循环判断如果压缩后图片是否大于200kb,大于继续压缩
 
             baos.reset();//重置baos即清空baos
             image.compress(CompressFormat.JPEG, offset, baos);//这里压缩options%，把压缩后的数据存放到baos中
@@ -852,8 +781,8 @@ public class ImageUtils {
         }
         ByteArrayInputStream isBm = new ByteArrayInputStream(baos.toByteArray());
         //把压缩后的数据baos存放到ByteArrayInputStream中
-        Bitmap bitmap = BitmapFactory.decodeStream(isBm, null, null);//把ByteArrayInputStream数据生成图片
-        return bitmap;
+        //把ByteArrayInputStream数据生成图片
+        return BitmapFactory.decodeStream(isBm, null, null);
     }
 
     /**
@@ -861,8 +790,10 @@ public class ImageUtils {
      *
      * @return 保存bitmap的file对象
      */
+    @SuppressWarnings("IOStreamConstructor")
     public static File convertToFile(Bitmap bitmap, String storageDir, String prefix) throws IOException {
         File cacheDir = checkTargetCacheDir(storageDir);
+        if (cacheDir == null) return cacheDir;
         //以时间戳生成一个临时文件名称
         cacheDir = createFile(cacheDir, prefix, ".jpg");
         boolean created = false;//是否创建成功,默认没有创建
@@ -874,8 +805,6 @@ public class ImageUtils {
 
     /**
      * 检查目标缓存目录是否存在，如果存在则返回这个目录，如果不存在则新建这个目录
-     *
-     * @return
      */
     public static File checkTargetCacheDir(String storageDir) {
 
@@ -883,10 +812,15 @@ public class ImageUtils {
         file = new File(storageDir);
 
         if (!file.exists()) {
-            file.mkdirs();//创建目录
+            boolean b = file.mkdirs();//创建目录
+            if (b){
+                KLog.i("文件目录创建成功");
+            }else {
+                KLog.i("文件目录创建失败");
+            }
         }
 
-        if (file != null && file.exists())
+        if (file.exists())
             return file;//文件已经被成功创建
         else {
             return null;//即时经过以上检查，文件还是没有被准确的创建
@@ -897,7 +831,14 @@ public class ImageUtils {
      * 根据系统时间、前缀、后缀产生一个文件
      */
     public static File createFile(File folder, String prefix, String suffix) {
-        if (!folder.exists() || !folder.isDirectory()) folder.mkdirs();
+        if (!folder.exists() || !folder.isDirectory()) {
+            boolean f = folder.mkdirs();
+            if (f){
+                KLog.i("文件创建成功");
+            }else {
+                KLog.i("文件创建失败");
+            }
+        }
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmssSSS", Locale.CHINA);
         String filename = prefix + dateFormat.format(new Date(System.currentTimeMillis())) + suffix;
         return new File(folder, filename);
@@ -940,10 +881,18 @@ public class ImageUtils {
     /**
      * android图片压缩工具
      * 压缩单张图片 RxJava 方式
+     * 调用方：
+     * Disposable disposable = ImageUtils.compressWithRx(url, file -> {
+     *      处理结果
+     * });
+     *  在 onDestroy 中：
+     * if (disposable != null && !disposable.isDisposed()) {
+     *     disposable.dispose();
+     * }
      */
-    public static void compressWithRx(String url, Consumer<File> consumer){
-
-        Luban.get(Utils.getContext())
+    @SuppressLint("CheckResult")
+    public static Disposable compressWithRx(String url, Consumer<File> consumer){
+        return Luban.get(Utils.getContext())
                 .load(url)
                 .putGear(Luban.THIRD_GEAR)
                 .asObservable()
@@ -964,9 +913,9 @@ public class ImageUtils {
                 .subscribe(consumer);
     }
 
-    public static void compressWithRx(String url, Consumer<File> consumer, IThrowable iThrowable){
-
-        Luban.get(Utils.getContext())
+    @SuppressLint("CheckResult")
+    public static Disposable compressWithRx(String url, Consumer<File> consumer, IThrowable iThrowable){
+        return Luban.get(Utils.getContext())
                 .load(url)
                 .putGear(Luban.THIRD_GEAR)
                 .asObservable()

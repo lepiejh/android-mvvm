@@ -1,5 +1,5 @@
 package com.ved.framework.utils;
 
-interface IThrowable {
+public interface IThrowable {
     void accept(Throwable throwable);
 }
