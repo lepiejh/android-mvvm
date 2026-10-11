@@ -11,6 +11,9 @@ import android.view.ViewTreeObserver;
 import android.view.WindowManager;
 
 import androidx.annotation.Nullable;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.gyf.immersionbar.BarHide;
 import com.gyf.immersionbar.ImmersionBar;
@@ -36,15 +39,11 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
                 finish();
             }
         }
-        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P){
-//            HookSystem.Companion.getInstance().hookSystemHandler();
-        }else {
-            //如果是8.0系统的手机，并且认为是透明主题的Activity
-            if (Build.VERSION.SDK_INT == 26 && this.isTranslucentOrFloating()) {
-                //通过反射取消方向的设置，这样绕开系统的检查，避免闪退
-                boolean result = this.fixOrientation();
-                KLog.i("only_opaque","result : "+result);
-            }
+        // Android P 以上无需处理（这里原本用于 hook SystemHandler，已移除）
+        // Android 8.0 的透明主题 Activity 固定方向会触发系统检查导致闪退，需要反射绕开
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O && isTranslucentOrFloating()) {
+            boolean result = fixOrientation();
+            KLog.i("only_opaque", "result : " + result);
         }
         super.onCreate(savedInstanceState);
         if (isRegular()) {
@@ -69,7 +68,8 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
             final TypedArray ta = obtainStyledAttributes(styleableRes);
             Method m = ActivityInfo.class.getMethod("isTranslucentOrFloating", TypedArray.class);
             m.setAccessible(true);
-            isTranslucentOrFloating = (boolean) m.invoke(null, ta);
+            Boolean isTranslucent = (Boolean) m.invoke(null, ta);
+            isTranslucentOrFloating = isTranslucent != null && isTranslucent;
             m.setAccessible(false);
         } catch (Exception e) {
             KLog.e(e.getMessage());
@@ -130,36 +130,19 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
     private void setupFullScreenImmersiveMode() {
         View decorView = getWindow().getDecorView();
 
-        // 设置系统UI可见性标志
-        int uiOptions;
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            // Android 11 及以上
-            getWindow().setDecorFitsSystemWindows(false);
-            uiOptions = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        } else {
-            // Android 11 以下
-            uiOptions = View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    | View.SYSTEM_UI_FLAG_FULLSCREEN
-                    | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
-        }
-
-        decorView.setSystemUiVisibility(uiOptions);
+        // 使用 androidx 的 WindowInsetsControllerCompat 替代已过时的 View#setSystemUiVisibility
+        // 与 Window#setDecorFitsSystemWindows，一套 API 兼容 Android 11 上下的全屏沉浸式
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat insetsController =
+                new WindowInsetsControllerCompat(getWindow(), decorView);
+        // 用户从边缘滑动时短暂显示系统栏后自动重新隐藏，等价于旧的 SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+        insetsController.setSystemBarsBehavior(
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        insetsController.hide(WindowInsetsCompat.Type.systemBars());
 
         // 设置窗口标志，确保全屏
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
-
-        // 监听系统UI可见性变化，确保在用户试图滑动时立即重新隐藏
-        decorView.setOnSystemUiVisibilityChangeListener(visibility -> {
-            if ((visibility & View.SYSTEM_UI_FLAG_FULLSCREEN) == 0) {
-                // 系统UI显示了，重新隐藏
-                decorView.postDelayed(() -> decorView.setSystemUiVisibility(uiOptions), 100);
-            }
-        });
     }
 
     @Override
