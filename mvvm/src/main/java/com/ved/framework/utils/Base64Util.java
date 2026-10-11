@@ -3,14 +3,15 @@ package com.ved.framework.utils;
 import android.util.Base64;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * BASE64 编码解码
  */
 public final class Base64Util {
 
-    private static char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".toCharArray();
-    private static byte[] codes = new byte[256];
+    private static final char[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=".toCharArray();
+    private static final byte[] codes = new byte[256];
 
     static {
         for (int i = 0; i < 256; i++)
@@ -50,7 +51,7 @@ public final class Base64Util {
             val >>= 6;
             out[index + 1] = alphabet[val & 0x3F];
             val >>= 6;
-            out[index + 0] = alphabet[val & 0x3F];
+            out[index] = alphabet[val & 0x3F];
         }
         return out;
     }
@@ -65,8 +66,8 @@ public final class Base64Util {
         int shift = 0;
         int accum = 0;
         int index = 0;
-        for (int ix = 0; ix < data.length; ix++) {
-            int value = codes[data[ix] & 0xFF];
+        for (char datum : data) {
+            int value = codes[datum & 0xFF];
             if (value >= 0) {
                 accum <<= 6;
                 shift += 6;
@@ -88,7 +89,7 @@ public final class Base64Util {
     public static String encryptBASE64(String data) {
         byte[] bytes = null;
         try {
-            bytes = data.getBytes("utf-8");
+            bytes = data.getBytes(StandardCharsets.UTF_8);
         } catch (Exception e) {
             KLog.e(e.getMessage());
         }
@@ -111,12 +112,8 @@ public final class Base64Util {
      */
     public static String decryptBASE64ToStr(String encodeStr) {
         String result = null;
-        try {
-            byte[] decodeBytes = Base64.decode(encodeStr, Base64.DEFAULT);
-            result = new String(decodeBytes, "utf-8");
-        } catch (IOException e) {
-            KLog.e(e.getMessage());
-        }
+        byte[] decodeBytes = Base64.decode(encodeStr, Base64.DEFAULT);
+        result = new String(decodeBytes, StandardCharsets.UTF_8);
         return result;
     }
 

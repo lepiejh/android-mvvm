@@ -8,13 +8,11 @@ public class Base64 {
     private static final char[] legalChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".toCharArray();
     /**
      * data[]进行编码
-     * @param data
-     * @return
      */
     public static String encode(byte[] data) {
         int start = 0;
         int len = data.length;
-        StringBuffer buf = new StringBuffer(data.length * 3 / 2);
+        StringBuilder buf = new StringBuilder(data.length * 3 / 2);
 
         int end = len - 3;
         int i = start;

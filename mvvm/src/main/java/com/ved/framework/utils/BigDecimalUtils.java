@@ -4,16 +4,11 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * @author: Lyb
  * on: 2020/6/11
- * @ClassInfo:
  */
 public class BigDecimalUtils {
     /**
      * 保留两位小数
-     *
-     * @param value
-     * @return
      */
     public static String toDecimal(double value) {
         BigDecimal bd = new BigDecimal(value);
@@ -48,10 +43,6 @@ public class BigDecimalUtils {
 
     /**
      * 保留两位小数
-     *
-     * @param value
-     * @param point
-     * @return
      */
     public static String toDecimal(String value, int point) {
         if (BlankUtil.isEmptyObj(value)) {
@@ -64,10 +55,6 @@ public class BigDecimalUtils {
 
     /**
      * 保留两位小数
-     *
-     * @param value
-     * @param point
-     * @return
      */
     public static String toDecimal(float value, int point) {
         double d = Double.parseDouble(String.valueOf(value));  // 保证精度不丢失
@@ -97,16 +84,11 @@ public class BigDecimalUtils {
     }
 
     public static double add(BigDecimal value1, BigDecimal value2) {
-        BigDecimal b1 = value1;
-        BigDecimal b2 = value2;
-        return b1.add(b2).doubleValue();
+        return value1.add(value2).doubleValue();
     }
 
     public static double add(BigDecimal value1, BigDecimal value2, BigDecimal value3) {
-        BigDecimal b1 = value1;
-        BigDecimal b2 = value2;
-        BigDecimal b3 = value3;
-        return b1.add(b2).add(b3).doubleValue();
+        return value1.add(value2).add(value3).doubleValue();
     }
 
     /**
@@ -123,9 +105,7 @@ public class BigDecimalUtils {
     }
 
     public static double sub(BigDecimal value1, BigDecimal value2) {
-        BigDecimal b1 = value1;
-        BigDecimal b2 = value2;
-        return b1.subtract(b2).doubleValue();
+        return value1.subtract(value2).doubleValue();
     }
 
     /**
@@ -142,9 +122,7 @@ public class BigDecimalUtils {
     }
 
     public static double mul(BigDecimal value1, BigDecimal value2) {
-        BigDecimal b1 = value1;
-        BigDecimal b2 = value2;
-        return b1.multiply(b2).doubleValue();
+        return value1.multiply(value2).doubleValue();
     }
 
     /**
@@ -154,7 +132,6 @@ public class BigDecimalUtils {
      * @param value2 除数
      * @param scale  精确范围
      * @return 两个参数的商
-     * @throws IllegalAccessException
      */
     public static double div(String value1, String value2, int scale) throws IllegalAccessException {
         //如果精确范围小于0，抛出异常信息

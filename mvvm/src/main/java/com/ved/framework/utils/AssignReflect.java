@@ -28,7 +28,7 @@ public class AssignReflect {
      * @return T对象
      */
     public <T> T convertObj(Class<T> cz, Map<String, Object> map) {
-        if (map == null || map.size() == 0) {
+        if (map == null || map.isEmpty()) {
             KLog.w("AssignReflect","The incoming map object is empty or size is zero");
             return null;
         }
