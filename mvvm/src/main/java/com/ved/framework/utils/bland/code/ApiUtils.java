@@ -1,5 +1,4 @@
 package com.ved.framework.utils.bland.code;
-import com.ved.framework.utils.Utils;
 
 import android.util.Log;
 
@@ -18,8 +17,8 @@ public final class ApiUtils {
 
     private static final String TAG = "ApiUtils";
 
-    private Map<Class<?>, BaseApi> mApiMap           = new ConcurrentHashMap<>();
-    private Map<Class<?>, Class<?>> mInjectApiImplMap = new HashMap<>();
+    private final Map<Class<?>, BaseApi> mApiMap           = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Class<?>> mInjectApiImplMap = new HashMap<>();
 
     private ApiUtils() {
         init();
