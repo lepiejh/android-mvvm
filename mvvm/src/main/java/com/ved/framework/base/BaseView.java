@@ -3,7 +3,6 @@ package com.ved.framework.base;
 import android.content.Intent;
 import android.os.Bundle;
 
-import androidx.core.content.ContextCompat;
 import androidx.databinding.ViewDataBinding;
 import androidx.lifecycle.LifecycleOwner;
 
@@ -16,6 +15,7 @@ import com.ved.framework.permission.IPermission;
 import com.ved.framework.utils.Constant;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SoftKeyboardUtil;
+import com.ved.framework.utils.bland.code.ColorUtils;
 import com.ved.framework.utils.bland.code.SizeUtils;
 
 import org.greenrobot.eventbus.EventBus;
@@ -260,8 +260,7 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
             final SwipePanel swipeLayout = new SwipePanel(viewDelegate.FragmentActivity());
             swipeLayout.setLeftDrawable(R.drawable.ca);
             swipeLayout.setLeftEdgeSize(SizeUtils.dp2px(16));
-            // Resources.getColor(int) 在 API 23 已过时，统一走 ContextCompat 做版本兼容
-            swipeLayout.setLeftSwipeColor(ContextCompat.getColor(viewDelegate.FragmentActivity(), R.color.colorPrimary));
+            swipeLayout.setLeftSwipeColor(ColorUtils.getColor(R.color.colorPrimary));
             swipeLayout.wrapView(viewDelegate.FragmentActivity().findViewById(android.R.id.content));
             swipeLayout.setOnFullSwipeListener(direction -> {
                 swipeLayout.close(direction);

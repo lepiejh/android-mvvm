@@ -208,7 +208,7 @@ public final class AppUtils {
         ActivityManager am = (ActivityManager) Utils.getContext().getSystemService(Context.ACTIVITY_SERVICE);
         if (am != null) {
             List<ActivityManager.RunningTaskInfo> taskInfo = am.getRunningTasks(Integer.MAX_VALUE);
-            if (taskInfo != null && taskInfo.size() > 0) {
+            if (taskInfo != null && !taskInfo.isEmpty()) {
                 for (ActivityManager.RunningTaskInfo aInfo : taskInfo) {
                     if (aInfo.baseActivity != null) {
                         if (pkgName.equals(aInfo.baseActivity.getPackageName())) {
@@ -218,7 +218,7 @@ public final class AppUtils {
                 }
             }
             List<ActivityManager.RunningServiceInfo> serviceInfo = am.getRunningServices(Integer.MAX_VALUE);
-            if (serviceInfo != null && serviceInfo.size() > 0) {
+            if (serviceInfo != null && !serviceInfo.isEmpty()) {
                 for (ActivityManager.RunningServiceInfo aInfo : serviceInfo) {
                     if (pkgName.equals(aInfo.service.getPackageName())) {
                         return true;

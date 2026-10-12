@@ -1,6 +1,5 @@
 package com.ved.framework.utils.bland.code;
 import com.ved.framework.utils.KLog;
-import com.ved.framework.utils.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -179,7 +178,7 @@ public final class JsonUtils {
                                         final String key,
                                         final T defaultValue,
                                         final byte type) {
-        if (jsonObject == null || key == null || key.length() == 0) {
+        if (jsonObject == null || key == null || key.isEmpty()) {
             return defaultValue;
         }
         try {
@@ -213,8 +212,8 @@ public final class JsonUtils {
                                         final String key,
                                         final T defaultValue,
                                         final byte type) {
-        if (json == null || json.length() == 0
-                || key == null || key.length() == 0) {
+        if (json == null || json.isEmpty()
+                || key == null || key.isEmpty()) {
             return defaultValue;
         }
         try {

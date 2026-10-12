@@ -1,6 +1,5 @@
 package com.ved.framework.utils.bland.code;
 import com.ved.framework.utils.KLog;
-import com.ved.framework.utils.Utils;
 
 import android.util.Log;
 
@@ -90,6 +89,7 @@ public final class BusUtils {
         return getInstance().toString();
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "BusUtils: " + mTag_BusInfoListMap;
@@ -236,9 +236,7 @@ public final class BusUtils {
             } else {
                 return Class.forName(busInfo.className).getDeclaredMethod(busInfo.funName, getClassName(busInfo.paramType));
             }
-        } catch (ClassNotFoundException e) {
-            KLog.e(e.getMessage());
-        } catch (NoSuchMethodException e) {
+        } catch (ClassNotFoundException | NoSuchMethodException e) {
             KLog.e(e.getMessage());
         }
         return null;
@@ -308,7 +306,7 @@ public final class BusUtils {
                     buses.addAll(subBuses);
                 }
             }
-            if (buses.size() == 0) {
+            if (buses.isEmpty()) {
                 if (!sticky) {
                     Log.e(TAG, "The " + busInfo + " was not registered before.");
                 }
@@ -331,9 +329,7 @@ public final class BusUtils {
                     busInfo.method.invoke(bus, arg);
                 }
             }
-        } catch (IllegalAccessException e) {
-            KLog.e(e.getMessage());
-        } catch (InvocationTargetException e) {
+        } catch (IllegalAccessException | InvocationTargetException e) {
             KLog.e(e.getMessage());
         }
     }
@@ -414,6 +410,7 @@ public final class BusUtils {
             this.subClassNames = new CopyOnWriteArrayList<>();
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "BusInfo { tag : " + tag +

@@ -78,7 +78,7 @@ public class ArrayUtils {
      * @return {@code true}: yes<br>{@code false}: no
      */
     public static boolean isEmpty(@Nullable Object array) {
-        return getLength(array) == 0;
+        return array == null;
     }
 
     /**
@@ -474,11 +474,15 @@ public class ArrayUtils {
         }
         int newSize = endIndexExclusive - startIndexInclusive;
         Class<?> type = array.getClass().getComponentType();
+        if (type == null) return null;
         if (newSize <= 0) {
             return Array.newInstance(type, 0);
         }
         Object subArray = Array.newInstance(type, newSize);
-        System.arraycopy(array, startIndexInclusive, subArray, 0, newSize);
+
+        // 将 Object 强制转换为 Object[] 以消除警告
+        System.arraycopy((Object[]) array, startIndexInclusive, (Object[]) subArray, 0, newSize);
+
         return subArray;
     }
 
@@ -560,10 +564,18 @@ public class ArrayUtils {
     private static Object realAddOne(@Nullable Object array, @Nullable Object element, Class<?> newArrayComponentType) {
         Object newArray;
         int arrayLength = 0;
-        if (array != null) {
+        if (array != null && array.getClass().isArray()) { // 1. 显式检查是否为数组
             arrayLength = getLength(array);
-            newArray = Array.newInstance(array.getClass().getComponentType(), arrayLength + 1);
-            System.arraycopy(array, 0, newArray, 0, arrayLength);
+            Class<?> componentType = array.getClass().getComponentType();
+            // 2. 判空（虽然 isArray() 保证了非空，但为了通过 IDE 检查可以加）
+            if (componentType == null) {
+                componentType = Object.class;
+            }
+            newArray = Array.newInstance(componentType, arrayLength + 1);
+
+            // 3. 消除 'array' is not of an array type 警告
+            // 因为已经判断了是数组，这里可以安全地强转
+            System.arraycopy((Object[]) array, 0, (Object[]) newArray, 0, arrayLength);
         } else {
             newArray = Array.newInstance(newArrayComponentType, 1);
         }
@@ -638,6 +650,7 @@ public class ArrayUtils {
         return (double[]) realAddArr(array1, array2);
     }
 
+    @Nullable
     private static Object realAddArr(@Nullable Object array1, @Nullable Object array2) {
         if (array1 == null && array2 == null) return null;
         if (array1 == null) {
@@ -646,11 +659,40 @@ public class ArrayUtils {
         if (array2 == null) {
             return realCopy(array1);
         }
+
+        // 1. 显式检查是否为数组，消除 IDE 对 getComponentType() 可能为 null 的警告
+        if (!array1.getClass().isArray() || !array2.getClass().isArray()) {
+            // 根据你的业务需求，这里可以抛异常或返回 null
+            throw new IllegalArgumentException("Both parameters must be arrays.");
+        }
+
         int len1 = getLength(array1);
         int len2 = getLength(array2);
-        Object joinedArray = Array.newInstance(array1.getClass().getComponentType(), len1 + len2);
+
+        // 2. 获取组件类型并处理可能的 null（虽然 isArray() 后基本不会为 null，但为了通过 IDE 检查加一层保险）
+        Class<?> componentType1 = array1.getClass().getComponentType();
+        Class<?> componentType2 = array2.getClass().getComponentType();
+
+        // 检查两个数组的组件类型是否一致，不一致会抛出 ArrayStoreException
+        if (componentType1 != componentType2) {
+            throw new IllegalArgumentException("Array types are incompatible: "
+                    + componentType1 + " vs " + componentType2);
+        }
+
+        if (componentType1 == null){
+            return null;
+        }
+
+        // 3. 创建新数组并复制
+        Object joinedArray = Array.newInstance(componentType1, len1 + len2);
+
+        // 4. 使用 @SuppressWarnings 忽略 System.arraycopy 的类型检查警告
+        // 因为此时已经确定是数组，且类型一致，运行时绝对安全
+        //noinspection SuspiciousSystemArraycopy
         System.arraycopy(array1, 0, joinedArray, 0, len1);
+        //noinspection SuspiciousSystemArraycopy
         System.arraycopy(array2, 0, joinedArray, len1, len2);
+
         return joinedArray;
     }
 
@@ -769,19 +811,66 @@ public class ArrayUtils {
         if (index > len1 || index < 0) {
             throw new IndexOutOfBoundsException("Index: " + index + ", array1 Length: " + len1);
         }
-        Object joinedArray = Array.newInstance(array1.getClass().getComponentType(), len1 + len2);
+
+        // 1. 显式检查是否为数组，消除 getComponentType() 可能为 null 的警告
+        if ((array1 != null && !array1.getClass().isArray()) || (array2 != null && !array2.getClass().isArray())) {
+            throw new IllegalArgumentException("Both parameters must be arrays.");
+        }
+
+        // 2. 获取组件类型（此时 IDE 已知不是 null）
+        Class<?> componentType1 = getAClass(array1, array2);
+
+        if (componentType1 == null) return null;
+
+        // 4. 创建新数组（componentType1 已确定不为 null）
+        Object joinedArray = Array.newInstance(componentType1, len1 + len2);
+
+        // 5. 使用 //noinspection 忽略 System.arraycopy 的类型检查警告
         if (index == len1) {
-            System.arraycopy(array1, 0, joinedArray, 0, len1);
-            System.arraycopy(array2, 0, joinedArray, len1, len2);
+            if (array1 != null) {
+                System.arraycopy((Object[]) array1, 0, (Object[]) joinedArray, 0, len1);
+            }
+            if (array2 != null) {
+                System.arraycopy((Object[]) array2, 0, (Object[]) joinedArray, len1, len2);
+            }
         } else if (index == 0) {
-            System.arraycopy(array2, 0, joinedArray, 0, len2);
-            System.arraycopy(array1, 0, joinedArray, len2, len1);
+            if (array2 != null) {
+                System.arraycopy((Object[]) array2, 0, (Object[]) joinedArray, 0, len2);
+            }
+            if (array1 != null) {
+                System.arraycopy((Object[]) array1, 0, (Object[]) joinedArray, len2, len1);
+            }
         } else {
-            System.arraycopy(array1, 0, joinedArray, 0, index);
-            System.arraycopy(array2, 0, joinedArray, index, len2);
-            System.arraycopy(array1, index, joinedArray, index + len2, len1 - index);
+            if (array1 != null) {
+                System.arraycopy((Object[]) array1, 0, (Object[]) joinedArray, 0, index);
+            }
+            if (array2 != null) {
+                System.arraycopy((Object[]) array2, 0, (Object[]) joinedArray, index, len2);
+            }
+            if (array1 != null) {
+                System.arraycopy((Object[]) array1, index, (Object[]) joinedArray, index + len2, len1 - index);
+            }
         }
         return joinedArray;
+    }
+
+    @Nullable
+    private static Class<?> getAClass(@Nullable Object array1, @Nullable Object array2) {
+        Class<?> componentType1 = null;
+        if (array1 != null) {
+            componentType1 = array1.getClass().getComponentType();
+        }
+        Class<?> componentType2 = null;
+        if (array2 != null) {
+            componentType2 = array2.getClass().getComponentType();
+        }
+
+        // 3. 检查类型一致性，避免运行时 ArrayStoreException
+        if (componentType1 != componentType2) {
+            throw new IllegalArgumentException("Array types are incompatible: "
+                    + componentType1 + " vs " + componentType2);
+        }
+        return componentType1;
     }
 
     /**
@@ -882,10 +971,10 @@ public class ArrayUtils {
             throw new IndexOutOfBoundsException("Index: " + index + ", Length: " + length);
         }
         Object result = Array.newInstance(clss, length + 1);
-        System.arraycopy(array, 0, result, 0, index);
+        System.arraycopy((Object[]) array, 0, (Object[]) result, 0, index);
         Array.set(result, index, element);
         if (index < length) {
-            System.arraycopy(array, index, result, index + 1, length - index);
+            System.arraycopy((Object[]) array, index, (Object[]) result, index + 1, length - index);
         }
         return result;
     }
@@ -1087,11 +1176,12 @@ public class ArrayUtils {
         if (index < 0 || index >= length) {
             throw new IndexOutOfBoundsException("Index: " + index + ", Length: " + length);
         }
-
-        Object result = Array.newInstance(array.getClass().getComponentType(), length - 1);
-        System.arraycopy(array, 0, result, 0, index);
+        Class<?> componentType = array.getClass().getComponentType();
+        if (componentType == null) return new Object[0];
+        Object result = Array.newInstance(componentType, length - 1);
+        System.arraycopy((Object[]) array, 0, (Object[]) result, 0, index);
         if (index < length - 1) {
-            System.arraycopy(array, index + 1, result, index, length - index - 1);
+            System.arraycopy((Object[]) array, index + 1, (Object[]) result, index, length - index - 1);
         }
 
         return result;
@@ -1413,6 +1503,7 @@ public class ArrayUtils {
         return indexOf(array, valueToFind, 0, tolerance);
     }
 
+    @SuppressWarnings("ConstantConditions")
     public static int indexOf(@Nullable double[] array, double valueToFind, int startIndex) {
         if (ArrayUtils.isEmpty(array)) {
             return INDEX_NOT_FOUND;
@@ -1606,7 +1697,7 @@ public class ArrayUtils {
         }
         final char[] result = new char[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].charValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1621,7 +1712,7 @@ public class ArrayUtils {
         final char[] result = new char[array.length];
         for (int i = 0; i < array.length; i++) {
             Character b = array[i];
-            result[i] = (b == null ? valueForNull : b.charValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1635,7 +1726,7 @@ public class ArrayUtils {
         }
         final Character[] result = new Character[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Character(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1653,7 +1744,7 @@ public class ArrayUtils {
         }
         final long[] result = new long[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].longValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1668,7 +1759,7 @@ public class ArrayUtils {
         final long[] result = new long[array.length];
         for (int i = 0; i < array.length; i++) {
             Long b = array[i];
-            result[i] = (b == null ? valueForNull : b.longValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1682,7 +1773,7 @@ public class ArrayUtils {
         }
         final Long[] result = new Long[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Long(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1700,7 +1791,7 @@ public class ArrayUtils {
         }
         final int[] result = new int[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].intValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1715,7 +1806,7 @@ public class ArrayUtils {
         final int[] result = new int[array.length];
         for (int i = 0; i < array.length; i++) {
             Integer b = array[i];
-            result[i] = (b == null ? valueForNull : b.intValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1729,7 +1820,7 @@ public class ArrayUtils {
         }
         final Integer[] result = new Integer[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Integer(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1747,7 +1838,7 @@ public class ArrayUtils {
         }
         final short[] result = new short[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].shortValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1762,7 +1853,7 @@ public class ArrayUtils {
         final short[] result = new short[array.length];
         for (int i = 0; i < array.length; i++) {
             Short b = array[i];
-            result[i] = (b == null ? valueForNull : b.shortValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1776,7 +1867,7 @@ public class ArrayUtils {
         }
         final Short[] result = new Short[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Short(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1794,7 +1885,7 @@ public class ArrayUtils {
         }
         final byte[] result = new byte[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].byteValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1809,7 +1900,7 @@ public class ArrayUtils {
         final byte[] result = new byte[array.length];
         for (int i = 0; i < array.length; i++) {
             Byte b = array[i];
-            result[i] = (b == null ? valueForNull : b.byteValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1823,7 +1914,7 @@ public class ArrayUtils {
         }
         final Byte[] result = new Byte[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Byte(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1841,7 +1932,7 @@ public class ArrayUtils {
         }
         final double[] result = new double[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].doubleValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1856,7 +1947,7 @@ public class ArrayUtils {
         final double[] result = new double[array.length];
         for (int i = 0; i < array.length; i++) {
             Double b = array[i];
-            result[i] = (b == null ? valueForNull : b.doubleValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1870,7 +1961,7 @@ public class ArrayUtils {
         }
         final Double[] result = new Double[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Double(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1888,7 +1979,7 @@ public class ArrayUtils {
         }
         final float[] result = new float[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].floatValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1903,7 +1994,7 @@ public class ArrayUtils {
         final float[] result = new float[array.length];
         for (int i = 0; i < array.length; i++) {
             Float b = array[i];
-            result[i] = (b == null ? valueForNull : b.floatValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
@@ -1917,7 +2008,7 @@ public class ArrayUtils {
         }
         final Float[] result = new Float[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = new Float(array[i]);
+            result[i] = array[i];
         }
         return result;
     }
@@ -1935,7 +2026,7 @@ public class ArrayUtils {
         }
         final boolean[] result = new boolean[array.length];
         for (int i = 0; i < array.length; i++) {
-            result[i] = array[i].booleanValue();
+            result[i] = array[i];
         }
         return result;
     }
@@ -1950,7 +2041,7 @@ public class ArrayUtils {
         final boolean[] result = new boolean[array.length];
         for (int i = 0; i < array.length; i++) {
             Boolean b = array[i];
-            result[i] = (b == null ? valueForNull : b.booleanValue());
+            result[i] = (b == null ? valueForNull : b);
         }
         return result;
     }
