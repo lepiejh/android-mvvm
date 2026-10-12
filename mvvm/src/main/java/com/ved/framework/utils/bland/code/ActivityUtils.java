@@ -149,7 +149,7 @@ public final class ActivityUtils {
         PackageManager pm = Utils.getContext().getPackageManager();
         return !(pm.resolveActivity(intent, 0) == null ||
                 intent.resolveActivity(pm) == null ||
-                pm.queryIntentActivities(intent, 0).size() == 0);
+                pm.queryIntentActivities(intent, 0).isEmpty());
     }
 
     /**
