@@ -13,19 +13,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 
 public class KLog {
@@ -52,14 +58,55 @@ public class KLog {
     /** 日志文件后缀 */
     private static final String LOG_FILE_SUFFIX = ".txt";
 
-    /** 单线程池，用于异步写入日志文件 */
-    private static final ExecutorService LOG_EXECUTOR = Executors.newSingleThreadExecutor();
+    /** 写入缓冲的 flush 间隔（毫秒）。普通日志攒着刷，降低IO次数 */
+    private static final long FLUSH_INTERVAL_MS = 1000L;
 
-    /** 日期格式 */
-    @SuppressLint("ConstantLocale")
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
-    @SuppressLint("ConstantLocale")
-    private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    /** 累计写入多少字节后检查一次文件大小，避免每条日志都 stat 一次 */
+    private static final long SIZE_CHECK_THRESHOLD = 64 * 1024L;
+
+    /** 导出/读取日志的最大字符数，防止把几十MB日志读进内存导致OOM */
+    private static final int MAX_EXPORT_CHARS = 4 * 1024 * 1024;
+
+    /**
+     * 单线程写入日志。这里【不能】用 Executors.newSingleThreadExecutor()：
+     * 它内部是无界队列，一旦日志产生速度超过写盘速度，任务会无限堆积直到OOM。
+     * 改为有界队列 + 丢弃最旧任务：日志只是调试用，丢几条远好过把APP搞崩
+     */
+    private static final int LOG_QUEUE_CAPACITY = 2000;
+    private static final ExecutorService LOG_EXECUTOR = new ThreadPoolExecutor(
+            1, 1, 0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<Runnable>(LOG_QUEUE_CAPACITY),
+            new ThreadPoolExecutor.DiscardOldestPolicy());
+
+    /** 保护日志文件句柄与相关状态的锁 */
+    private static final Object FILE_LOCK = new Object();
+
+    // 复用的写入句柄。原来每条日志都 new FileWriter/close 一次，
+    // 高频日志(如串口每帧打点)会产生大量文件开关操作，严重拖慢并可能造成任务堆积
+    private static BufferedWriter sLogWriter = null;
+    private static FileOutputStream sLogStream = null;
+    private static String sCurrentLogFileName = null;
+    private static long sUncheckedBytes = 0L;
+    private static long sLastFlushMs = 0L;
+
+    /**
+     * 时间格式。SimpleDateFormat 【不是线程安全的】，不能做成静态共享实例，
+     * 否则多线程同时打日志会产出错乱的时间戳甚至抛异常。这里用 ThreadLocal 每个线程一份
+     */
+    private static final ThreadLocal<SimpleDateFormat> DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+        @SuppressLint("ConstantLocale")
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.getDefault());
+        }
+    };
+    private static final ThreadLocal<SimpleDateFormat> FILE_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
+        @SuppressLint("ConstantLocale")
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+        }
+    };
 
     // ============================================
 
@@ -118,8 +165,15 @@ public class KLog {
                 }
             }
 
-            // 清理旧日志文件
-            cleanOldLogFiles();
+            // 清理旧日志文件。放到写入线程做，避免在主线程做文件IO造成启动卡顿
+            LOG_EXECUTOR.execute(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (FILE_LOCK) {
+                        cleanOldLogFiles();
+                    }
+                }
+            });
         }
     }
 
@@ -129,6 +183,17 @@ public class KLog {
      */
     public static void setSaveToFile(boolean isSaveToFile) {
         IS_SAVE_TO_FILE = isSaveToFile;
+        if (!isSaveToFile) {
+            // 关闭保存时把缓冲落盘，避免最后一段日志丢在缓冲区里
+            LOG_EXECUTOR.execute(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (FILE_LOCK) {
+                        flushWriter();
+                    }
+                }
+            });
+        }
     }
 
     /**
@@ -144,16 +209,22 @@ public class KLog {
      */
     public static void setLogFileDir(String logDir) {
         if (!TextUtils.isEmpty(logDir)) {
-            LOG_FILE_DIR = logDir.endsWith(File.separator) ? logDir : logDir + File.separator;
-            File dir = new File(LOG_FILE_DIR);
-            if (!dir.exists()) {
-                boolean d = dir.mkdirs();
-                if (d){
-                    KLog.i("文件创建成功");
-                }else {
-                    KLog.i("文件创建失败");
+            final String newDir = logDir.endsWith(File.separator) ? logDir : logDir + File.separator;
+            // 换目录前必须先关掉旧目录里打开的文件句柄，否则会继续往旧文件里写
+            LOG_EXECUTOR.execute(new Runnable() {
+                @Override
+                public void run() {
+                    synchronized (FILE_LOCK) {
+                        closeWriter();
+                        LOG_FILE_DIR = newDir;
+                        File dir = new File(LOG_FILE_DIR);
+                        if (!dir.exists()) {
+                            boolean d = dir.mkdirs();
+                            Log.i("KLog", d ? "日志目录创建成功" : "日志目录创建失败");
+                        }
+                    }
                 }
-            }
+            });
         }
     }
 
@@ -162,6 +233,20 @@ public class KLog {
      */
     public static String getLogFileDir() {
         return LOG_FILE_DIR;
+    }
+
+    /**
+     * 强制把缓冲中的日志落盘（同步执行）。
+     * 遥控器这类设备经常直接断电/关机，退出前或关键时刻调一次，
+     * 能把还在缓冲区里的日志写进文件，否则最后一段日志会丢
+     */
+    public static void flushLog() {
+        if (!IS_SAVE_TO_FILE) {
+            return;
+        }
+        synchronized (FILE_LOCK) {
+            flushWriter();
+        }
     }
 
     /**
@@ -175,55 +260,172 @@ public class KLog {
         LOG_EXECUTOR.execute(new Runnable() {
             @Override
             public void run() {
-                try {
-                    String today = FILE_DATE_FORMAT.format(new Date());
-                    String fileName = LOG_FILE_PREFIX + today + LOG_FILE_SUFFIX;
-                    File logFile = new File(LOG_FILE_DIR, fileName);
+                synchronized (FILE_LOCK) {
+                    try {
+                        String today = FILE_DATE_FORMAT.get().format(new Date());
+                        String fileName = LOG_FILE_PREFIX + today + LOG_FILE_SUFFIX;
 
-                    // 检查文件大小，如果超过限制则归档
-                    if (logFile.exists() && logFile.length() > MAX_LOG_FILE_SIZE) {
-                        archiveLogFile(logFile);
+                        // 跨天了：关掉昨天的文件，打开今天的
+                        if (!fileName.equals(sCurrentLogFileName) || sLogWriter == null) {
+                            closeWriter();
+                            if (!openWriter(fileName)) {
+                                return;
+                            }
+                        }
+
+                        String timestamp = DATE_FORMAT.get().format(new Date());
+                        String logEntry = String.format(Locale.getDefault(), "[%s] [%s] [%s] %s%s",
+                                timestamp, level, tag, logContent, LINE_SEPARATOR);
+
+                        sLogWriter.write(logEntry);
+                        sUncheckedBytes += logEntry.length();
+
+                        // WARN 及以上立即落盘并 fsync：这类日志往往是崩溃前的最后几条，
+                        // 不能留在缓冲区里等定时 flush，否则断电就丢了
+                        boolean urgent = "WARN".equals(level) || "ERROR".equals(level)
+                                || "ASSERT".equals(level);
+                        long now = System.currentTimeMillis();
+                        if (urgent || now - sLastFlushMs >= FLUSH_INTERVAL_MS) {
+                            flushWriter();
+                            if (urgent) {
+                                forceWriter();
+                            }
+                        }
+
+                        // 累计写入一定量后再检查文件大小，超过限制就归档
+                        if (sUncheckedBytes >= SIZE_CHECK_THRESHOLD) {
+                            sUncheckedBytes = 0;
+                            flushWriter();
+                            File logFile = new File(LOG_FILE_DIR, sCurrentLogFileName);
+                            if (logFile.exists() && logFile.length() > MAX_LOG_FILE_SIZE) {
+                                archiveCurrentLogFile();
+                            }
+                        }
+
+                    } catch (IOException e) {
+                        Log.e("KLog", "写入日志文件失败: " + e.getMessage());
+                        // 写入异常(比如存储满了)时关掉句柄，下次写入重新打开，避免一直失败
+                        closeWriter();
                     }
-
-                    String timestamp = DATE_FORMAT.format(new Date());
-                    String logEntry = String.format("[%s] [%s] [%s] %s%s",
-                            timestamp, level, tag, logContent, LINE_SEPARATOR);
-
-                    FileWriter writer = new FileWriter(logFile, true);
-                    writer.write(logEntry);
-                    writer.flush();
-                    writer.close();
-
-                } catch (IOException e) {
-                    Log.e("KLog", "写入日志文件失败: " + e.getMessage());
                 }
             }
         });
     }
 
     /**
-     * 归档日志文件
+     * 打开日志文件句柄。
+     * 用 OutputStreamWriter + UTF-8 显式指定编码：原来用 FileWriter 走的是平台默认编码，
+     * 而读取时用的是 UTF-8，编码不一致会直接乱码
      */
-    private static void archiveLogFile(File logFile) {
+    private static boolean openWriter(String fileName) throws IOException {
+        File dir = new File(LOG_FILE_DIR);
+        if (!dir.exists() && !dir.mkdirs()) {
+            Log.e("KLog", "日志目录创建失败: " + LOG_FILE_DIR);
+            return false;
+        }
+        File logFile = new File(dir, fileName);
+        sLogStream = new FileOutputStream(logFile, true);
+        sLogWriter = new BufferedWriter(
+                new OutputStreamWriter(sLogStream, StandardCharsets.UTF_8), 32 * 1024);
+        sCurrentLogFileName = fileName;
+        sUncheckedBytes = 0L;
+        return true;
+    }
+
+    /** 把缓冲刷到文件（只到OS层，不保证落盘） */
+    private static void flushWriter() {
+        if (sLogWriter == null) {
+            return;
+        }
         try {
-            String timestamp = new SimpleDateFormat("HHmmss", Locale.getDefault()).format(new Date());
-            String baseName = logFile.getName().replace(LOG_FILE_SUFFIX, "");
-            File archiveFile = new File(logFile.getParent(), baseName + "_" + timestamp + LOG_FILE_SUFFIX);
-            boolean b = logFile.renameTo(archiveFile);
-            if (b){
-                KLog.i("文件重命名成功");
-            }else {
-                KLog.i("文件重命名失败");
-            }
-            // 清理旧的归档文件
-            cleanOldLogFiles();
+            sLogWriter.flush();
+        } catch (IOException e) {
+            Log.e("KLog", "flush日志文件失败: " + e.getMessage());
+        }
+        sLastFlushMs = System.currentTimeMillis();
+    }
+
+    /** 强制刷到磁盘（fsync），断电也不丢 */
+    private static void forceWriter() {
+        if (sLogStream == null) {
+            return;
+        }
+        try {
+            sLogStream.getChannel().force(false);
         } catch (Exception e) {
-            Log.e("KLog", "归档日志文件失败: " + e.getMessage());
+            // fsync 失败不影响主流程
+        }
+    }
+
+    private static void closeWriter() {
+        try {
+            if (sLogWriter != null) {
+                sLogWriter.flush();
+            }
+        } catch (IOException e) {
+            Log.e("KLog", "关闭日志文件失败: " + e.getMessage());
+        } finally {
+            if (sLogWriter != null) {
+                try {
+                    sLogWriter.close();
+                } catch (IOException ignored) {
+                }
+            }
+            sLogWriter = null;
+            if (sLogStream != null) {
+                try {
+                    sLogStream.close();
+                } catch (IOException ignored) {
+                }
+            }
+            sLogStream = null;
+            sCurrentLogFileName = null;
+            sUncheckedBytes = 0L;
         }
     }
 
     /**
-     * 清理旧的日志文件，只保留最新的 MAX_LOG_FILES 个文件
+     * 归档当前日志文件。
+     * 注意：这里【不能】调用 KLog.i() 之类的日志方法 —— 本方法运行在日志写入线程内，
+     * 再打日志会往同一个单线程池队列里塞任务，属于自产自销的递归入队。统一用原生 Log
+     */
+    private static void archiveCurrentLogFile() {
+        closeWriter();
+        if (TextUtils.isEmpty(sCurrentLogFileName)) {
+            return;
+        }
+        File logFile = new File(LOG_FILE_DIR, LOG_FILE_PREFIX
+                + FILE_DATE_FORMAT.get().format(new Date()) + LOG_FILE_SUFFIX);
+        if (!logFile.exists()) {
+            return;
+        }
+        try {
+            String baseName = LOG_FILE_PREFIX + FILE_DATE_FORMAT.get().format(new Date());
+            // 同一秒内重复归档时文件名会撞车，原来直接 renameTo 会失败导致文件一直超限。
+            // 这里循环加序号直到找到一个不存在的名字
+            String stamp = new SimpleDateFormat("HHmmss", Locale.getDefault()).format(new Date());
+            File archiveFile;
+            int index = 0;
+            do {
+                String name = baseName + "_" + stamp + (index == 0 ? "" : "_" + index) + LOG_FILE_SUFFIX;
+                archiveFile = new File(logFile.getParent(), name);
+                index++;
+            } while (archiveFile.exists());
+
+            boolean ok = logFile.renameTo(archiveFile);
+            Log.i("KLog", "归档日志文件" + (ok ? "成功: " + archiveFile.getName() : "失败"));
+        } catch (Exception e) {
+            Log.e("KLog", "归档日志文件失败: " + e.getMessage());
+        }
+        // 归档后再清理一轮，控制文件数量
+        cleanOldLogFiles();
+    }
+
+    /**
+     * 清理旧的日志文件，只保留最新的 MAX_LOG_FILES 个文件。
+     * 排序必须用 Collections.sort（全版本可用）：原来用的 List.sort() 是 API 24 才有的，
+     * 在低版本Android(5.1/6.0等)上排序根本不执行，于是按 listFiles() 的不确定顺序
+     * 删除"第10个之后"的文件 —— 很可能把当天的日志删掉、反而留下旧的
      */
     private static void cleanOldLogFiles() {
         try {
@@ -249,10 +451,14 @@ public class KLog {
             }
 
             if (logFiles.size() > MAX_LOG_FILES) {
-                // 按最后修改时间排序，保留最新的
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    logFiles.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
-                }
+                // 按最后修改时间倒序排序，最新的在前（不用 Long.compare，兼容低版本）
+                Collections.sort(logFiles, new Comparator<File>() {
+                    @Override
+                    public int compare(File f1, File f2) {
+                        long diff = f2.lastModified() - f1.lastModified();
+                        return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+                    }
+                });
                 for (int i = MAX_LOG_FILES; i < logFiles.size(); i++) {
                     boolean deleted = logFiles.get(i).delete();
                     if (deleted) {
@@ -266,7 +472,7 @@ public class KLog {
     }
 
     /**
-     * 获取所有日志文件列表
+     * 获取所有日志文件列表（最新的在前）
      * @return 日志文件列表
      */
     public static List<File> getLogFiles() {
@@ -291,10 +497,14 @@ public class KLog {
             }
         }
 
-        // 按最后修改时间排序，最新的在前
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            result.sort((f1, f2) -> Long.compare(f2.lastModified(), f1.lastModified()));
-        }
+        // 按最后修改时间排序，最新的在前（同样用兼容低版本的写法）
+        Collections.sort(result, new Comparator<File>() {
+            @Override
+            public int compare(File f1, File f2) {
+                long diff = f2.lastModified() - f1.lastModified();
+                return diff > 0 ? 1 : (diff < 0 ? -1 : 0);
+            }
+        });
         return result;
     }
 
@@ -311,6 +521,11 @@ public class KLog {
             sb.append(readLogFile(file));
             sb.append(LINE_SEPARATOR);
             sb.append(LINE_SEPARATOR);
+            // 防止把几十MB日志一次性读进内存导致OOM
+            if (sb.length() >= MAX_EXPORT_CHARS) {
+                sb.append("... 日志过大，已截断 ...").append(LINE_SEPARATOR);
+                break;
+            }
         }
 
         return sb.toString();
@@ -327,21 +542,25 @@ public class KLog {
             return "日志文件不存在";
         }
 
+        BufferedReader reader = null;
         try {
             FileInputStream fis = new FileInputStream(file);
             InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
-            BufferedReader reader = new BufferedReader(isr);
+            reader = new BufferedReader(isr);
 
             String line;
             while ((line = reader.readLine()) != null) {
                 sb.append(line).append(LINE_SEPARATOR);
             }
-
-            reader.close();
-            isr.close();
-            fis.close();
         } catch (IOException e) {
             return "读取日志文件失败: " + e.getMessage();
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException ignored) {
+                }
+            }
         }
 
         return sb.toString();
@@ -381,13 +600,13 @@ public class KLog {
      */
     public static boolean clearAllLogFiles() {
         try {
-            List<File> files = getLogFiles();
-            for (File file : files) {
-                boolean b = file.delete();
-                if (b){
-                    KLog.i("文件删除成功");
-                }else {
-                    KLog.i("文件删除失败");
+            // 先关掉句柄再删，否则句柄还指向已被删除的文件，后续写入会写到已删除的inode上
+            synchronized (FILE_LOCK) {
+                closeWriter();
+                List<File> files = getLogFiles();
+                for (File file : files) {
+                    boolean b = file.delete();
+                    Log.i("KLog", b ? "文件删除成功: " + file.getName() : "文件删除失败: " + file.getName());
                 }
             }
             return true;
@@ -425,12 +644,14 @@ public class KLog {
     }
 
     /**
-     * 导出日志到外部存储（用户可访问的位置）
-     * 注意：此方法需要 WRITE_EXTERNAL_STORAGE 权限
+     * 导出日志到外部存储（用户可访问的位置）。
+     * Android 10(API 29) 起分区存储生效，getExternalStoragePublicDirectory 已废弃且
+     * 拿到的位置不可写，所以高版本改用应用自己的外部目录，无需任何权限
      * @param context 上下文
      * @param destPath 目标路径，如果为null则保存到 Downloads 目录
      * @return 导出后的文件路径，失败返回null
      */
+    @SuppressWarnings("deprecation")
     public static String exportLogsToExternal(Context context, String destPath) {
         List<File> logFiles = getLogFiles();
         if (logFiles.isEmpty()) {
@@ -438,13 +659,23 @@ public class KLog {
             return null;
         }
 
+        BufferedWriter writer = null;
         try {
             File destFile;
             if (TextUtils.isEmpty(destPath)) {
-                // 保存到 Downloads 目录
-                File downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
-                        android.os.Environment.DIRECTORY_DOWNLOADS
-                );
+                File downloadDir;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    // 应用专属外部目录，不需要任何存储权限
+                    downloadDir = context.getExternalFilesDir(android.os.Environment.DIRECTORY_DOWNLOADS);
+                } else {
+                    downloadDir = android.os.Environment.getExternalStoragePublicDirectory(
+                            android.os.Environment.DIRECTORY_DOWNLOADS
+                    );
+                }
+                if (downloadDir == null) {
+                    Log.e("KLog", "无法获取导出目录");
+                    return null;
+                }
                 String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
                 destFile = new File(downloadDir, "app_logs_" + timestamp + ".txt");
             } else {
@@ -454,19 +685,17 @@ public class KLog {
             // 确保父目录存在
             if (destFile.getParentFile() != null && !destFile.getParentFile().exists()) {
                 boolean b = destFile.getParentFile().mkdirs();
-                if (b){
-                    KLog.i("文件创建成功");
-                }else {
-                    KLog.i("文件创建失败");
-                }
+                Log.i("KLog", b ? "导出目录创建成功" : "导出目录创建失败");
             }
 
-            // 合并所有日志
+            // 合并所有日志前先落盘，保证导出的是最新内容
+            flushLog();
+
             String allLogs = getAllLogContent();
-            FileWriter writer = new FileWriter(destFile);
+            writer = new BufferedWriter(new OutputStreamWriter(
+                    new FileOutputStream(destFile), StandardCharsets.UTF_8));
             writer.write(allLogs);
             writer.flush();
-            writer.close();
 
             Log.i("KLog", "日志导出成功: " + destFile.getAbsolutePath());
             return destFile.getAbsolutePath();
@@ -474,6 +703,13 @@ public class KLog {
         } catch (Exception e) {
             Log.e("KLog", "导出日志失败: " + e.getMessage());
             return null;
+        } finally {
+            if (writer != null) {
+                try {
+                    writer.close();
+                } catch (IOException ignored) {
+                }
+            }
         }
     }
 
@@ -562,21 +798,32 @@ public class KLog {
 
 
     private static void printLog(int type, String tagStr, Object objectMsg) {
-        String msg;
         if (!IS_SHOW_LOG && !IS_SAVE_TO_FILE) {
             // 如果既不显示也不保存，直接返回
             return;
         }
 
-        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        // 打日志本身绝不能把业务搞崩：栈帧解析、字符串处理都可能出意外，统一兜住
+        try {
+            printLogInternal(type, tagStr, objectMsg);
+        } catch (Throwable t) {
+            Log.e("KLog", "打印日志异常: " + t.getMessage());
+        }
+    }
 
-        int index = 4;
-        String className = stackTrace[index].getFileName();
-        String methodName = stackTrace[index].getMethodName();
-        int lineNumber = stackTrace[index].getLineNumber();
+    private static void printLogInternal(int type, String tagStr, Object objectMsg) {
+        String msg;
+
+        StackTraceElement targetElement = getTargetStackTraceElement();
+
+        String className = targetElement != null ? targetElement.getFileName() : "Unknown";
+        String methodName = targetElement != null ? targetElement.getMethodName() : "unknown";
+        int lineNumber = targetElement != null ? targetElement.getLineNumber() : 0;
 
         String tag = (tagStr == null ? className : tagStr);
-        methodName = methodName.substring(0, 1).toUpperCase(Locale.getDefault()) + methodName.substring(1);
+        methodName = !TextUtils.isEmpty(methodName)
+                ? methodName.substring(0, 1).toUpperCase(Locale.getDefault()) + methodName.substring(1)
+                : methodName;
 
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("[ (").append(className).append(":").append(lineNumber).append(")#").append(methodName).append(" ] ");
@@ -630,47 +877,50 @@ public class KLog {
                 if (IS_SHOW_LOG) {
                     if (TextUtils.isEmpty(msg)) {
                         Log.d(tag, "Empty or Null json content");
-                        return;
-                    }
-
-                    String message = null;
-
-                    try {
-                        if (msg.startsWith("{")) {
-                            JSONObject jsonObject = new JSONObject(msg);
-                            message = jsonObject.toString(JSON_INDENT);
-                        } else if (msg.startsWith("[")) {
-                            JSONArray jsonArray = new JSONArray(msg);
-                            message = jsonArray.toString(JSON_INDENT);
-                        }
-                    } catch (JSONException e) {
-                        e(tag, (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()) + "\n" + msg);
-                        return;
-                    }
-
-                    printLine(tag, true);
-                    message = logStr + LINE_SEPARATOR + message;
-                    String[] lines = message.split(LINE_SEPARATOR);
-                    StringBuilder jsonContent = new StringBuilder();
-                    for (String line : lines) {
-                        jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
-                    }
-
-                    if (jsonContent.toString().length() > 3200) {
-                        Log.w(tag, "jsonContent.length = " + jsonContent.toString().length());
-                        int chunkCount = jsonContent.toString().length() / 3200;
-                        for (int i = 0; i <= chunkCount; i++) {
-                            int max = 3200 * (i + 1);
-                            if (max >= jsonContent.toString().length()) {
-                                Log.w(tag, jsonContent.toString().substring(3200 * i));
-                            } else {
-                                Log.w(tag, jsonContent.toString().substring(3200 * i, max));
-                            }
-                        }
+                        // 原来这里直接 return，导致只开文件保存时这条空json不会被记录。
+                        // 改为不 return，继续走下面的写文件流程
                     } else {
-                        Log.w(tag, jsonContent.toString());
+                        String message;
+
+                        try {
+                            if (msg.startsWith("{")) {
+                                JSONObject jsonObject = new JSONObject(msg);
+                                message = jsonObject.toString(JSON_INDENT);
+                            } else if (msg.startsWith("[")) {
+                                JSONArray jsonArray = new JSONArray(msg);
+                                message = jsonArray.toString(JSON_INDENT);
+                            } else {
+                                message = msg;
+                            }
+                        } catch (JSONException e) {
+                            e(tag, (e.getCause() != null ? e.getCause().getMessage() : e.getMessage()) + "\n" + msg);
+                            return;
+                        }
+
+                        printLine(tag, true);
+                        message = logStr + LINE_SEPARATOR + message;
+                        String[] lines = message.split(LINE_SEPARATOR);
+                        StringBuilder jsonContent = new StringBuilder();
+                        for (String line : lines) {
+                            jsonContent.append("║ ").append(line).append(LINE_SEPARATOR);
+                        }
+
+                        if (jsonContent.toString().length() > 3200) {
+                            Log.w(tag, "jsonContent.length = " + jsonContent.toString().length());
+                            int chunkCount = jsonContent.toString().length() / 3200;
+                            for (int i = 0; i <= chunkCount; i++) {
+                                int max = 3200 * (i + 1);
+                                if (max >= jsonContent.toString().length()) {
+                                    Log.w(tag, jsonContent.toString().substring(3200 * i));
+                                } else {
+                                    Log.w(tag, jsonContent.toString().substring(3200 * i, max));
+                                }
+                            }
+                        } else {
+                            Log.w(tag, jsonContent.toString());
+                        }
+                        printLine(tag, false);
                     }
-                    printLine(tag, false);
                 }
 
                 // JSON 日志也保存到文件
@@ -686,6 +936,36 @@ public class KLog {
         if (IS_SAVE_TO_FILE) {
             writeLogToFile(levelName, tag, logStr);
         }
+    }
+
+    /**
+     * 定位"调用KLog的那个类"的栈帧。
+     * 原来是硬编码 stackTrace[4]：调用链深度一变就越界。
+     * 尤其是在子线程里直接调用 KLog（栈比主线程浅）会 ArrayIndexOutOfBoundsException，
+     * 业务代码打个日志就崩溃。这里改为跳过 KLog 自身的所有栈帧，动态定位
+     */
+    private static StackTraceElement getTargetStackTraceElement() {
+        StackTraceElement[] stackTrace = Thread.currentThread().getStackTrace();
+        if (stackTrace == null || stackTrace.length == 0) {
+            return null;
+        }
+
+        boolean foundKLog = false;
+        for (StackTraceElement element : stackTrace) {
+            String className = element.getClassName();
+            if (className != null && className.equals(KLog.class.getName())) {
+                foundKLog = true;
+                continue;
+            }
+            // 已经跳过了KLog自己的栈帧，第一个非KLog的帧就是调用方
+            if (foundKLog) {
+                return element;
+            }
+        }
+
+        // 兜底：没找到KLog栈帧(极端情况)，取一个安全下标，绝不越界
+        int index = Math.min(4, stackTrace.length - 1);
+        return index >= 0 ? stackTrace[index] : null;
     }
 
     @NonNull
