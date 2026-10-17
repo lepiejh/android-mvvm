@@ -246,6 +246,8 @@ public class KLog {
         }
         synchronized (FILE_LOCK) {
             flushWriter();
+            // 只有显式调用才 fsync：日常写日志不做，否则会阻塞主线程的文件IO
+            forceWriter();
         }
     }
 
@@ -280,16 +282,16 @@ public class KLog {
                         sLogWriter.write(logEntry);
                         sUncheckedBytes += logEntry.length();
 
-                        // WARN 及以上立即落盘并 fsync：这类日志往往是崩溃前的最后几条，
-                        // 不能留在缓冲区里等定时 flush，否则断电就丢了
+                        // WARN 及以上立即 flush（不等定时 flush），保证崩溃前最后几条不丢。
+                        // 注意：这里【不能】fsync。fsync 会长时间独占文件系统IO(嵌入式eMMC上
+                        // 单次可达几十到几百毫秒)，而主线程此时正在写 SharedPreferences 等文件，
+                        // 会被一起阻塞 —— 实测就是这么造成ANR的。
+                        // fsync 只在显式调用 flushLog() 时才做（退出前/崩溃时用）
                         boolean urgent = "WARN".equals(level) || "ERROR".equals(level)
                                 || "ASSERT".equals(level);
                         long now = System.currentTimeMillis();
                         if (urgent || now - sLastFlushMs >= FLUSH_INTERVAL_MS) {
                             flushWriter();
-                            if (urgent) {
-                                forceWriter();
-                            }
                         }
 
                         // 累计写入一定量后再检查文件大小，超过限制就归档
