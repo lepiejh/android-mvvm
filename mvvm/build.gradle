@@ -29,14 +29,14 @@ android {
     buildTypes {
 
         debug {
-            minifyEnabled true
+            minifyEnabled false
             // proguard-rules.pro：保留全部类名 + public/protected 成员，
             // 仅混淆类内部的 private / 包级方法与局部实现。
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
 
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -132,9 +132,9 @@ dependencies {
     api 'com.tencent:mmkv-static:1.2.16'
 //    implementation 'com.github.getActivity:Toaster:13.6'
     api 'org.apache.commons:commons-lang3:3.6'
-    api 'com.github.lepiejh:android-dialog:v1.2.27'
+    api 'com.github.lepiejh:android-dialog:v1.2.28'
 //    compileOnly 'com.github.lepiejh:android-tcp:v1.3.37'
-    api 'com.github.lepiejh:tablayout:v1.3.40'
+    api 'com.github.lepiejh:tablayout:v1.3.41'
 //    compileOnly 'com.github.lepiejh:android-play:v1.0.8'
     compileOnly 'com.github.lepiejh:android-update:v1.0.1'
 //    compileOnly 'com.github.lepiejh:html:v1.1.0'
