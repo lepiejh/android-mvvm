@@ -24,7 +24,6 @@ import org.greenrobot.eventbus.EventBus;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
     protected V binding;
@@ -119,8 +118,17 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
     }
 
     /** 构造一个 (事件源, 处理器) 绑定条目，泛型 T 由事件源实参自动推断 */
-    private static <T> EventBinding<T> bind(SingleLiveEvent<T> event, Consumer<? super T> handler) {
+    private static <T> EventBinding<T> bind(SingleLiveEvent<T> event, EventAction<? super T> handler) {
         return new EventBinding<>(event, handler);
+    }
+
+    /**
+     * 事件处理器（自定义函数式接口）：
+     * 不用 {@code java.util.function.Consumer} 是因为它要求 API 24+，
+     * 本框架 minSdk 19 且未开启 core library desugaring，低版本设备会 NoClassDefFoundError。
+     */
+    private interface EventAction<T> {
+        void onEvent(T value);
     }
 
     /**
@@ -129,15 +137,15 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
      */
     private static final class EventBinding<T> {
         private final SingleLiveEvent<T> event;
-        private final Consumer<? super T> handler;
+        private final EventAction<? super T> handler;
 
-        private EventBinding(SingleLiveEvent<T> event, Consumer<? super T> handler) {
+        private EventBinding(SingleLiveEvent<T> event, EventAction<? super T> handler) {
             this.event = event;
             this.handler = handler;
         }
 
         private void register(LifecycleOwner owner) {
-            event.observe(owner, handler::accept);
+            event.observe(owner, handler::onEvent);
         }
     }
 

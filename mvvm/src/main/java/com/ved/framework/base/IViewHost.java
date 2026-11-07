@@ -11,8 +11,6 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
 
-import java.util.function.Consumer;
-
 /**
  * 视图宿主角色接口（接口隔离原则）：
  * 定义 View 与宿主（Activity / Fragment）环境之间的能力契约，
@@ -67,11 +65,20 @@ interface IViewHost<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
      * @param fragmentAction 宿主为 Fragment 时执行
      * @param activityAction 宿主为 Activity 时执行
      */
-    default void dispatchToHost(Consumer<Fragment> fragmentAction, Consumer<FragmentActivity> activityAction) {
+    default void dispatchToHost(HostAction<Fragment> fragmentAction, HostAction<FragmentActivity> activityAction) {
         if (isFragment() && getFragment() != null) {
             fragmentAction.accept(getFragment());
         } else if (FragmentActivity() != null) {
             activityAction.accept(FragmentActivity());
         }
+    }
+
+    /**
+     * 宿主动作回调（自定义函数式接口）：
+     * 不用 {@code java.util.function.Consumer} 是因为它要求 API 24+，
+     * 本框架 minSdk 19 且未开启 core library desugaring，低版本设备会 NoClassDefFoundError。
+     */
+    interface HostAction<T> {
+        void accept(T host);
     }
 }
