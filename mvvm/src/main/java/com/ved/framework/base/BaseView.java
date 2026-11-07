@@ -9,6 +9,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.blankj.swipepanel.SwipePanel;
 import com.ved.framework.R;
 import com.ved.framework.bus.Messenger;
+import com.ved.framework.bus.event.SingleLiveEvent;
 import com.ved.framework.bus.event.eventbus.EventBusUtil;
 import com.ved.framework.entity.ParameterField;
 import com.ved.framework.permission.IPermission;
@@ -19,6 +20,11 @@ import com.ved.framework.utils.bland.code.ColorUtils;
 import com.ved.framework.utils.bland.code.SizeUtils;
 
 import org.greenrobot.eventbus.EventBus;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
 
 class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
     protected V binding;
@@ -69,68 +75,94 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
         }
     }
 
+    /**
+     * UI 事件管线查表分发（表驱动 + 观察者模式）：
+     * 每个条目 {@link EventBinding} = (事件源 LiveData, 事件处理器)，统一注册后一次遍历完成 observe。
+     * 新增 UI 事件时只需在表中加一行（复杂解析逻辑下沉到私有 handler 方法），
+     * 不再需要重复的 observe 样板，注册顺序与原实现保持一致。
+     */
     private void setupViewModelObservers() {
         LifecycleOwner owner = viewDelegate.getLifecycleOwner();
+        IUIChangeLiveData uc = viewModel.getUC();
 
-        // 对话框相关
-        viewModel.getUC().getShowDialogEvent().observe(owner, this::showDialog);
-        viewModel.getUC().getDismissDialogEvent().observe(owner, v -> dismissDialog());
+        List<EventBinding<?>> dispatchTable = Arrays.asList(
+                // 对话框相关
+                bind(uc.getShowDialogEvent(), v -> showDialog()),
+                bind(uc.getDismissDialogEvent(), v -> dismissDialog()),
+                // 权限 / 电话 / WiFi
+                bind(uc.getRequestPermissionEvent(), this::onRequestPermissionEvent),
+                bind(uc.getRequestCallPhoneEvent(), params -> permissionHelper.callPhone((String) params.get(Constant.PHONE_NUMBER))),
+                bind(uc.getRequestWifiRssiEvent(), o -> permissionHelper.getWifiRssi()),
+                // 活动跳转相关
+                bind(uc.getStartActivityEvent(), this::onStartActivityEvent),
+                bind(uc.getStartActivityForResultEvent(), this::onStartActivityForResultEvent),
+                bind(uc.getStartContainerActivityEvent(), this::onStartContainerActivityEvent),
+                // 生命周期相关
+                bind(uc.getFinishEvent(), v -> finishActivity()),
+                bind(uc.getOnBackPressedEvent(), v -> viewDelegate.FragmentActivity().onBackPressed()),
+                bind(uc.getOnLoadEvent(), o -> handleOnLoadEvent()),
+                // 广播相关
+                bind(uc.getReceiverEvent(), o -> sendReceiver()),
+                // Fragment Resume 事件（getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
+                // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
+                bind(uc.getOnResumeEvent(), o -> {
+                    if (viewDelegate.isFragment()) {
+                        viewDelegate.initView();
+                    } else {
+                        viewDelegate.refreshView();
+                    }
+                }));
 
-        // 权限相关
-        viewModel.getUC().getRequestPermissionEvent().observe(owner, params -> {
-            IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
-            String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
-            requestPermission(iPermission, permissions);
-        });
-
-        // 电话相关
-        viewModel.getUC().getRequestCallPhoneEvent().observe(owner, params -> {
-            String phoneNumber = (String) params.get(Constant.PHONE_NUMBER);
-            permissionHelper.callPhone(phoneNumber);
-        });
-
-        viewModel.getUC().getRequestWifiRssiEvent().observe(owner, o -> permissionHelper.getWifiRssi());
-
-        // 活动跳转相关
-        viewModel.getUC().getStartActivityEvent().observe(owner, params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startActivity(clz, bundle);
-        });
-
-        viewModel.getUC().getStartActivityForResultEvent().observe(owner, params -> {
-            Class<?> clz = (Class<?>) params.get(ParameterField.CLASS);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            Integer requestCodeObj = (Integer) params.get(ParameterField.REQUEST_CODE);
-            int requestCode = requestCodeObj != null ? requestCodeObj : 0;
-            startActivityForResult(clz, requestCode, bundle);
-        });
-
-        viewModel.getUC().getStartContainerActivityEvent().observe(owner, params -> {
-            String canonicalName = (String) params.get(ParameterField.CANONICAL_NAME);
-            Bundle bundle = (Bundle) params.get(ParameterField.BUNDLE);
-            startContainerActivity(canonicalName, bundle);
-        });
-
-        // 生命周期相关
-        viewModel.getUC().getFinishEvent().observe(owner, v -> finishActivity());
-        viewModel.getUC().getOnBackPressedEvent().observe(owner, v -> viewDelegate.FragmentActivity().onBackPressed());
-
-        // 初始化相关
-        viewModel.getUC().getOnLoadEvent().observe(owner, o -> handleOnLoadEvent());
-
-        // 广播相关
-        viewModel.getUC().getReceiverEvent().observe(owner, o -> sendReceiver());
-
-        // Fragment Resume事件（getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，
-        // instanceof Fragment 恒为 false，需通过 viewDelegate.isFragment() 判断宿主类型）
-        if (viewModel.getUC().getOnResumeEvent() != null) {
-            if (viewDelegate.isFragment()){
-                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.initView());
-            }else {
-                viewModel.getUC().getOnResumeEvent().observe(owner, o -> viewDelegate.refreshView());
-            }
+        for (EventBinding<?> entry : dispatchTable) {
+            entry.register(owner);
         }
+    }
+
+    /** 构造一个 (事件源, 处理器) 绑定条目，泛型 T 由事件源实参自动推断 */
+    private static <T> EventBinding<T> bind(SingleLiveEvent<T> event, Consumer<? super T> handler) {
+        return new EventBinding<>(event, handler);
+    }
+
+    /**
+     * 查表条目：事件 LiveData 与其处理器的强类型配对。
+     * 泛型参数保证处理器入参与事件载荷类型一致，注册时无需任何强转。
+     */
+    private static final class EventBinding<T> {
+        private final SingleLiveEvent<T> event;
+        private final Consumer<? super T> handler;
+
+        private EventBinding(SingleLiveEvent<T> event, Consumer<? super T> handler) {
+            this.event = event;
+            this.handler = handler;
+        }
+
+        private void register(LifecycleOwner owner) {
+            event.observe(owner, handler::accept);
+        }
+    }
+
+    private void onRequestPermissionEvent(Map<String, Object> params) {
+        IPermission iPermission = (IPermission) params.get(Constant.PERMISSION);
+        String[] permissions = (String[]) params.get(Constant.PERMISSION_NAME);
+        requestPermission(iPermission, permissions);
+    }
+
+    private void onStartActivityEvent(Map<String, Object> params) {
+        startActivity((Class<?>) params.get(ParameterField.CLASS), (Bundle) params.get(ParameterField.BUNDLE));
+    }
+
+    private void onStartActivityForResultEvent(Map<String, Object> params) {
+        Integer requestCodeObj = (Integer) params.get(ParameterField.REQUEST_CODE);
+        startActivityForResult(
+                (Class<?>) params.get(ParameterField.CLASS),
+                requestCodeObj != null ? requestCodeObj : 0,
+                (Bundle) params.get(ParameterField.BUNDLE));
+    }
+
+    private void onStartContainerActivityEvent(Map<String, Object> params) {
+        startContainerActivity(
+                (String) params.get(ParameterField.CANONICAL_NAME),
+                (Bundle) params.get(ParameterField.BUNDLE));
     }
 
     private void handleOnLoadEvent() {

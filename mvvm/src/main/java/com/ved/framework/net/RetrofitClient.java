@@ -39,7 +39,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 
-class RetrofitClient {
+public class RetrofitClient {
 
     private RetrofitClient() {
         // 防止反射破坏单例：依赖 Holder 的懒初始化时序——
@@ -101,7 +101,17 @@ class RetrofitClient {
      */
     private static volatile OkHttpClient baseClient;
 
-    private static OkHttpClient getBaseClient() {
+    /**
+     * 全局基础 OkHttpClient 的公开获取入口（享元模式）。
+     * <p>
+     * 仅供 {@code DownLoadManager} 等旁路网络能力复用连接池/缓存/Cookie/SSL 使用，
+     * 调用方必须通过 {@code getBaseClient().newBuilder()...build()} 派生新 client——
+     * {@code newBuilder()} 是浅拷贝，派生过程不会影响全局实例本身；
+     * 严禁把返回值直接改配后当作全局 client 使用。
+     *
+     * @return 全局共享的基础 OkHttpClient
+     */
+    public static OkHttpClient getBaseClient() {
         OkHttpClient client = baseClient;
         if (client == null) {
             synchronized (RetrofitClient.class) {

@@ -32,9 +32,7 @@ import com.tencent.mmkv.MMKV;
 import com.ved.framework.utils.KLog;
 import com.ved.framework.utils.SPUtils;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.lang.ref.WeakReference;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -56,16 +54,17 @@ public final class CustomActivityOnCrash {
     private final static String TAG = "CustomActivityOnCrash";
 
     //Extras passed to the error activity
-    private static final String EXTRA_CONFIG = "cat.ereza.customactivityoncrash.EXTRA_CONFIG";
-    private static final String EXTRA_STACK_TRACE = "cat.ereza.customactivityoncrash.EXTRA_STACK_TRACE";
-    private static final String EXTRA_ACTIVITY_LOG = "cat.ereza.customactivityoncrash.EXTRA_ACTIVITY_LOG";
+    //（包级可见：供 crash 包内的 CrashResponsePolicy 策略实现读写）
+    static final String EXTRA_CONFIG = "cat.ereza.customactivityoncrash.EXTRA_CONFIG";
+    static final String EXTRA_STACK_TRACE = "cat.ereza.customactivityoncrash.EXTRA_STACK_TRACE";
+    static final String EXTRA_ACTIVITY_LOG = "cat.ereza.customactivityoncrash.EXTRA_ACTIVITY_LOG";
 
     //General constants
     private static final String INTENT_ACTION_ERROR_ACTIVITY = "cat.ereza.customactivityoncrash.ERROR";
     private static final String INTENT_ACTION_RESTART_ACTIVITY = "cat.ereza.customactivityoncrash.RESTART";
     private static final String CAOC_HANDLER_PACKAGE_NAME = "cat.ereza.customactivityoncrash";
     private static final String DEFAULT_HANDLER_PACKAGE_NAME = "com.android.internal.os";
-    private static final int MAX_STACK_TRACE_SIZE = 131071; //128 KB - 1
+    static final int MAX_STACK_TRACE_SIZE = 131071; //128 KB - 1
     private static final int MAX_ACTIVITIES_IN_LOG = 50;
 
     //Shared preferences
@@ -113,8 +112,9 @@ public final class CustomActivityOnCrash {
 
                                 if (hasCrashedInTheLastSeconds(application)) {
                                     KLog.e(TAG, "App already crashed recently, not starting custom error activity because we could enter a restart loop. Are you sure that your app does not crash directly on init?"+throwable);
-                                    if (oldHandler != null) {
-                                        oldHandler.uncaughtException(thread, throwable);
+                                    // 崩溃循环：交还前序 handler；无前序 handler 时继续走清理+杀进程
+                                    if (!DelegatePreviousHandlerPolicy.INSTANCE.handle(
+                                            new CrashContext(application, thread, throwable, oldHandler, config, null, isInBackground, activityLog))) {
                                         return;
                                     }
                                 } else {
@@ -128,56 +128,21 @@ public final class CustomActivityOnCrash {
 
                                     if (isStackTraceLikelyConflictive(throwable, errorActivityClass)) {
                                         KLog.e(TAG, "Your application class or your error activity have crashed, the custom activity will not be launched!");
-                                        if (oldHandler != null) {
-                                            oldHandler.uncaughtException(thread, throwable);
+                                        // 冲突栈：错误页大概率也起不来，交还前序 handler
+                                        if (!DelegatePreviousHandlerPolicy.INSTANCE.handle(
+                                                new CrashContext(application, thread, throwable, oldHandler, config, errorActivityClass, isInBackground, activityLog))) {
                                             return;
                                         }
-                                    } else if (config.getBackgroundMode() == CaocConfig.BACKGROUND_MODE_SHOW_CUSTOM || !isInBackground) {
-
-                                        final Intent intent = new Intent(application, errorActivityClass);
-                                        StringWriter sw = new StringWriter();
-                                        PrintWriter pw = new PrintWriter(sw);
-                                        throwable.printStackTrace(pw);
-                                        String stackTraceString = sw.toString();
-
-                                        //Reduce data to 128KB so we don't get a TransactionTooLargeException when sending the intent.
-                                        //The limit is 1MB on Android but some devices seem to have it lower.
-                                        //See: http://developer.android.com/reference/android/os/TransactionTooLargeException.html
-                                        //And: http://stackoverflow.com/questions/11451393/what-to-do-on-transactiontoolargeexception#comment46697371_12809171
-                                        if (stackTraceString.length() > MAX_STACK_TRACE_SIZE) {
-                                            String disclaimer = " [stack trace too large]";
-                                            stackTraceString = stackTraceString.substring(0, MAX_STACK_TRACE_SIZE - disclaimer.length()) + disclaimer;
-                                        }
-                                        intent.putExtra(EXTRA_STACK_TRACE, stackTraceString);
-
-                                        if (config.isTrackActivities()) {
-                                            String activityLogString = "";
-                                            while (!activityLog.isEmpty()) {
-                                                activityLogString += activityLog.poll();
-                                            }
-                                            intent.putExtra(EXTRA_ACTIVITY_LOG, activityLogString);
-                                        }
-
-                                        if (config.isShowRestartButton() && config.getRestartActivityClass() == null) {
-                                            //We can set the restartActivityClass because the app will terminate right now,
-                                            //and when relaunched, will be null again by default.
-                                            config.setRestartActivityClass(guessRestartActivityClass(application));
-                                        }
-
-                                        intent.putExtra(EXTRA_CONFIG, config);
-                                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                        if (config.getEventListener() != null) {
-                                            config.getEventListener().onLaunchErrorActivity();
-                                        }
-                                        application.startActivity(intent);
-                                    } else if (config.getBackgroundMode() == CaocConfig.BACKGROUND_MODE_CRASH) {
-                                        if (oldHandler != null) {
-                                            oldHandler.uncaughtException(thread, throwable);
+                                    } else {
+                                        // 策略分派（策略模式）：前台崩溃一律启动错误页；后台按 backgroundMode 选择策略
+                                        CrashResponsePolicy policy =
+                                                (config.getBackgroundMode() == CaocConfig.BACKGROUND_MODE_SHOW_CUSTOM || !isInBackground)
+                                                        ? LaunchErrorActivityPolicy.INSTANCE
+                                                        : resolveBackgroundPolicy(config.getBackgroundMode());
+                                        if (!policy.handle(new CrashContext(application, thread, throwable, oldHandler, config, errorActivityClass, isInBackground, activityLog))) {
                                             return;
                                         }
-                                        //If it is null (should not be), we let it continue and kill the process or it will be stuck
                                     }
-                                    //Else (BACKGROUND_MODE_SILENT): do nothing and let the following code kill the process
                                 }
                                 final Activity lastActivity = lastActivityCreated.get();
                                 if (lastActivity != null) {
@@ -256,6 +221,22 @@ public final class CustomActivityOnCrash {
             }
         } catch (Throwable t) {
             KLog.e(TAG, "An unknown error occurred while installing CustomActivityOnCrash, it may not have been properly initialized. Please report this as a bug if needed."+t);
+        }
+    }
+
+    /**
+     * 按后台模式解析崩溃响应策略（策略注册表）。
+     * 新增处置方式时在此登记，分发流程不用动。
+     */
+    private static CrashResponsePolicy resolveBackgroundPolicy(int backgroundMode) {
+        switch (backgroundMode) {
+            case CaocConfig.BACKGROUND_MODE_CRASH:
+                return DelegatePreviousHandlerPolicy.INSTANCE;
+            case CaocConfig.BACKGROUND_MODE_SILENT:
+                return SilentCrashPolicy.INSTANCE;
+            case CaocConfig.BACKGROUND_MODE_SHOW_CUSTOM:
+            default:
+                return LaunchErrorActivityPolicy.INSTANCE;
         }
     }
 
@@ -525,7 +506,7 @@ public final class CustomActivityOnCrash {
      * @return The guessed restart activity class, or null if no suitable one is found
      */
     @Nullable
-    private static Class<? extends Activity> guessRestartActivityClass(@NonNull Context context) {
+    static Class<? extends Activity> guessRestartActivityClass(@NonNull Context context) {
         Class<? extends Activity> resolvedActivityClass;
 
         //If action is defined, use that

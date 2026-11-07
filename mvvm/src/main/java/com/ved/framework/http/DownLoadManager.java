@@ -3,6 +3,7 @@ package com.ved.framework.http;
 import com.ved.framework.http.download.DownLoadSubscriber;
 import com.ved.framework.http.download.ProgressCallBack;
 import com.ved.framework.http.interceptor.ProgressInterceptor;
+import com.ved.framework.net.RetrofitClient;
 
 import java.util.concurrent.TimeUnit;
 
@@ -61,7 +62,11 @@ public class DownLoadManager {
     }
 
     private void buildNetWork() {
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        // 复用全局基础 OkHttpClient（享元模式）：连接池、缓存、Cookie、SSL 等与业务请求共享，
+        // 修复原来自建整套 client 导致的 TCP 连接无法复用、下载请求丢失 Cookie/代理配置等问题。
+        // newBuilder() 是浅拷贝，派生过程不会影响全局 baseClient 本身；
+        // 仅追加下载专用的进度拦截器，并保留原来 20s 的连接超时（读/写超时继承全局 30s，对大文件下载更宽松）。
+        OkHttpClient okHttpClient = RetrofitClient.getBaseClient().newBuilder()
                 .addInterceptor(new ProgressInterceptor())
                 .connectTimeout(20, TimeUnit.SECONDS)
                 .build();
@@ -69,6 +74,7 @@ public class DownLoadManager {
         retrofit = new Retrofit.Builder()
                 .client(okHttpClient)
                 .addCallAdapterFactory(RxJava3CallAdapterFactory.create())
+                // @Url 传入的是完整下载地址，baseUrl 仅为 Retrofit 要求的占位
                 .baseUrl("http://www.baidu.com")
                 .build();
     }
