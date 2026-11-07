@@ -1,8 +1,6 @@
 package com.ved.framework.bus;
 
 
-import android.os.Build;
-
 import com.ved.framework.binding.command.BindingAction;
 import com.ved.framework.binding.command.BindingConsumer;
 
@@ -19,6 +17,10 @@ import java.util.Map;
  * <p>
  * 详细使用方法（定义 token、注册监听、发送消息、注销监听、token 命名规范等）
  * 见项目 README.md「Messenger 消息总线」章节。
+ * <p>
+ * 订阅数据的存取全部收敛到内部值对象 {@link SubscriptionStore}：
+ * 原实现对 HashMap 的注册写入完全无锁、注销路径却有锁，读写不对称，
+ * 并发注册+注销时可能丢订阅甚至触发 HashMap 扩容死循环；现统一经单一对象锁保护。
  */
 public class Messenger {
 
@@ -27,11 +29,10 @@ public class Messenger {
      */
     private static volatile Messenger defaultInstance;
 
-    private Map<Type, List<WeakActionAndToken>> recipientsOfSubclassesAction;
-
-    private Map<Type, List<WeakActionAndToken>> recipientsStrictAction;
-
-    private static final Object LOCK = new Object();
+    /**
+     * 订阅存储（实例字段：{@link #overrideDefault} 可整体替换实例，存储随实例走）
+     */
+    private final SubscriptionStore store = new SubscriptionStore();
 
     public static Messenger getDefault() {
         if (defaultInstance == null) {
@@ -158,49 +159,10 @@ public class Messenger {
     }
 
     /**
-     * 模板方法：抽取 register 系列方法的公共注册流程。
-     * 根据 receiveDerivedMessagesToo 选择对应的接收者容器，再写入消息订阅。
+     * 模板方法：抽取 register 系列方法的公共注册流程，实际存取委托给订阅存储。
      */
     private void doRegister(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
-        Map<Type, List<WeakActionAndToken>> recipients = getRecipients(receiveDerivedMessagesToo);
-
-        List<WeakActionAndToken> list;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            list = recipients.computeIfAbsent(messageType, k -> new ArrayList<>());
-        }else {
-            list = recipients.get(messageType);
-            if (list == null) {
-                list = new ArrayList<>();
-                recipients.put(messageType, list);
-            }
-        }
-
-        list.add(new WeakActionAndToken(weakAction, token));
-        cleanup();
-    }
-
-    /**
-     * 根据是否接收派生类消息，返回对应的接收者容器（懒加载）
-     */
-    private Map<Type, List<WeakActionAndToken>> getRecipients(boolean receiveDerivedMessagesToo) {
-        Map<Type, List<WeakActionAndToken>> recipients;
-        if (receiveDerivedMessagesToo) {
-            if (recipientsOfSubclassesAction == null) {
-                recipientsOfSubclassesAction = new HashMap<>();
-            }
-            recipients = recipientsOfSubclassesAction;
-        } else {
-            if (recipientsStrictAction == null) {
-                recipientsStrictAction = new HashMap<>();
-            }
-            recipients = recipientsStrictAction;
-        }
-        return recipients;
-    }
-
-    private void cleanup() {
-        cleanupList(recipientsOfSubclassesAction);
-        cleanupList(recipientsStrictAction);
+        store.add(messageType, receiveDerivedMessagesToo, weakAction, token);
     }
 
     /**
@@ -281,72 +243,12 @@ public class Messenger {
      * @param recipient receiver of message
      */
     public void unregister(Object recipient) {
-        unregisterFromLists(recipient, recipientsOfSubclassesAction);
-        unregisterFromLists(recipient, recipientsStrictAction);
-        cleanup();
+        store.unregister(recipient);
     }
 
 
     public void unregister(Object recipient, Object token) {
-        unregisterFromLists(recipient, token, recipientsStrictAction);
-        unregisterFromLists(recipient, token, recipientsOfSubclassesAction);
-        cleanup();
-    }
-
-
-    private static void unregisterFromLists(Object recipient, Map<Type, List<WeakActionAndToken>> lists) {
-        if (recipient == null
-                || lists == null
-                || lists.isEmpty()) {
-            return;
-        }
-        synchronized (LOCK) {
-            // 直接遍历 entrySet，避免 keySet + get 的二次查找
-            for (Map.Entry<Type, List<WeakActionAndToken>> entry : lists.entrySet()) {
-                for (WeakActionAndToken item : entry.getValue()) {
-                    WeakAction<Object> weakAction = item.getAction();
-
-                    if (weakAction != null
-                            && recipient == weakAction.getTarget()) {
-                        weakAction.markForDeletion();
-                    }
-                }
-            }
-            // 把清理放到同步块内，确保线程安全
-            cleanupList(lists);
-        }
-    }
-
-    /**
-     * 模板方法：按 token 注销无消息类型（{@link NotMsgType}）订阅。
-     */
-    private static void unregisterFromLists(
-            Object recipient,
-            Object token,
-            Map<Type, List<WeakActionAndToken>> lists) {
-        if (recipient == null
-                || lists == null
-                || lists.isEmpty()
-                || !lists.containsKey(NotMsgType.class)) {
-            return;
-        }
-
-        synchronized (LOCK) {
-            List<WeakActionAndToken> targetList = lists.get(NotMsgType.class);
-            if (targetList == null) {
-                return;
-            }
-            for (WeakActionAndToken item : targetList) {
-                WeakAction<Object> weakAction = item.getAction();
-
-                if (weakAction != null
-                        && recipient == weakAction.getTarget()
-                        && (token == null
-                        || token.equals(item.getToken()))) {
-                    weakAction.markForDeletion();
-                }
-            }
-        }
+        store.unregister(recipient, token);
     }
 
     private static boolean classImplements(Type instanceType, Type interfaceType) {
@@ -364,66 +266,38 @@ public class Messenger {
         return false;
     }
 
-    private static void cleanupList(Map<Type, List<WeakActionAndToken>> lists) {
-        if (lists == null) {
-            return;
-        }
-        Iterator<Map.Entry<Type, List<WeakActionAndToken>>> iterator = lists.entrySet().iterator();
-        while (iterator.hasNext()) {
-            Map.Entry<Type, List<WeakActionAndToken>> entry = iterator.next();
-            List<WeakActionAndToken> itemList = entry.getValue();
-            if (itemList != null) {
-                // 使用迭代器安全删除失效的订阅，避免 ConcurrentModificationException
-                Iterator<WeakActionAndToken> itemIterator = itemList.iterator();
-                while (itemIterator.hasNext()) {
-                    WeakActionAndToken item = itemIterator.next();
-                    if (item.getAction() == null
-                            || !item.getAction().isLive()) {
-                        itemIterator.remove();
-                    }
-                }
-                if (itemList.isEmpty()) {
-                    iterator.remove();
-                }
-            }
-        }
-    }
-
     private void sendToTargetOrType(Object message, Type messageTargetType, Object token) {
         // 无消息（sendNoMsg 系列）时用 NotMsgType 哨兵类型匹配"无参订阅"，
         // 有消息时按消息的运行时类型匹配，两套分发流程由此收敛为一份
         Class<?> messageType = message != null ? message.getClass() : NotMsgType.class;
 
-        if (recipientsOfSubclassesAction != null) {
-            // Clone to protect from people registering in a "receive message" method
-            // Bug correction Messaging BL0008.002
-            List<Type> listClone = new ArrayList<>(recipientsOfSubclassesAction.keySet());
-            for (Type type : listClone) {
-                List<WeakActionAndToken> list = null;
+        // Clone to protect from people registering in a "receive message" method
+        // Bug correction Messaging BL0008.002
+        List<Type> listClone = store.derivedKeysSnapshot();
+        for (Type type : listClone) {
+            List<WeakActionAndToken> list = null;
 
-                if (messageType == type
-                        || ((Class<?>) type).isAssignableFrom(messageType)
-                        || classImplements(messageType, type)) {
-                    list = recipientsOfSubclassesAction.get(type);
-                }
-
-                sendToList(message, list, messageTargetType, token);
+            if (messageType == type
+                    || ((Class<?>) type).isAssignableFrom(messageType)
+                    || classImplements(messageType, type)) {
+                list = store.derivedSnapshot(type);
             }
+
+            sendToList(message, list, messageTargetType, token);
         }
 
-        if (recipientsStrictAction != null) {
-            if (recipientsStrictAction.containsKey(messageType)) {
-                List<WeakActionAndToken> list = recipientsStrictAction.get(messageType);
-                sendToList(message, list, messageTargetType, token);
-            }
+        List<WeakActionAndToken> strictList = store.strictSnapshot(messageType);
+        if (strictList != null) {
+            sendToList(message, strictList, messageTargetType, token);
         }
 
-        cleanup();
+        store.cleanup();
     }
 
     /**
      * 消息分发模板：message 为 null 表示"无参事件"（走 BindingAction 通道），
      * 否则按类型分发给注册了对应消息类型的 BindingConsumer。
+     * 入参快照在锁外执行回调，避免持锁调用外部代码造成死锁。
      */
     private static void sendToList(
             Object message,
@@ -455,6 +329,139 @@ public class Messenger {
         }
     }
 
+
+    /**
+     * 订阅存储（值对象，内在锁）：
+     * 封装「严格类型 / 派生类型」两个订阅容器，注册、注销、清理、快照全部经由
+     * 本对象的同一把监视器锁（synchronized 方法），消除原实现"注册无锁、注销有锁"
+     * 的读写不对称；对外只暴露快照查询，回调执行不持锁。
+     */
+    private static final class SubscriptionStore {
+
+        /** 严格模式订阅：只匹配注册时声明的消息类型本身 */
+        private final Map<Type, List<WeakActionAndToken>> strictSubscriptions = new HashMap<>();
+
+        /** 派生模式订阅：消息类型是注册类型的子类/实现类时也分发 */
+        private final Map<Type, List<WeakActionAndToken>> derivedSubscriptions = new HashMap<>();
+
+        /** 注册订阅并顺带清理失效条目（synchronized：与注销/快照共用同一把锁） */
+        synchronized void add(Type messageType, boolean receiveDerivedMessagesToo, WeakAction<Object> weakAction, Object token) {
+            Map<Type, List<WeakActionAndToken>> recipients = recipientsFor(receiveDerivedMessagesToo);
+            List<WeakActionAndToken> list = recipients.get(messageType);
+            if (list == null) {
+                list = new ArrayList<>();
+                recipients.put(messageType, list);
+            }
+            list.add(new WeakActionAndToken(weakAction, token));
+            cleanupLocked();
+        }
+
+        synchronized void unregister(Object recipient) {
+            if (recipient == null) {
+                return;
+            }
+            markForDeletion(recipient, strictSubscriptions);
+            markForDeletion(recipient, derivedSubscriptions);
+            cleanupLocked();
+        }
+
+        synchronized void unregister(Object recipient, Object token) {
+            if (recipient == null) {
+                return;
+            }
+            markForDeletionWithToken(recipient, token, strictSubscriptions);
+            markForDeletionWithToken(recipient, token, derivedSubscriptions);
+            cleanupLocked();
+        }
+
+        synchronized void cleanup() {
+            cleanupLocked();
+        }
+
+        /** 派生容器全部消息类型的快照（发送方遍历用，避免遍历时容器被并发修改） */
+        synchronized List<Type> derivedKeysSnapshot() {
+            return new ArrayList<>(derivedSubscriptions.keySet());
+        }
+
+        /** 派生容器中某消息类型的订阅快照，无订阅返回 null */
+        synchronized List<WeakActionAndToken> derivedSnapshot(Type messageType) {
+            return snapshot(derivedSubscriptions, messageType);
+        }
+
+        /** 严格容器中某消息类型的订阅快照，无订阅返回 null */
+        synchronized List<WeakActionAndToken> strictSnapshot(Type messageType) {
+            return snapshot(strictSubscriptions, messageType);
+        }
+
+        private static List<WeakActionAndToken> snapshot(Map<Type, List<WeakActionAndToken>> subscriptions, Type messageType) {
+            List<WeakActionAndToken> list = subscriptions.get(messageType);
+            return list == null ? null : new ArrayList<>(list);
+        }
+
+        private Map<Type, List<WeakActionAndToken>> recipientsFor(boolean receiveDerivedMessagesToo) {
+            return receiveDerivedMessagesToo ? derivedSubscriptions : strictSubscriptions;
+        }
+
+        private static void markForDeletion(Object recipient, Map<Type, List<WeakActionAndToken>> lists) {
+            // 直接遍历 entrySet，避免 keySet + get 的二次查找
+            for (Map.Entry<Type, List<WeakActionAndToken>> entry : lists.entrySet()) {
+                for (WeakActionAndToken item : entry.getValue()) {
+                    WeakAction<Object> weakAction = item.getAction();
+                    if (weakAction != null && recipient == weakAction.getTarget()) {
+                        weakAction.markForDeletion();
+                    }
+                }
+            }
+        }
+
+        /**
+         * 与原实现保持一致的语义：带 token 的注销只清理「无参订阅」（NotMsgType 桶），
+         * 不触碰带消息类型的订阅桶。
+         */
+        private static void markForDeletionWithToken(Object recipient, Object token, Map<Type, List<WeakActionAndToken>> lists) {
+            List<WeakActionAndToken> targetList = lists.get(NotMsgType.class);
+            if (targetList == null) {
+                return;
+            }
+            for (WeakActionAndToken item : targetList) {
+                WeakAction<Object> weakAction = item.getAction();
+                if (weakAction != null
+                        && recipient == weakAction.getTarget()
+                        && (token == null
+                        || token.equals(item.getToken()))) {
+                    weakAction.markForDeletion();
+                }
+            }
+        }
+
+        /** 移除已失效（弱引用回收 / 标记删除）的订阅及空桶，仅在持锁状态下调用 */
+        private void cleanupLocked() {
+            cleanupList(derivedSubscriptions);
+            cleanupList(strictSubscriptions);
+        }
+
+        private static void cleanupList(Map<Type, List<WeakActionAndToken>> lists) {
+            Iterator<Map.Entry<Type, List<WeakActionAndToken>>> iterator = lists.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Type, List<WeakActionAndToken>> entry = iterator.next();
+                List<WeakActionAndToken> itemList = entry.getValue();
+                if (itemList != null) {
+                    // 使用迭代器安全删除失效的订阅，避免 ConcurrentModificationException
+                    Iterator<WeakActionAndToken> itemIterator = itemList.iterator();
+                    while (itemIterator.hasNext()) {
+                        WeakActionAndToken item = itemIterator.next();
+                        if (item.getAction() == null
+                                || !item.getAction().isLive()) {
+                            itemIterator.remove();
+                        }
+                    }
+                    if (itemList.isEmpty()) {
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+    }
 
     /**
      * 订阅条目：把一个 {@code WeakAction} 与可选的 token 绑在一起。
