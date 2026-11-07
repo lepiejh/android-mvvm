@@ -22,21 +22,25 @@ public class AppManager {
 
     private static Stack<Activity> activityStack;
     private static Stack<Fragment> fragmentStack;
-    private static AppManager instance;
 
     private AppManager() {
     }
 
     /**
-     * 单例模式
+     * 单例模式（静态内部类 Holder 写法）：
+     * 借助类加载机制保证懒加载 + 线程安全，无需加锁。
+     * <p>
+     * 修复：原来的裸懒汉写法（无锁无 volatile）在多线程首次调用时会
+     * 创建多个实例，导致 Activity 栈分裂。
      *
      * @return AppManager
      */
     public static AppManager getAppManager() {
-        if (instance == null) {
-            instance = new AppManager();
-        }
-        return instance;
+        return SingletonHolder.INSTANCE;
+    }
+
+    private static class SingletonHolder {
+        private static final AppManager INSTANCE = new AppManager();
     }
 
     /**

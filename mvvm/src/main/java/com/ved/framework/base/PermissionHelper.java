@@ -25,13 +25,11 @@ class PermissionHelper<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     /** 申请运行时权限 */
     public void requestPermission(IPermission iPermission, String... permissions) {
-        // getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
-        // 导致 Fragment 内请求权限静默失效，需用 viewDelegate 判断宿主类型
-        if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
-            RxPermission.requestPermission(viewDelegate.getFragment(), iPermission, permissions);
-        } else if (viewDelegate.FragmentActivity() != null) {
-            RxPermission.requestPermission(viewDelegate.FragmentActivity(), iPermission, permissions);
-        }
+        // 宿主双分派：Fragment 场景 getLifecycleOwner() 返回 viewLifecycleOwner，
+        // instanceof 判断恒为 false，会导致权限申请静默失效，必须按宿主类型区分
+        viewDelegate.dispatchToHost(
+                fragment -> RxPermission.requestPermission(fragment, iPermission, permissions),
+                activity -> RxPermission.requestPermission(activity, iPermission, permissions));
     }
 
     /** 拨打电话（自动申请权限） */

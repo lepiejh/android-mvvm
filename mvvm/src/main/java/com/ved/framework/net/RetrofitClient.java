@@ -42,8 +42,12 @@ import retrofit2.adapter.rxjava3.RxJava3CallAdapterFactory;
 class RetrofitClient {
 
     private RetrofitClient() {
-        // 防止反射破坏单例
-        if (RetrofitClient.getInstance() != null) {
+        // 防止反射破坏单例：依赖 Holder 的懒初始化时序——
+        // 正常初始化时 SingletonHolder.INSTANCE 尚为 null（放行）；
+        // Holder 初始化完成后再经反射 newInstance() 进来，INSTANCE 已非 null（拒绝）。
+        // 注意：这里必须判 SingletonHolder.INSTANCE 而不是调用 getInstance()，
+        // 后者等价但会诱导读者以为存在递归问题。
+        if (SingletonHolder.INSTANCE != null) {
             throw new IllegalStateException("u can't instantiate me...");
         }
     }

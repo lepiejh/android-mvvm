@@ -11,6 +11,8 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.trello.rxlifecycle4.LifecycleProvider;
 
+import java.util.function.Consumer;
+
 /**
  * 视图宿主角色接口（接口隔离原则）：
  * 定义 View 与宿主（Activity / Fragment）环境之间的能力契约，
@@ -51,4 +53,25 @@ interface IViewHost<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     /** 获取当前 Activity 实例 */
     FragmentActivity getCurrentActivity();
+
+    /**
+     * 宿主双分派（Visitor 思想）：
+     * 根据宿主类型把调用分派给 Fragment 或 Activity 侧的回调，
+     * 两者都不可用时什么都不做。
+     * <p>
+     * 框架内多处（NavigatorHelper / PermissionHelper / BaseView 等）都存在
+     * {@code isFragment() && getFragment() != null ? Fragment 分支 : Activity 分支}
+     * 的同构判断链，新增宿主类型时需要逐处修改；收敛到本方法后，
+     * 调用方只需提供两个回调，判断链只有这一份实现。
+     *
+     * @param fragmentAction 宿主为 Fragment 时执行
+     * @param activityAction 宿主为 Activity 时执行
+     */
+    default void dispatchToHost(Consumer<Fragment> fragmentAction, Consumer<FragmentActivity> activityAction) {
+        if (isFragment() && getFragment() != null) {
+            fragmentAction.accept(getFragment());
+        } else if (FragmentActivity() != null) {
+            activityAction.accept(FragmentActivity());
+        }
+    }
 }

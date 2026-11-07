@@ -18,13 +18,14 @@ import com.ved.framework.utils.KLog;
  * <p>
  * {@link BaseFragment} 与 {@link BaseDialogFragment} 的逻辑 100% 相同，唯一差异是父类
  * （{@code RxFragment} / {@code RxDialogFragment}），Java 单继承无法合并两个不同父类，
- * 因此将公共逻辑下沉到本委托类，宿主 Fragment 仅保留 super 生命周期调用与宿主能力方法。
+ * 因此将公共逻辑下沉到本委托类，宿主基类仅保留 super 生命周期调用与宿主环境方法；
+ * {@link Host} 的 default 能力方法统一经 {@code getFragmentDelegate()} 转发到这里。
  * 这与 {@link ViewModelDelegate} / {@link BaseView} 的委托风格保持一致。
  *
  * @param <V>  ViewDataBinding 泛型
  * @param <VM> BaseViewModel 泛型
  */
-class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
+public class FragmentDelegate<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
 
     private final Host<V, VM> host;
     private final BaseView<V, VM> baseView;

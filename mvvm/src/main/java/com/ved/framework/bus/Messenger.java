@@ -208,7 +208,7 @@ public class Messenger {
      *              receive this msg
      */
     public void sendNoMsg(Object token) {
-        sendToTargetOrType(null, token);
+        sendToTargetOrType(null, null, token);
     }
 
     /**
@@ -219,7 +219,7 @@ public class Messenger {
      *               it will receive the message
      */
     public void sendNoMsgToTarget(Object target) {
-        sendToTargetOrType(target.getClass(), null);
+        sendToTargetOrType(null, target.getClass(), null);
     }
 
     /**
@@ -233,7 +233,7 @@ public class Messenger {
      *               it will receive the message
      */
     public void sendNoMsgToTargetWithToken(Object token, Object target) {
-        sendToTargetOrType(target.getClass(), token);
+        sendToTargetOrType(null, target.getClass(), token);
     }
 
     /**
@@ -293,32 +293,6 @@ public class Messenger {
         cleanup();
     }
 
-
-    private static <T> void sendToList(
-            T message,
-            Collection<WeakActionAndToken> list,
-            Type messageTargetType,
-            Object token) {
-        if (list != null) {
-            // Clone to protect from people registering in a "receive message" method
-            // Bug correction Messaging BL0004.007
-            ArrayList<WeakActionAndToken> listClone = new ArrayList<>(list);
-
-            for (WeakActionAndToken item : listClone) {
-                WeakAction<Object> executeAction = item.getAction();
-                if (executeAction != null
-                        && item.getAction().isLive()
-                        && item.getAction().getTarget() != null
-                        && (messageTargetType == null
-                        || item.getAction().getTarget().getClass() == messageTargetType
-                        || classImplements(item.getAction().getTarget().getClass(), messageTargetType))
-                        && ((item.getToken() == null && token == null)
-                        || item.getToken() != null && item.getToken().equals(token))) {
-                    executeAction.execute(message);
-                }
-            }
-        }
-    }
 
     private static void unregisterFromLists(Object recipient, Map<Type, List<WeakActionAndToken>> lists) {
         if (recipient == null
@@ -415,8 +389,11 @@ public class Messenger {
         }
     }
 
-    private void sendToTargetOrType(Type messageTargetType, Object token) {
-        Class<?> messageType = NotMsgType.class;
+    private void sendToTargetOrType(Object message, Type messageTargetType, Object token) {
+        // 无消息（sendNoMsg 系列）时用 NotMsgType 哨兵类型匹配"无参订阅"，
+        // 有消息时按消息的运行时类型匹配，两套分发流程由此收敛为一份
+        Class<?> messageType = message != null ? message.getClass() : NotMsgType.class;
+
         if (recipientsOfSubclassesAction != null) {
             // Clone to protect from people registering in a "receive message" method
             // Bug correction Messaging BL0008.002
@@ -430,21 +407,26 @@ public class Messenger {
                     list = recipientsOfSubclassesAction.get(type);
                 }
 
-                sendToList(list, messageTargetType, token);
+                sendToList(message, list, messageTargetType, token);
             }
         }
 
         if (recipientsStrictAction != null) {
             if (recipientsStrictAction.containsKey(messageType)) {
                 List<WeakActionAndToken> list = recipientsStrictAction.get(messageType);
-                sendToList(list, messageTargetType, token);
+                sendToList(message, list, messageTargetType, token);
             }
         }
 
         cleanup();
     }
 
+    /**
+     * 消息分发模板：message 为 null 表示"无参事件"（走 BindingAction 通道），
+     * 否则按类型分发给注册了对应消息类型的 BindingConsumer。
+     */
     private static void sendToList(
+            Object message,
             Collection<WeakActionAndToken> list,
             Type messageTargetType,
             Object token) {
@@ -463,42 +445,16 @@ public class Messenger {
                         || classImplements(item.getAction().getTarget().getClass(), messageTargetType))
                         && ((item.getToken() == null && token == null)
                         || item.getToken() != null && item.getToken().equals(token))) {
-                    executeAction.execute();
+                    if (message != null) {
+                        executeAction.execute(message);
+                    } else {
+                        executeAction.execute();
+                    }
                 }
             }
         }
     }
 
-    private <T> void sendToTargetOrType(T message, Type messageTargetType, Object token) {
-        Class<?> messageType = message.getClass();
-
-
-        if (recipientsOfSubclassesAction != null) {
-            // Clone to protect from people registering in a "receive message" method
-            // Bug correction Messaging BL0008.002
-            List<Type> listClone = new ArrayList<>(recipientsOfSubclassesAction.keySet());
-            for (Type type : listClone) {
-                List<WeakActionAndToken> list = null;
-
-                if (messageType == type
-                        || ((Class<?>) type).isAssignableFrom(messageType)
-                        || classImplements(messageType, type)) {
-                    list = recipientsOfSubclassesAction.get(type);
-                }
-
-                sendToList(message, list, messageTargetType, token);
-            }
-        }
-
-        if (recipientsStrictAction != null) {
-            if (recipientsStrictAction.containsKey(messageType)) {
-                List<WeakActionAndToken> list = recipientsStrictAction.get(messageType);
-                sendToList(message, list, messageTargetType, token);
-            }
-        }
-
-        cleanup();
-    }
 
     /**
      * 订阅条目：把一个 {@code WeakAction} 与可选的 token 绑在一起。

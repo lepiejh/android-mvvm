@@ -11,26 +11,15 @@ public class DataHolder {//解决activity之间传递数据过大导致崩溃的
     // 加 final：本字段只在构造时赋值，之后只 put/get/clear，从不重新指向。
     private final Map<String, Object> dataList = new HashMap<>();
 
-    private static volatile DataHolder instance;
-
+    /**
+     * 单例（静态内部类 Holder 写法）：借类加载机制实现懒加载 + 线程安全，替代原 DCL 双检锁。
+     */
     public static DataHolder getInstance() {
+        return SingletonHolder.INSTANCE;
+    }
 
-        if (instance == null) {
-
-            synchronized (DataHolder.class) {
-
-                if (instance == null) {
-
-                    instance = new DataHolder();
-
-                }
-
-            }
-
-        }
-
-        return instance;
-
+    private static class SingletonHolder {
+        private static final DataHolder INSTANCE = new DataHolder();
     }
 
     public void setData(String key, Object o) {

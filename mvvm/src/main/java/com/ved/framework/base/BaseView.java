@@ -30,8 +30,10 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
     private final NavigatorHelper<V, VM> navigatorHelper;
     private final PermissionHelper<V, VM> permissionHelper;
 
-    // EventBus 注册状态跟踪
-    private boolean isEventBusRegistered = false;
+    // EventBus 注册状态跟踪：记录实际注册的目标对象（观察者模式的订阅配对），
+    // 注销时用它精确解除，避免 Activity 宿主场景下 getCurrentActivity() 与
+    // 注册时 resolveEventBusTarget() 解析出的对象不一致导致"注册了却注销不掉"
+    private Object eventBusTarget;
 
     protected BaseView(IBaseView<V, VM> viewDelegate) {
         this.viewDelegate = viewDelegate;
@@ -148,18 +150,19 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
      * 按需注册 EventBus（模板方法抽取：初始化与销毁共用的注册目标解析逻辑）
      */
     private void registerEventBusIfNeeded() {
-        if (!viewDelegate.isRegisterEventBus() || isEventBusRegistered) {
+        if (!viewDelegate.isRegisterEventBus() || eventBusTarget != null) {
             return;
         }
         try {
             Object target = resolveEventBusTarget();
             if (target != null && !EventBus.getDefault().isRegistered(target)) {
                 EventBusUtil.register(target);
-                isEventBusRegistered = true;
             }
+            eventBusTarget = target;
         } catch (Exception e) {
             Object target = resolveEventBusTarget();
-            isEventBusRegistered = target != null && EventBus.getDefault().isRegistered(target);
+            eventBusTarget = target != null && EventBus.getDefault().isRegistered(target) ? target : null;
+            KLog.e(e.getMessage());
         }
     }
 
@@ -280,14 +283,11 @@ class BaseView<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
                 binding.unbind();
             }
 
-            if (viewDelegate.isRegisterEventBus()) {
-                Object target = viewDelegate.getCurrentActivity() != null
-                        ? viewDelegate.getCurrentActivity()
-                        : resolveEventBusTarget();
-                if (target != null && EventBus.getDefault().isRegistered(target)) {
-                    EventBusUtil.unregister(target);
+            if (viewDelegate.isRegisterEventBus() && eventBusTarget != null) {
+                if (EventBus.getDefault().isRegistered(eventBusTarget)) {
+                    EventBusUtil.unregister(eventBusTarget);
                 }
-                isEventBusRegistered = false;
+                eventBusTarget = null;
             }
             if (viewDelegate.hasWifi()) {
                 permissionHelper.stopWifiListening();

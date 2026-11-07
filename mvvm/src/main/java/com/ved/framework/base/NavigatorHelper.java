@@ -40,13 +40,11 @@ class NavigatorHelper<V extends ViewDataBinding, VM extends BaseViewModel<?>> {
         if (bundle != null) {
             intent.putExtras(bundle);
         }
-        // getLifecycleOwner() 在 Fragment 场景返回 viewLifecycleOwner，instanceof 判断恒为 false，
-        // 需用 viewDelegate.isFragment()/getFragment()/FragmentActivity() 判断宿主类型
-        if (viewDelegate.isFragment() && viewDelegate.getFragment() != null) {
-            viewDelegate.getFragment().startActivityForResult(intent, requestCode);
-        } else if (viewDelegate.FragmentActivity() != null) {
-            viewDelegate.FragmentActivity().startActivityForResult(intent, requestCode);
-        }
+        // 宿主双分派：Fragment 场景 getLifecycleOwner() 返回 viewLifecycleOwner，
+        // instanceof 判断恒为 false，必须按宿主类型区分跳转入口
+        viewDelegate.dispatchToHost(
+                fragment -> fragment.startActivityForResult(intent, requestCode),
+                activity -> activity.startActivityForResult(intent, requestCode));
     }
 
     /** 跳转容器页面（无参数） */
