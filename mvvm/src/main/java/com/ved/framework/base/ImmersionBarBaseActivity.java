@@ -126,7 +126,7 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
         if (isStatusBarEnabled()) {
             statusBarConfig().init();
 
-            if (getStatusBarHide() == 2 && isStickyImmersiveEnabled()){
+            if (statusBarHideMode().needsStickyFullScreen() && isStickyImmersiveEnabled()){
                 // 设置全屏模式，防止手势滑动时显示状态栏和导航栏
                 setupFullScreenImmersiveMode();
             }
@@ -158,7 +158,7 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && getStatusBarHide() == 2 && isStickyImmersiveEnabled()) {
+        if (hasFocus && statusBarHideMode().needsStickyFullScreen() && isStickyImmersiveEnabled()) {
             // 每次窗口获得焦点时重新应用全屏模式
             setupFullScreenImmersiveMode();
             if (mImmersionBar != null) {
@@ -206,25 +206,8 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
         if (statusBarColorDef()) {
             mImmersionBar.statusBarColor(statusBarColor());
         }
-        switch (getStatusBarHide()){
-            case 0 :
-                //隐藏状态栏
-                mImmersionBar.hideBar(BarHide.FLAG_HIDE_STATUS_BAR);
-                break;
-            case 1 :
-                //隐藏导航栏
-                mImmersionBar.hideBar(BarHide.FLAG_HIDE_NAVIGATION_BAR);
-                mImmersionBar.fullScreen(true);  // 启用全屏模式
-                break;
-            case 2 :
-                //隐藏状态栏和导航栏
-                mImmersionBar.hideBar(BarHide.FLAG_HIDE_BAR);
-                break;
-            default:
-                //显示状态栏和导航栏
-                mImmersionBar.hideBar(BarHide.FLAG_SHOW_BAR);
-                break;
-        }
+        // 隐藏策略由模式枚举内聚（原 0/1/2/3 类型码 switch 已收敛）
+        statusBarHideMode().applyTo(mImmersionBar);
         mImmersionBar.keyboardEnable(false, WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN
                 | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_PAN);  //解决软键盘与底部输入框冲突问题，默认为false，还有一个重载方法，可以指定软键盘mode
         //必须设置View树布局变化监听，否则软键盘无法顶上去，还有模式必须是SOFT_INPUT_ADJUST_PAN
@@ -232,8 +215,74 @@ class ImmersionBarBaseActivity extends RxAppCompatActivity implements ViewTreeOb
         return mImmersionBar;
     }
 
+    /**
+     * 状态栏/导航栏隐藏模式（策略入口）。
+     * <p>默认转发旧类型码钩子 {@link #getStatusBarHide()}：
+     * 覆盖了旧钩子的既有子类行为不变；新子类建议直接覆盖本方法返回枚举。
+     */
+    public StatusBarHideMode statusBarHideMode() {
+        return StatusBarHideMode.fromLegacyCode(getStatusBarHide());
+    }
+
+    /**
+     * 旧类型码钩子：0=隐藏状态栏，1=隐藏导航栏，2=隐藏全部，其他=显示全部。
+     * <p>新代码建议覆盖 {@link #statusBarHideMode()}；本钩子保留以保证既有子类兼容。
+     */
     public int getStatusBarHide(){
         return 3;
+    }
+
+    /**
+     * 系统栏隐藏模式枚举（策略模式）：每个常量内聚自己的 ImmersionBar 应用行为
+     * 与「是否需要 sticky 全屏」判定，取代原 0/1/2/3 类型码 switch 分派。
+     */
+    public enum StatusBarHideMode {
+        /** 显示状态栏和导航栏 */
+        SHOW_BAR,
+        /** 隐藏状态栏 */
+        HIDE_STATUS_BAR,
+        /** 隐藏导航栏（启用全屏模式） */
+        HIDE_NAVIGATION_BAR,
+        /** 隐藏状态栏和导航栏 */
+        HIDE_BOTH;
+
+        /** 旧类型码 → 枚举映射 */
+        static StatusBarHideMode fromLegacyCode(int code) {
+            switch (code) {
+                case 0:
+                    return HIDE_STATUS_BAR;
+                case 1:
+                    return HIDE_NAVIGATION_BAR;
+                case 2:
+                    return HIDE_BOTH;
+                default:
+                    return SHOW_BAR;
+            }
+        }
+
+        /** 将本模式应用到 ImmersionBar 配置 */
+        void applyTo(ImmersionBar bar) {
+            switch (this) {
+                case HIDE_STATUS_BAR:
+                    bar.hideBar(BarHide.FLAG_HIDE_STATUS_BAR);
+                    break;
+                case HIDE_NAVIGATION_BAR:
+                    bar.hideBar(BarHide.FLAG_HIDE_NAVIGATION_BAR);
+                    bar.fullScreen(true);  // 启用全屏模式
+                    break;
+                case HIDE_BOTH:
+                    bar.hideBar(BarHide.FLAG_HIDE_BAR);
+                    break;
+                default:
+                    bar.hideBar(BarHide.FLAG_SHOW_BAR);
+                    break;
+            }
+        }
+
+        /** 隐藏全部时需要配合 sticky 全屏，防止手势滑动时系统栏回显 */
+        boolean needsStickyFullScreen() {
+            return this == HIDE_BOTH;
+        }
     }
 
     @Override

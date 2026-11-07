@@ -25,6 +25,11 @@ import retrofit2.Converter;
  * （如 {@code Observable<BaseResponse<User>>} 会拿到 {@code BaseResponse<User>}），
  * 因此直接解析进 {@code type} 后做一次 {@code instanceof IEntityResponse} 判断即可。
  *
+ * <p>两个校验分支（实现接口的实体 / 标准包装 JSON）共享 {@link #isBusinessError}
+ * 这份业务码判断；未提取更重的「适配器接口」统一两者，是因为两者的取值来源
+ * （接口 getter vs 配置键名读 JSON）与后续动作（返回实体 vs 提取 data 重新解析）
+ * 本质不同，强行归一反而需要布尔标志与空实现，可读性更差。
+ *
  * @param <T> 接口声明的方法返回泛型
  */
 final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
@@ -64,7 +69,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
             // 项目自定义的响应实体基类实现了约定接口：直接通过接口做业务码校验（与字段名无关）
             IEntityResponse<?> entityResponse = (IEntityResponse<?>) result;
             int code = entityResponse.getCode();
-            if (code != Configure.getCode()) {
+            if (isBusinessError(code)) {
                 throw new ResultException(resolveErrorMsg(entityResponse), code);
             }
             // 兜底复核：实体字段名与后台键名不一致时，getCode() 会取到默认值且恰好等于成功码，
@@ -82,7 +87,7 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
         // 仍按配置键名做业务码校验（与声明了包装实体时的行为保持一致）
         if (CorpseUtils.INSTANCE.isStandardJson(response)) {
             int code = StringUtils.parseInt(JsonPraise.optCode(response, Configure.getCodeKey()));
-            if (code != Configure.getCode()) {
+            if (isBusinessError(code)) {
                 String msg = JsonPraise.optCode(response, Configure.getMsgKey());
                 throw new ResultException(TextUtils.isEmpty(msg) ? "服务器异常" : msg, code);
             }
@@ -110,6 +115,15 @@ final class GsonResponseBodyConverter<T> implements Converter<ResponseBody, T> {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 业务码统一校验谓词：两种响应形态（实现约定接口的实体 / 标准包装 JSON）的
+     * 「取 code → 比对成功码」语义收敛于此；两者的差异仅在取值来源与 data 提取，
+     * 校验语义完全一致，故共用这一份判断（是否强建适配器接口见类注释）。
+     */
+    private static boolean isBusinessError(int code) {
+        return code != Configure.getCode();
     }
 
     /**
