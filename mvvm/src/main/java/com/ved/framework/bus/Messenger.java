@@ -3,8 +3,8 @@ package com.ved.framework.bus;
 
 import android.os.Build;
 
-import com.ved.framework.command.BindingAction;
-import com.ved.framework.command.BindingConsumer;
+import com.ved.framework.binding.command.BindingAction;
+import com.ved.framework.binding.command.BindingConsumer;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

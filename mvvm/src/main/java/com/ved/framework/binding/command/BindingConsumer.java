@@ -1,4 +1,4 @@
-package com.ved.framework.command;
+package com.ved.framework.binding.command;
 
 /**
  * A one-argument action.
